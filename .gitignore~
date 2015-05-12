@@ -52,7 +52,7 @@ BuildLog.htm
 # binaries
 /bin
 /build
-/tests
+
 # build-generated CMake garbage
 /CMakeFiles
 */CMakeFiles
