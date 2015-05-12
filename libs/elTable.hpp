@@ -21,8 +21,8 @@
 #define ELTABLE_H
 
 #include <string>
-#include <boost/algorithm/string.hpp>
-
+//#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/trim.hpp>
 static std::string elTable = 
 	"H HeLiBeB C N O F NeNaMgAlSiP S Cl"
 	"ArK CaScTiV CrMnFeCoNiCuZnGaGeAsSeBr"
