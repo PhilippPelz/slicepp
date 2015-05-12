@@ -1,0 +1,8 @@
+[Dolphin]
+AdditionalInfo=Details_Size,Details_Date,Details_Type,CustomizedDetails
+Sorting=6
+Timestamp=2015,4,20,15,49,10
+ViewMode=1
+
+[Settings]
+HiddenFilesShown=true
