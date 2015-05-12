@@ -56,7 +56,8 @@ BuildLog.htm
 # build-generated CMake garbage
 /CMakeFiles
 */CMakeFiles
-#*.cmake
+*cmake_install*
+/hdf5boost/*.cmake
 CMakeCache.txt
 generate.stamp*
 

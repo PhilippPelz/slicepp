@@ -56,7 +56,7 @@ BuildLog.htm
 # build-generated CMake garbage
 /CMakeFiles
 */CMakeFiles
-*.cmake
+*cmake_install*
 CMakeCache.txt
 generate.stamp*
 
