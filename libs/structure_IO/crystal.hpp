@@ -51,7 +51,7 @@ class  CrystalBuilder : public IStructureBuilder{
 public:
 
 	CrystalBuilder(boost::filesystem::path p);
-	CrystalBuilder(StructureReaderFactory sfac,const ConfigPtr c);
+	CrystalBuilder(StructureReaderFactory sfac,const ConfigPtr& c);
 	~CrystalBuilder();
 
 	void ReadFromFile();

@@ -26,7 +26,7 @@ using boost::format;
 namespace QSTEM
 {
 
-CExperimentBase::CExperimentBase(ConfigPtr c, StructureBuilderPtr s, WavePtr w, PotPtr p, PersistenceManagerPtr pers)
+CExperimentBase::CExperimentBase(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers)
 : IExperiment()
 {
 	_config = c;

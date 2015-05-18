@@ -43,7 +43,7 @@ class CPotential : public IPotential
 
 public:
 	CPotential(unsigned nx, unsigned ny, unsigned nz, float_tt dx, float_tt dy, float_tt dz, float_tt atomRadius, float_tt v0);
-	CPotential(const ConfigPtr c, PersistenceManagerPtr persist);
+	CPotential(const ConfigPtr& c,const PersistenceManagerPtr& persist);
 
 	void GetSizePixels(unsigned &nx, unsigned &ny) const;
 	void WriteSlice(unsigned idx, std::string prefix);

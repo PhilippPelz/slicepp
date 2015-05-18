@@ -25,7 +25,7 @@ namespace QSTEM
 class C3DFFTPotential : public C3DPotential
 {
 public:
-  C3DFFTPotential(const ConfigPtr c, PersistenceManagerPtr p ) ;
+  C3DFFTPotential(const ConfigPtr& c,const PersistenceManagerPtr& persist) ;
   virtual void DisplayParams();
   //virtual void makeSlices(int nlayer, char *fileName, atom *center);
   virtual void AddAtomToSlices(atom& atom, float_tt atomX, float_tt atomY, float_tt atomZ);

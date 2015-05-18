@@ -23,7 +23,7 @@
 namespace QSTEM
 {
 
-C3DPotential::C3DPotential(const ConfigPtr c, PersistenceManagerPtr p ) : RealSpacePotential(c,p )
+C3DPotential::C3DPotential(const ConfigPtr& c,const PersistenceManagerPtr& p) : RealSpacePotential(c,p )
 {
 	m_sliceStep = 2*_config->Model.nx*_config->Model.ny;
 	m_boxNz = (int)(_config->Potential.AtomRadiusAngstrom/m_ddz+2.0);

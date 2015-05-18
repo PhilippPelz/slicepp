@@ -30,25 +30,28 @@ namespace expr = boost::log::expressions;
 namespace keywords = boost::log::keywords;
 using boost::property_tree::info_parser::read_info;
 namespace bpt = boost::property_tree;
-using namespace std;
+//using namespace std;
 
-#include <wavefunctions/wave_interface.hpp>
 #include <wavefunctions/wave_base.hpp>
+#include <wavefunctions/wave_interface.hpp>
 #include <wavefunctions/wave_convergent.hpp>
 #include <wavefunctions/wave_plane.hpp>
+#include "experiments/base.hpp"
 #include "experiments/stem.hpp"
 #include "experiments/cbed.hpp"
 #include "experiments/tem.hpp"
 #include "potentials/pot_interface.hpp"
-#include "structure_IO/structureInterface.hpp"
 #include "potentials/pot_2d.hpp"
 #include "potentials/pot_2d_fft.hpp"
 #include "potentials/pot_3d.hpp"
 #include "potentials/pot_3d_fft.hpp"
 #include "stemtypes_fftw3.hpp"
+#include "structure_IO/structureInterface.hpp"
 #include "structure_IO/IStructureBuilder.hpp"
 #include "structure_IO/SuperstructureBuilder.hpp"
 #include "structure_IO/CifReader.hpp"
+
+//#define BOOST_FUNCTIONAL_FACTORY_SUPPORT_NONE_T
 
 namespace QSTEM {
 

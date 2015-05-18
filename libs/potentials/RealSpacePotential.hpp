@@ -18,7 +18,7 @@ namespace QSTEM {
 class RealSpacePotential : public CPotential
 {
 public :
-	inline RealSpacePotential(const ConfigPtr c, PersistenceManagerPtr p): CPotential(c,p){};
+	inline RealSpacePotential(const ConfigPtr& c,const PersistenceManagerPtr& p): CPotential(c,p){};
 	virtual ~RealSpacePotential();
 protected:
 	void AddAtomRealSpace(atom& atom, float_tt atomX, float_tt atomY, float_tt atomZ);

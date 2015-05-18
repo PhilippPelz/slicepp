@@ -9,8 +9,8 @@
 
 namespace QSTEM {
 
-IStructureBuilder::IStructureBuilder(StructureReaderFactory sfac,const ConfigPtr c) {
-	_structureReaderFac = sfac;
+IStructureBuilder::IStructureBuilder(StructureReaderFactory sfac,const ConfigPtr& c) {
+	_sfac = sfac;
 	_c = c;
 }
 

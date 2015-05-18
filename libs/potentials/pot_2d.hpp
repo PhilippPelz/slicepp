@@ -7,7 +7,7 @@ namespace QSTEM {
 
 class C2DPotential: public RealSpacePotential {
 public:
-	C2DPotential(const ConfigPtr c, PersistenceManagerPtr p) ;
+	C2DPotential(const ConfigPtr& c,const PersistenceManagerPtr& persist) ;
 	virtual void DisplayParams();
 	virtual void AtomBoxLookUp(complex_tt &val, int Znum, float_tt x,float_tt y, float_tt z, float_tt B);
 	bool CheckAtomZInBounds(float_tt atomZ);

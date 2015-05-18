@@ -24,7 +24,7 @@ using boost::format;
 namespace QSTEM
 {
 
-CConvergentWave::CConvergentWave(const ConfigPtr c, PersistenceManagerPtr p) : CBaseWave(c,p)
+CConvergentWave::CConvergentWave(const ConfigPtr& c,const PersistenceManagerPtr& p) : CBaseWave(c,p)
 {
 	// TODO: where does beam current belong?
 	//configReader->ReadDoseParameters(m_beamCurrent, m_dwellTime);

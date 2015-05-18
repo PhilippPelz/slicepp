@@ -22,7 +22,7 @@
 namespace QSTEM
 {
 
-CExperimentTEM::CExperimentTEM(ConfigPtr c,StructureBuilderPtr s, WavePtr w, PotPtr p,PersistenceManagerPtr pers) : CExperimentBase(c,s,w,p,pers)
+CExperimentTEM::CExperimentTEM(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers) : CExperimentBase(c,s,w,p,pers)
 {
 	m_mode=ExperimentType::TEM;
 }

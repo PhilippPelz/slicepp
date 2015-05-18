@@ -27,6 +27,7 @@
 #include <data_IO/PersistenceManager.hpp>
 #include "config_IO/read_qsc.hpp"
 #include "stemtypes_fftw3.hpp"
+#include <boost/function.hpp>
 
 namespace QSTEM
 {
@@ -34,7 +35,7 @@ namespace QSTEM
 class IWave;
 typedef boost::shared_ptr<IWave> WavePtr;
 typedef WavePtr (*CreateWaveFn)(const ConfigPtr reader);
-typedef boost::function<IWave*(const ConfigPtr c, PersistenceManagerPtr p) > waveCreator;
+typedef boost::function<IWave*(const ConfigPtr& c,const PersistenceManagerPtr& p)> waveCreator;
 typedef std::map<int,waveCreator> WaveFactory;
 
 class IWave

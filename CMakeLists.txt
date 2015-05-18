@@ -17,7 +17,7 @@ if(WIN32)
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 else(WIN32)
   # specify C++0x support for GCC
-  ADD_DEFINITIONS(-std=c++11) # Or -std=c++11
+  ADD_DEFINITIONS(--std=c++11) # Or -std=c++11
 endif(WIN32)
 
 set(OPENBABEL_LIB /usr/local/lib/libopenbabel.so)

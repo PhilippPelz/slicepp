@@ -32,7 +32,7 @@ void CreateWaveFunctionDataSets(int x, int y, std::vector<int> positions, std::s
 	//	imageIO.CreateComplexDataSet(potDataSetLabel, positions);
 	//	imageIO.CreateComplexDataSet(mulswavDataSetLabel, positions);
 }
-CBaseWave::CBaseWave(const ConfigPtr c, PersistenceManagerPtr p) :
+CBaseWave::CBaseWave(const ConfigPtr& c,const PersistenceManagerPtr& p) :
 		_forward(fftwpp::fft2d(c->Model.nx,c->Model.ny,FFTW_FORWARD)),
 		_backward(fftwpp::fft2d(c->Model.nx,c->Model.ny,FFTW_BACKWARD)),
 				IWave(c,p)

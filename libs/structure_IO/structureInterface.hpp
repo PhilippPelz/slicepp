@@ -24,15 +24,18 @@
 #include <boost/filesystem.hpp>
 #include "stemtypes_fftw3.hpp"
 #include <cstring>
+#include <boost/function.hpp>
 
 namespace QSTEM
 {
 
 class IStructureReader;
+
 typedef boost::shared_ptr<IStructureReader> StructureReaderPtr;
 typedef StructureReaderPtr (*CreateStructureReaderFn)(const boost::filesystem::path &filename);
-typedef boost::function<IStructureReader*(const boost::filesystem::path &file) > structureReaderCreator;
+typedef boost::function<IStructureReader*(const boost::filesystem::path &file)> structureReaderCreator;
 typedef std::map<string,structureReaderCreator> StructureReaderFactory;
+typedef boost::shared_ptr<StructureReaderFactory> StructureReaderFactoryPtr;
 
 class IStructureReader
 {

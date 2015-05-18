@@ -43,7 +43,7 @@ namespace QSTEM
 class QSTEM_HELPER_DLL_EXPORT CBaseWave : public IWave
 {
 public:
-	CBaseWave(const ConfigPtr c, PersistenceManagerPtr p);
+	CBaseWave(const ConfigPtr& c,const PersistenceManagerPtr& p);
 	CBaseWave( const CBaseWave& other );
 
 	void Resize(int x, int y);

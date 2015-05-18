@@ -8,13 +8,14 @@
 #ifndef SRC_HDFFILE_H_
 #define SRC_HDFFILE_H_
 
+#include <boost/multi_array.hpp>
+#include <boost/filesystem.hpp>
 #include <iostream>
 #include <string>
 #include "H5Cpp.h"
 #include <cstdint>
-#include <algorithm>
-#include <boost/multi_array.hpp>
-#include <boost/filesystem.hpp>
+//#include <algorithm>
+
 #include "Complex.hpp"
 using boost::multi_array;
 using boost::extents;

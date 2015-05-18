@@ -40,7 +40,7 @@ namespace QSTEM
 class QSTEM_HELPER_DLL_EXPORT CExperimentBase : public IExperiment
 {
 public:
-    CExperimentBase(ConfigPtr c,StructureBuilderPtr s, WavePtr w, PotPtr p,PersistenceManagerPtr pers);
+    CExperimentBase(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers);
     virtual void DisplayProgress(int flag);
     virtual void DisplayParams();
     virtual void Run()=0;
@@ -120,7 +120,7 @@ protected:
     std::vector<float_tt> m_propxr, m_propxi, m_propyr, m_propyi;
 };
 
-typedef boost::function<CExperimentBase*(ConfigPtr c,StructureBuilderPtr s, WavePtr w, PotPtr p,PersistenceManagerPtr pers)> experimentCreator;
+typedef boost::function<CExperimentBase*(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers)> experimentCreator;
 typedef std::map<ExperimentType,experimentCreator> ExperimentFactory;
 
 }

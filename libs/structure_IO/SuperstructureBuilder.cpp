@@ -13,7 +13,7 @@ using boost::format;
 using boost::algorithm::trim;
 namespace QSTEM {
 
-SuperstructureBuilder::SuperstructureBuilder(StructureReaderFactory sfac,const ConfigPtr c) : IStructureBuilder(sfac,c) {
+SuperstructureBuilder::SuperstructureBuilder(StructureReaderFactory sfac,const ConfigPtr& c) : IStructureBuilder(sfac,c) {
 	atRad = atRadf;
 	covRad = covRadf;
 	_nGrains = 0;

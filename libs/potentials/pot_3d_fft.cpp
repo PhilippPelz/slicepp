@@ -25,7 +25,7 @@ using boost::format;
 
 namespace QSTEM {
 
-C3DFFTPotential::C3DFFTPotential(const ConfigPtr c, PersistenceManagerPtr p)  : C3DPotential(c,p ){
+C3DFFTPotential::C3DFFTPotential(const ConfigPtr& c,const PersistenceManagerPtr& p)  : C3DPotential(c,p ){
 	_nz = 0;
 	_nzPerSlice=0;
 	for (unsigned i = 0; i < _config->Model.nSlices; i++) {

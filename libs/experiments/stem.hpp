@@ -28,7 +28,7 @@ namespace QSTEM
 class QSTEM_HELPER_DLL_EXPORT CExperimentSTEM : public CExperimentBase
 {
 public:
-    CExperimentSTEM(ConfigPtr c, StructureBuilderPtr s, WavePtr w, PotPtr p, PersistenceManagerPtr pers);
+    CExperimentSTEM(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers);
     void Run();
     void DisplayParams();
     void CheckParams(){};

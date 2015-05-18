@@ -28,7 +28,7 @@ namespace QSTEM
 class CExperimentCBED : public CExperimentBase
 {
 public:
-    CExperimentCBED(ConfigPtr c,StructureBuilderPtr s, WavePtr w, PotPtr p,PersistenceManagerPtr pers);
+    CExperimentCBED(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers);
 
     void Run();
     void DisplayParams();

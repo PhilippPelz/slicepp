@@ -22,7 +22,7 @@ QSTEM - image simulation for TEM/STEM/CBED
 namespace QSTEM
 {
 
-C2DPotential::C2DPotential(const ConfigPtr c, PersistenceManagerPtr p )  : RealSpacePotential(c, p)
+C2DPotential::C2DPotential(const ConfigPtr& c,const PersistenceManagerPtr& p)  : RealSpacePotential(c, p)
 {
 	m_boxNz = 1;
 }

@@ -32,7 +32,7 @@ CPotential::CPotential() :
 
 }
 
-CPotential::CPotential(const ConfigPtr c, PersistenceManagerPtr persist) :
+CPotential::CPotential(const ConfigPtr& c,const PersistenceManagerPtr& persist) :
 		CPotential() {
 	_config = c;
 	_persist = persist;

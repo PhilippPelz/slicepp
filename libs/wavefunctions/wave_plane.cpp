@@ -25,7 +25,7 @@ using boost::format;
 namespace QSTEM
 {
 
-CPlaneWave::CPlaneWave(const ConfigPtr c, PersistenceManagerPtr p) : CBaseWave(c,p)
+CPlaneWave::CPlaneWave(const ConfigPtr& c,const PersistenceManagerPtr& p) : CBaseWave(c,p)
 {
 	_nx = c->Model.nx;
 	_ny = c->Model.ny;

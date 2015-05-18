@@ -23,7 +23,7 @@ using boost::format;
 namespace QSTEM {
 
 
-C2DFFTPotential::C2DFFTPotential(const ConfigPtr c, PersistenceManagerPtr p ) : CPotential(c,p ) {
+C2DFFTPotential::C2DFFTPotential(const ConfigPtr& c,const PersistenceManagerPtr& p) : CPotential(c,p ) {
 	m_atPot = std::map<unsigned, ComplexArray2D>();
 }
 

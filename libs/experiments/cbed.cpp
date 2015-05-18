@@ -28,7 +28,7 @@ using boost::format;
 namespace QSTEM
 {
 
-CExperimentCBED::CExperimentCBED(ConfigPtr c,StructureBuilderPtr s, WavePtr w, PotPtr p,PersistenceManagerPtr pers) : CExperimentBase(c,s,w,p,pers)
+CExperimentCBED::CExperimentCBED(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers) : CExperimentBase(c,s,w,p,pers)
 {
 	m_mode=ExperimentType::CBED;
 	_lbeams = false;

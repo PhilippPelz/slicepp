@@ -26,7 +26,7 @@ class C2DFFTPotential : public CPotential
 {
 public:
   C2DFFTPotential();
-  C2DFFTPotential(const ConfigPtr c, PersistenceManagerPtr persist );
+  C2DFFTPotential(const ConfigPtr& c,const PersistenceManagerPtr& persist);
   virtual void DisplayParams();
 
 

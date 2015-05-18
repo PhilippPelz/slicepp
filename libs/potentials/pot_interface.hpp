@@ -24,6 +24,7 @@
 #include <boost/log/trivial.hpp>
 #include "config_IO/read_qsc.hpp"
 #include "data_IO/PersistenceManager.hpp"
+#include <boost/function.hpp>
 using boost::format;
 
 #ifndef POTENTIAL_INTERFACE_H
@@ -34,7 +35,7 @@ namespace QSTEM
 
 class IPotential;
 typedef boost::shared_ptr<IPotential> PotPtr;
-typedef boost::function<IPotential*(const ConfigPtr c, PersistenceManagerPtr persist) > potentialCreator;
+typedef boost::function<IPotential*(const ConfigPtr& c,const PersistenceManagerPtr &persist) > potentialCreator;
 typedef std::map<string,potentialCreator> PotentialFactory;
 typedef PotPtr (*CreatePotentialFn)(ConfigPtr);
 
@@ -42,7 +43,7 @@ typedef PotPtr (*CreatePotentialFn)(ConfigPtr);
 class IPotential
 {
 public:
-	IPotential(const ConfigPtr c, PersistenceManagerPtr persist);
+	IPotential(const ConfigPtr& c,const PersistenceManagerPtr& persist);
 	virtual void DisplayParams(){};
 	virtual void MakeSlices(superCellBoxPtr info){};
 	virtual void ReadPotential(std::string &fileName, unsigned subSlabIdx){};

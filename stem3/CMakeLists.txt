@@ -6,6 +6,10 @@ include_directories(
 	${CMAKE_SOURCE_DIR}/libs
 	${CMAKE_SOURCE_DIR}/hdf5boost/lib
 	${OPENBABEL_INCLUDE_DIR}
+	${Boost_INCLUDE_DIRS} 
+  	${FFTW3_INCLUDE_DIRS} 
+  	${HDF5_INCLUDE_DIR}
+  	${NLOPT_INCLUDE_DIR}
 )
 
 

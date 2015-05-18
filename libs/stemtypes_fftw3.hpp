@@ -21,17 +21,15 @@ QSTEM - image simulation for TEM/STEM/CBED
 #define STEMTYPES_H
 
 #include <boost/shared_ptr.hpp>
+#include "boost/multi_array.hpp"
 #include "fftw_allocator.hpp"
 #include "elTable.hpp"
-#include "boost/multi_array.hpp"
+#include "Complex.hpp"
 #include <complex>
 #include <cmath>
 #include <iomanip>
 #include <map>
 #include <armadillo>
-#include "Complex.hpp"
-
-
 
 using namespace std;
 
