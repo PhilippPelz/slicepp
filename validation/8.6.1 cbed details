@@ -1,0 +1,19 @@
+512x512 px
+32.5x32.5 A
+
+kev             100
+cs3             1.3mm
+cs5             0
+df              850A
+aprt            11.43mrad
+2-fold astig    0 0
+3-fold astig    0 0
+smooth apert    0
+
+cells           6 6 40
+dz              1.3575A
+tds             false
+temp            100K
+probe pos       20A 20A
+incl centralbeam true
+impose apert    false

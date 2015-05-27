@@ -1,0 +1,14 @@
+opt. phonons 1e12 - 1e13 Hz
+
+takes 0.7e-16 s to traverse specimen
+
+--> incoherent averaging
+
+frozen phonon:
+
+The final image or diffraction pattern is the intensity averaged over several different configurations of atoms with different random offsets (average |ψ |2 and not ψ )
+
+einstein model:
+
+random offsets can be generated using a random number generator with
+a Gaussian distribution Kittel [211]

@@ -1,0 +1,10 @@
+[Dolphin]
+HeaderColumnWidths=402,108,191,188,129
+SortRole=date
+Timestamp=2015,5,21,13,46,35
+Version=3
+ViewMode=1
+VisibleRoles=Details_text,Details_size,Details_date,Details_type,Details_permissions,CustomizedDetails
+
+[Settings]
+HiddenFilesShown=true

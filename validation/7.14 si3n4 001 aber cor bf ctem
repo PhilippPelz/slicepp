@@ -1,0 +1,21 @@
+aberration corrected bf-ctem
+
+001 si3n4
+
+200 kev
+
+dz = 1.4545 A
+
+20A defocus
+cs5 = 50mm 
+cs3 = -0.02mm
+obj. apert 30 mrad
+def. spread 10A
+
+spec thick
+
+22
+100
+151 A
+
+5x3 unit cells
