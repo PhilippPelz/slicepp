@@ -13,7 +13,7 @@ using boost::format;
 using boost::algorithm::trim;
 namespace QSTEM {
 
-SuperstructureBuilder::SuperstructureBuilder(StructureReaderFactory sfac,const ConfigPtr& c) : IStructureBuilder(sfac,c) {
+SuperstructureBuilder::SuperstructureBuilder(StructureReaderFactory& sfac,const ConfigPtr& c) : IStructureBuilder(sfac,c) {
 	atRad = atRadf;
 	covRad = covRadf;
 	_nGrains = 0;
@@ -939,12 +939,6 @@ void SuperstructureBuilder::makeSpecial(int distPlotFlag) {
 				amorphAtoms += (int)(grains[g].unitCell[iatom].y);
 			}
 
-			//			superCell.atoms = (atom *)realloc(superCell.atoms,(amorphAtoms+superCell.natoms+1)*
-			//				sizeof(atom));
-			//			if (superCell.atoms == NULL) {
-			//				printf("makeAmorphous: Could not allocate memory for additional atoms!\n");
-			//				exit(0);
-			//			}
 			atomCount = _superCell->atoms.size();  // start adding amorphous atoms, where we left off.
 
 			// Now we can loop through and add these atoms randomly to the grain

@@ -32,7 +32,7 @@ namespace QSTEM {
 
 class SuperstructureBuilder : public IStructureBuilder {
 public:
-	SuperstructureBuilder(StructureReaderFactory sfac,const ConfigPtr& c);
+	SuperstructureBuilder(StructureReaderFactory& sfac,const ConfigPtr& c);
 	virtual ~SuperstructureBuilder();
 	int removeVacancies(std::vector<atom>& atoms);
 	void computeCenterofMass();

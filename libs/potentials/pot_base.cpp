@@ -347,7 +347,7 @@ void CPotential::MakeSlices(superCellBoxPtr info) {
 #pragma omp critical
 		atomsAdded++;
 
-		if (atomsAdded % (info->atoms.size() / 20) == 0)
+		if (atomsAdded % (info->atoms.size() / 100) == 0)
 			loadbar(atomsAdded, info->atoms.size());
 		//		if(atomsAdded % 100 == 0) BOOST_LOG_TRIVIAL(info)<<format("%2.1f percent of atoms added") % ((float)atomsAdded/m_atoms->size()*100);
 

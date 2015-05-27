@@ -163,7 +163,7 @@ void CExperimentTEM::Run()
 		// and diffraction patterns.
 		//////////////////////////////////////////////////////////////////////////////
 
-		m_wave->ReadDiffPat();
+//		m_wave->ReadDiffPat();
 
 		if (_runCount == 0) {
 			/***********************************************************
@@ -226,7 +226,7 @@ void CExperimentTEM::Run()
 			m_wave->ApplyTransferFunction(imageWave);
 
 			// save the amplitude squared:
-			m_wave->ReadImage();
+//			m_wave->ReadImage();
 			unsigned px=nx*ny;
 			for (unsigned i=0;i<px;i++){
 				//        t = ((float_tt)_runCount*m_wave->GetDiffPatPixel(i)+
@@ -234,7 +234,7 @@ void CExperimentTEM::Run()
 				//          m_wave->SetDiffPatPixel(i,t);
 				// TODO see what this does and replace it
 			}
-			m_wave->WriteImage();
+//			m_wave->WriteImage();
 			// End of Image writing (if avgCount > 0)
 			//////////////////////////////////////////////////////////////////////
 

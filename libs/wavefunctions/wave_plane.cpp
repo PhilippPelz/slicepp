@@ -94,19 +94,5 @@ void CPlaneWave::TiltBack()
 	TiltBeam(true);
 }
 
-void CPlaneWave::ReadImage()
-{
-	m_position.clear();
-	// TODO user persistence
-//	m_imageIO->ReadImage(m_image, imageFilePrefix, m_position);
-}
-
-void CPlaneWave::WriteImage()
-{
-	std::map<std::string, double> params;
-	std::string comment;
-	//TODO user persistence
-//	m_imageIO->WriteImage(m_image, imageFilePrefix, params, comment, m_position);
-}
 
 } // end namespace QSTEM

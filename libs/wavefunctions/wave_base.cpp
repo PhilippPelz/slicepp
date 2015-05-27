@@ -82,6 +82,11 @@ void CBaseWave::InitializePropagators()
 //		m_propyi[iya] = (float_tt)-sin(t);
 //	}
 }
+
+void CBaseWave::ShiftTo(float_tt x, float_tt y){
+
+}
+
 void CBaseWave::PropagateToNextSlice()
 {
 	float_tt wr, wi, tr, ti;
@@ -281,73 +286,6 @@ void CBaseWave::ApplyTransferFunction(boost::shared_array<complex_tt> &wave)
 	ToRealSpace();
 }
 
-
-void CBaseWave::SetWavePosition(int navg)
-{
-	m_position.resize(1);
-	m_position[0]=navg;
-}
-
-void CBaseWave::SetWavePosition(int posX, int posY)
-{
-	m_detPosX=posX;
-	m_detPosY=posY;
-	m_position.resize(2);
-	m_position[0]=posX;
-	m_position[1]=posY;
-}
-
-void CBaseWave::SetWavePosition(int posX, int posY, int posZ)
-{
-	m_detPosX=posX;
-	m_detPosY=posY;
-	m_position.resize(3);
-	m_position[0]=posX;
-	m_position[1]=posY;
-	m_position[2]=posZ;
-}
-
-void CBaseWave::ReadWave()
-{
-	m_position.clear();
-	//	m_imageIO->ReadImage(m_wave, waveFilePrefix, m_position);
-}
-
-void CBaseWave::ReadWave(int navg)
-{
-	SetWavePosition(navg);
-	//	m_imageIO->ReadImage(m_wave, waveFilePrefix, m_position);
-
-}
-
-void CBaseWave::ReadWave(int positionx, int positiony)
-{
-	SetWavePosition(positionx, positiony);
-	// TODO write Readwave
-	// TODO user persist ReadWave
-	//	m_imageIO->ReadImage(m_wave, waveFilePrefix, m_position);
-}
-
-void CBaseWave::ReadDiffPat()
-{
-	m_position.clear();
-	// TODO user persist ReadDiffPat
-	//	m_imageIO->ReadImage(m_diffpat, dpFilePrefix, m_position);
-}
-
-void CBaseWave::ReadDiffPat(int navg)
-{
-	SetWavePosition(navg);
-	// TODO user persist ReadDiffPat
-	//	m_imageIO->ReadImage(m_diffpat, dpFilePrefix, m_position);
-}
-
-void CBaseWave::ReadDiffPat(int positionx, int positiony)
-{
-	SetWavePosition(positionx, positiony);
-	// TODO user persist ReadDiffPat
-	//	m_imageIO->ReadImage(m_diffpat, dpFilePrefix, m_position);
-}
 
 /*--------------------- wavelength() -----------------------------------*/
 /*

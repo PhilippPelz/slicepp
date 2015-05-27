@@ -63,12 +63,15 @@ CrystalBuilder::CrystalBuilder() :
 CrystalBuilder::CrystalBuilder(boost::filesystem::path p): CrystalBuilder(){
 
 }
-CrystalBuilder::CrystalBuilder(StructureReaderFactory sfac,const ConfigPtr& c) : CrystalBuilder()  {
+CrystalBuilder::CrystalBuilder(StructureReaderFactory& sfac,const ConfigPtr& c) : CrystalBuilder()  {
 	_config = c;
 	m_wobble_temp_scale = sqrt(_config->Structure.temperatureK / 300.0);
 	boost::filesystem::path p(c->Structure.structureFilename);
-//	BOOST_LOG_TRIVIAL(info) << p.extension().string();
-	_structureReader = StructureReaderPtr(sfac[p.extension().string()](p));
+	BOOST_LOG_TRIVIAL(info) << p.extension().string();
+	structureReaderCreator& ctor = sfac[p.extension().string()];
+	auto tmp = ctor(p);
+	_structureReader = StructureReaderPtr(tmp);
+	sfac[p.extension().string()] = ctor;
 	_structureWriter = CStructureWriterFactory::Get()->GetWriter(c->Structure.structureFilename,m_ax, m_by, m_cz);
 }
 //(const std::vector<double> &x, std::vector<double> &grad, void* f_data)

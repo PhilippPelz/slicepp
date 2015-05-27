@@ -71,6 +71,7 @@ public:
 	virtual void Transmit(ComplexArray2DView t)=0;
 	virtual void PropagateToNextSlice()=0;
 	virtual void InitializePropagators()=0;
+	virtual void ShiftTo(float_tt x, float_tt y)=0;
 protected:
 	PersistenceManagerPtr _persist;
 	ConfigPtr _config;

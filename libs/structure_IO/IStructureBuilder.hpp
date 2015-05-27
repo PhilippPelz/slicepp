@@ -17,7 +17,7 @@ namespace QSTEM {
 
 class IStructureBuilder {
 public:
-	IStructureBuilder(StructureReaderFactory sfac,const ConfigPtr& c);
+	IStructureBuilder(StructureReaderFactory& sfac,const ConfigPtr& c);
 	virtual ~IStructureBuilder();
 	virtual superCellBoxPtr Build()=0;
 	virtual std::vector<int> GetUniqueAtoms()=0;
@@ -31,7 +31,7 @@ protected:
 	ConfigPtr _c;
 };
 typedef boost::shared_ptr<IStructureBuilder> StructureBuilderPtr;
-typedef boost::function<IStructureBuilder*(const StructureReaderFactory& sfac,const ConfigPtr& c) > structureBuilderCreator;
+typedef boost::function<IStructureBuilder*(StructureReaderFactory& sfac,const ConfigPtr& c) > structureBuilderCreator;
 typedef std::map<string,structureBuilderCreator> StructureBuilderFactory;
 } /* namespace QSTEM */
 

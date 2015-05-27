@@ -286,12 +286,9 @@ void CConvergentWave::FormProbe()
 #pragma omp parallel for
 		for(int ix=0; ix<_nx; ix++) {
 			for(int iy=0; iy<_ny; iy++) {
-				float_tt r = exp(-((ix-_nx/2)*(ix-_nx/2)+(iy-_ny/2)*(iy-_ny/2))/(_nx*_nx*_gaussScale));
+				float_tt r = exp(-((ix-_nx/2)*(ix-_nx/2)+(iy-_ny/2)*(iy-_ny/2))/(_nx*_ny*_gaussScale));
 #pragma omp critical
-				_wave[ix][iy] = complex_tt(_wave[ix][iy].real()*r,_wave[ix][iy].imag()*r);
-
-				//        m_wave[ix][iy][0] *= (float)r;
-				//        m_wave[ix][iy][1] *= (float)r;
+				_wave[ix][iy] *= r;
 			}
 		}
 	}
@@ -324,7 +321,7 @@ void CConvergentWave::FormProbe()
 	/*  Normalize probe intensity to unity  */
 	for(int ix=0; ix<_nx; ix++)
 		for(int iy=0; iy<_ny; iy++)
-			sum +=  _wave[ix][iy].real()*_wave[ix][iy].real()+ _wave[ix][iy].imag()*_wave[ix][iy].imag();
+			sum += abs2(_wave[ix][iy]);
 
 	scale = 1.0 / sum;
 //	scale = scale * ((double)m_nx) * ((double)m_ny);
@@ -332,14 +329,11 @@ void CConvergentWave::FormProbe()
 
 	for(int ix=0; ix<_nx; ix++)
 		for(int iy=0; iy<_ny; iy++) {
-			_wave[ix][iy] = complex_tt((float) scale*_wave[ix][iy].real(),(float) scale*_wave[ix][iy].imag());
+			_wave[ix][iy] *= scale;
 
 		}
 	sum = 0;
-	for(int ix=0; ix<_nx; ix++)
-		for(int iy=0; iy<_ny; iy++) {
-			sum += _wave[ix][iy].real()*_wave[ix][iy].real() + _wave[ix][iy].imag()*_wave[ix][iy].imag();
-		}
+
 	/*  Output results and find min and max to echo
       remember that complex pix are stored in the file in FORTRAN
       order for compatability

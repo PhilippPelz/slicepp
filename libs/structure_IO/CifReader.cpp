@@ -85,7 +85,7 @@ int CifReader::ReadAtoms(std::vector<atom> &atoms,
 
 			a->Znum = at->GetAtomicNum();
 			a->mass = at->GetAtomicMass();
-			a->dw = 0;
+			a->dw = 0.45*28.0/(double)(2.0*a->Znum);;
 			a->q = at->GetFormalCharge();
 			a->x = v1.x();
 			a->y = v1.y();

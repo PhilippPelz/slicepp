@@ -1,8 +1,10 @@
 [Dolphin]
-AdditionalInfo=Details_Size,Details_Date,Details_Type,CustomizedDetails
-Sorting=6
-Timestamp=2015,4,20,15,49,10
+HeaderColumnWidths=425,108,193,224,129
+SortRole=date
+Timestamp=2015,5,21,18,36,44
+Version=3
 ViewMode=1
+VisibleRoles=Details_text,Details_size,Details_date,Details_type,Details_permissions,CustomizedDetails
 
 [Settings]
 HiddenFilesShown=true

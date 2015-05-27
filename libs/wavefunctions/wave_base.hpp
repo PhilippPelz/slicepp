@@ -30,13 +30,6 @@
 #include "data_IO/PersistenceManager.hpp"
 #include "fftw++.hpp"
 
-void CreateWaveFunctionDataSets(int x, int y, std::vector<int> positions, std::string output_ext);
-
-static std::string waveFilePrefix="wave";
-static std::string dpFilePrefix="diff";
-static std::string probeFilePrefix="probe_wave";
-static std::string waveIntensityFilePrefix="wave_int";
-
 namespace QSTEM
 {
 
@@ -69,12 +62,6 @@ public:
 	void ApplyTransferFunction(boost::shared_array<complex_tt> &wave);
 	void WriteBeams(int absoluteSlice);
 	float_tt GetIntegratedIntensity() const ;
-	void ReadWave();
-	void ReadWave(int navg);
-	void ReadWave(int posX, int posY);
-	void ReadDiffPat();
-	void ReadDiffPat(int navg);
-	void ReadDiffPat(int posX, int posY);
 
 	virtual ~CBaseWave();
 	virtual WavePtr Clone()=0;
@@ -83,12 +70,18 @@ public:
 	virtual void Transmit(ComplexArray2DView t);
 	virtual void PropagateToNextSlice();
 	virtual void InitializePropagators();
+	virtual void ShiftTo(float_tt x, float_tt y);
+
 protected:
 	ComplexArray2D _prop;
 	std::vector<float_tt> m_propxr, m_propxi, m_propyr, m_propyi;
 	bool m_realSpace;
 	int m_detPosX, m_detPosY;
 	int _nx, _ny;		      /* size of wavefunc and diffpat arrays */
+	int m_Scherzer;
+	int m_printLevel;
+	float_tt m_dx, m_dy;  // physical pixel size of wavefunction array
+	float_tt m_k2max;
 	//float_tt **m_avgArray;
 	//float_tt m_thickness;
 	//float_tt m_intIntensity;
@@ -97,15 +90,9 @@ protected:
 	//float_tt m_dwellTime;
 	float_tt m_v0;
 	std::vector<int> m_position;
-	std::map<std::string, double> m_params;
-
-	// defocus mode: 1 = Scherzer, 2 = ???
-	int m_Scherzer;
-	int m_printLevel;
-	float_tt m_dx, m_dy;  // physical pixel size of wavefunction array
 	ComplexArray2D _wave; /* complex wave function */
 	RealVector m_kx2,m_ky2,m_kx,m_ky;
-	float_tt m_k2max;
+
 
 
 #if FLOAT_PRECISION == 1
@@ -119,9 +106,6 @@ protected:
 protected:
 	void Initialize(std::string input_ext, std::string output_ext);
 	void InitializeKVectors();
-	void SetWavePosition(int navg);
-	void SetWavePosition(int posX, int posY);
-	void SetWavePosition(int posX, int posY, int posZ);
 
 	float_tt Wavelength(float_tt keV);
 	float_tt m_wavlen;

@@ -146,7 +146,7 @@ class QSTEM_HELPER_DLL_EXPORT WaveConfig : IPropertyTreeReader{
 public:
 	float_tt Cs, C5, Cc, dV_V, alpha, Defocus, Astigmatism, AstigmatismAngle,
 		a_33, a_31, a_44, a_42, a_55, a_53, a_51, a_66, a_64, a_62, phi_33, phi_31, phi_44, phi_42, phi_55, phi_53, phi_51, phi_66, phi_64, phi_62, gaussScale,
-		dI_I, dE_E, AISaperture, tiltX, tiltY;
+		dI_I, dE_E, AISaperture, tiltX, tiltY, posX,posY;
 	bool Smooth, Gaussian;
 	int type;
 

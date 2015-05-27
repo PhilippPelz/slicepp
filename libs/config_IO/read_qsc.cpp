@@ -151,6 +151,8 @@ void WaveConfig::Read(ptree& t){
 	AISaperture=t.get<float_tt>("wave.AISaperture");
 	tiltX=t.get<float_tt>("wave.tiltX");
 	tiltY=t.get<float_tt>("wave.tiltY");
+//	posX=t.get<float_tt>("wave.posX");
+//	posY=t.get<float_tt>("wave.posY");
 }
 void BeamConfig::Read(ptree& t){
 	EnergykeV =t.get<float_tt>("beam.energy_keV");
