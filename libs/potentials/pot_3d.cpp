@@ -25,11 +25,14 @@ namespace QSTEM
 
 C3DPotential::C3DPotential(const ConfigPtr& c,const PersistenceManagerPtr& p) : RealSpacePotential(c,p )
 {
-	m_sliceStep = 2*_config->Model.nx*_config->Model.ny;
-	m_boxNz = (int)(_config->Potential.AtomRadiusAngstrom/m_ddz+2.0);
-	m_c += 2*_config->Potential.AtomRadiusAngstrom;
+	m_sliceStep = 2*_c->Model.nx*_c->Model.ny;
+	m_boxNz = (int)(_c->Potential.AtomRadiusAngstrom/_ddz+2.0);
+	_totalThickness += 2*_c->Potential.AtomRadiusAngstrom;
 }
 void C3DPotential::ComputeAtomPotential(int Znum){
+
+}
+void C3DPotential::SaveAtomicPotential(int znum){
 
 }
 void C3DPotential::SliceSetup(){
@@ -47,24 +50,24 @@ void C3DPotential::AtomBoxLookUp(complex_tt &val, int Znum, float_tt x, float_tt
 	int ix, iy, iz;
 
 	// does the atom box lookup or calculation
-	CPotential::AtomBoxLookUp(val, Znum, x, y, z, B);
+	RealSpacePotential::AtomBoxLookUp(val, Znum, x, y, z, B);
 
 	/***************************************************************
 	 * Do the trilinear interpolation
 	 */
 	val = complex_tt(0,0);
-	if (x*x+y*y+z*z > m_atomRadius2) {
+	if (x*x+y*y+z*z > _atomRadius2) {
 		return;
 	}
 	x = fabs(x);
 	y = fabs(y);
 	z = fabs(z);
-	ix = (int)(x/m_ddx);
-	iy = (int)(y/m_ddy);
-	iz = (int)(z/m_ddz);
-	dx = x-(float_tt)ix*m_ddx;
-	dy = y-(float_tt)iy*m_ddy;
-	dz = z-(float_tt)iz*m_ddz;
+	ix = (int)(x/_ddx);
+	iy = (int)(y/_ddy);
+	iz = (int)(z/_ddz);
+	dx = x-(float_tt)ix*_ddx;
+	dy = y-(float_tt)iy*_ddy;
+	dz = z-(float_tt)iz*_ddz;
 	if ((dx < 0) || (dy<0) || (dz<0)) {
 		/* printf("Warning, dx(%g), dy(%g), dz(%g) < 0, (x=%g, y=%g, z=%g)\n",dx,dy,dz,x,y,z);
 		 */
@@ -112,13 +115,13 @@ bool C3DPotential::CheckAtomZInBounds(float_tt atomZ)
 	 * if the z-position of this atom is outside the potential slab
 	 * we won't consider it and skip to the next
 	 */
-	return ((atomZ + _config->Potential.AtomRadiusAngstrom < m_c) && (atomZ - _config->Potential.AtomRadiusAngstrom + _config->Model.sliceThicknessAngstrom >= 0));
+	return ((atomZ + _c->Potential.AtomRadiusAngstrom < _totalThickness) && (atomZ - _c->Potential.AtomRadiusAngstrom + _c->Model.dz >= 0));
 }
 
 void C3DPotential::AddAtomToSlices(atom& atom,
 		float_tt atomX, float_tt atomY, float_tt atomZ)
 {
-	if (!_config->Potential.periodicZ && CheckAtomZInBounds(atomZ))
+	if (!_c->Potential.periodicZ && CheckAtomZInBounds(atomZ))
 	{
 		AddAtomRealSpace(atom, atomX, atomY, atomZ);
 	}
@@ -138,28 +141,28 @@ void C3DPotential::_AddAtomRealSpace(atom &atom,
 	 */
 	float_tt r2sqr = atomBoxX*atomBoxX + atomBoxY*atomBoxY;
 	// TODO: iRadZ is also calculated in the base class, one level up.  Which is correct?
-	unsigned iRadZ = (unsigned)(sqrt(m_atomRadius2-r2sqr)/m_sliceThicknesses[0]+1.0);
+	unsigned iRadZ = (unsigned)(sqrt(_atomRadius2-r2sqr)/_sliceThicknesses[0]+1.0);
 	/* loop through the slices that this atoms contributes to */
-	for (int iaz=-m_iRadZ;iaz <=m_iRadZ;iaz++) {
-		if (!_config->Potential.periodicZ) {
+	for (int iaz=-_iRadZ;iaz <=_iRadZ;iaz++) {
+		if (!_c->Potential.periodicZ) {
 			if (iaz+iAtomZ < 0) {
-				if (-iAtomZ <= m_iRadZ) iaz = -iAtomZ;
+				if (-iAtomZ <= _iRadZ) iaz = -iAtomZ;
 				else break;
-				if (abs(iaz)>_config->Model.nSlices) break;
+				if (abs(iaz)>_c->Model.nSlices) break;
 			}
-			if (iaz+iAtomZ >= _config->Model.nSlices)        break;
+			if (iaz+iAtomZ >= _c->Model.nSlices)        break;
 		}
-		atomBoxZ = (double)(iAtomZ+iaz+0.5)*m_sliceThicknesses[0]-atomBoxZ;
+		atomBoxZ = (double)(iAtomZ+iaz+0.5)*_sliceThicknesses[0]-atomBoxZ;
 		/* shift into the positive range */
-		iz = (iaz+iAtomZ+32*_config->Model.nSlices) % _config->Model.nSlices;
+		iz = (iaz+iAtomZ+32*_c->Model.nSlices) % _c->Model.nSlices;
 		/* x,y,z is the true vector from the atom center
 		 * We can look up the proj potential at that spot
 		 * using trilinear extrapolation.
 		 */
-		AtomBoxLookUp(dPot,atom.Znum,atomBoxX,atomBoxY,atomBoxZ, _config->Model.UseTDS ? 0 : atom.dw);
+		AtomBoxLookUp(dPot,atom.Znum,atomBoxX,atomBoxY,atomBoxZ, _c->Model.UseTDS ? 0 : atom.dw);
 		// printf("access: %d %d %d\n",iz,ix,iy);
 		//    unsigned idx=ix*m_ny+iy;
-		m_trans1[iz][iy][ix] += dPot;
+		_t[iz][iy][ix] += dPot;
 		//    m_trans[iz][idx]+=dPot;
 		//m_trans[iz][ix][iy][0] += dPot[0];
 		//m_trans[iz][ix][iy][1] += dPot[1];
@@ -169,7 +172,7 @@ void C3DPotential::_AddAtomRealSpace(atom &atom,
 
 void C3DPotential::CenterAtomZ(std::vector<atom>::iterator &atom, float_tt &z)
 {
-	z = atom->z + _config->Structure.zOffset;
+	z = atom->r[2] + _c->Structure.zOffset;
 }
 
 

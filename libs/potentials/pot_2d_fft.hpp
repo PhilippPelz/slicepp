@@ -44,8 +44,9 @@ protected:
   complex_tt *GetAtomPotential2D(int Znum, double B);
   virtual void SliceSetup();
   virtual void ComputeAtomPotential(int Znum) ;
+  virtual void SaveAtomicPotential(int znum);
   virtual void CenterAtomZ(std::vector<atom>::iterator &atom, float_tt &z);
-  std::map<unsigned, ComplexArray2D> m_atPot;
+  std::map<unsigned, ComplexArray2D> _atomPot;
 
   friend class CPotFactory;
   // Create an instance of this class, wrapped in a shared ptr

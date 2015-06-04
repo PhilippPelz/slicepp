@@ -13,13 +13,12 @@
 
 namespace QSTEM {
 
-
-
 class IStructureBuilder {
 public:
-	IStructureBuilder(StructureReaderFactory& sfac,const ConfigPtr& c);
+	IStructureBuilder(StructureReaderPtr& r,const ConfigPtr& c);
 	virtual ~IStructureBuilder();
 	virtual superCellBoxPtr Build()=0;
+	virtual superCellBoxPtr DisplaceAtoms()=0;
 	virtual std::vector<int> GetUniqueAtoms()=0;
 	virtual std::map<unsigned, float_tt> GetU2()=0;
 	virtual void DisplayParams()=0;
@@ -27,11 +26,11 @@ public:
 	virtual void SetResolution(ModelConfig& mc, const PotentialConfig pc)=0;
 protected:
 	IStructureBuilder(){};
-	StructureReaderFactory _sfac;
+	StructureReaderPtr _r;
 	ConfigPtr _c;
 };
 typedef boost::shared_ptr<IStructureBuilder> StructureBuilderPtr;
-typedef boost::function<IStructureBuilder*(StructureReaderFactory& sfac,const ConfigPtr& c) > structureBuilderCreator;
+typedef boost::function<IStructureBuilder*(StructureReaderPtr& r,const ConfigPtr& c) > structureBuilderCreator;
 typedef std::map<string,structureBuilderCreator> StructureBuilderFactory;
 } /* namespace QSTEM */
 

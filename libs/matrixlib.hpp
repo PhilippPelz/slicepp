@@ -42,7 +42,7 @@ float_tt pythag(float_tt a, float_tt b);
  */
 void crossProduct(const float_tt *a, const float_tt *b, float_tt *c);
 float_tt dotProduct(const float_tt *a, const float_tt *b);
-float_tt findLambda(plane *p, float_tt *point, int revFlag);
+float_tt findLambda(plane *p,const float_tt *point, int revFlag);
 void showMatrix(float_tt **M,int Nx, int Ny,char *name);
 void vectDiff_f(float *a, float_tt *b, float_tt *c,int revFlag);
 float_tt vectLength(float_tt *vect);

@@ -151,6 +151,7 @@ void CConvergentWave::DisplayParams()
 #define SMOOTH_EDGE 5 // make a smooth edge on AIS aperture over +/-SMOOTH_EDGE pixels
 void CConvergentWave::FormProbe()
 {
+	CBaseWave::FormProbe();
 	unsigned iy, ixmid, iymid;
 	float_tt rmin, rmax, aimin, aimax;
 	float_tt k2max, x, y, scale, pixel,alpha;

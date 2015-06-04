@@ -26,7 +26,9 @@ public:
 	void SavePotential(ComplexArray3D a);
 	void SaveProjectedPotential(ComplexArray2DPtr a);
 	void Save2DDataSet(ComplexArray2DPtr a, string name);
+	void Save3DDataSet(ComplexArray3DPtr a, string name);
 	void StoreToDisc();
+	void InitStorage();
 	virtual ~PersistenceManager();
 protected:
 	HDFFile _file;

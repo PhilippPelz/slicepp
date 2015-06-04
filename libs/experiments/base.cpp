@@ -36,14 +36,12 @@ CExperimentBase::CExperimentBase(const ConfigPtr& c,const StructureBuilderPtr& s
 	_pot = p;
 	m_equalDivs = true;
 	m_saveLevel = static_cast<unsigned>(c->Output.SaveLevel);
-	int atomRadiusSlices = ceil(_config->Potential.AtomRadiusAngstrom / c->Model.sliceThicknessAngstrom);
+	int atomRadiusSlices = ceil(_config->Potential.AtomRadiusAngstrom / c->Model.dz);
 	if(_config->Potential.Use3D)
 		c->Model.nSlices += 2 * atomRadiusSlices;
 
 	DisplayParams();
 	_structureBuilder->DisplayParams();
-	_pot->DisplayParams();
-	_wave->DisplayParams();
 	m_avgArray = RealVector();
 }
 
@@ -142,7 +140,7 @@ void CExperimentBase::DisplayProgress(int flag)
 			 */
 			BOOST_LOG_TRIVIAL(info) << format(" %9f | %9f ") % intensityAvg % timeAvg;
 		} else {
-			BOOST_LOG_TRIVIAL(info) << format("**************** finished after %.1f sec ******************") % curTime;
+			BOOST_LOG_TRIVIAL(info) << format("Finished calculations after %.1f s") % curTime;
 		}
 	} // end of printLevel check.
 
@@ -175,7 +173,7 @@ void CExperimentBase::InitializePropagators(WavePtr wave)
 	m_propyr.resize(ny);
 	m_propyi.resize(ny);
 
-	float_tt scale = _config->Model.sliceThicknessAngstrom * PI;
+	float_tt scale = _config->Model.dz * PI;
 
 	//		BOOST_LOG_TRIVIAL(debug) << format("* InitializePropagators") ;
 
@@ -224,7 +222,7 @@ int CExperimentBase::RunMultislice(WavePtr wave)
 
 	if(printFlag) {
 		for(islice = 0; islice < _config->Model.nSlices; islice++) {
-			cztot += _config->Model.sliceThicknessAngstrom;
+			cztot += _config->Model.dz;
 		}
 		BOOST_LOG_TRIVIAL(info) << format("Specimen thickness: %g Angstroms\n") % cztot;
 	}
@@ -253,7 +251,7 @@ int CExperimentBase::RunMultislice(WavePtr wave)
 
 		wave->ToRealSpace();
 
-		if(_config->Output.SaveWaveAfterSlice) _persist->SaveWaveAfterSlice(_wave->GetWave(),islice);
+		if(_config->Output.SaveWaveAfterSlice && islice % _config->Output.SaveWaveIterations == 0) _persist->SaveWaveAfterSlice(_wave->GetWave(),islice);
 		PostSliceProcess(absolute_slice);
 
 		if(islice % (int)ceil(_config->Model.nSlices / 10.0) == 0)
@@ -266,8 +264,6 @@ void CExperimentBase::Propagate(WavePtr wave, float_tt dz)
 {
 	float_tt wr, wi, tr, ti;
 	float_tt scale, t;
-	float_tt dzs = 0;
-
 	float_tt dx, dy;
 	int nx, ny;
 

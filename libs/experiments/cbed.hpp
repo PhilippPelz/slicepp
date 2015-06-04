@@ -31,18 +31,20 @@ public:
     CExperimentCBED(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers);
 
     void Run();
-    void DisplayParams();
-    void CheckParams() {};
-    void DescribeParams() {};
 
+    virtual void DisplayParams();
     virtual void WriteBeams(unsigned absoluteSlice);
+    virtual ~CExperimentCBED(){};
 
 protected:
     void PostSliceProcess(unsigned absoluteSlice);
     void CollectIntensity(unsigned absoluteSlice);
     void SaveImages();
 
-    unsigned _nbout;				/* number of recorded beams */
+    void SetResolution(superCellBoxPtr);
+    void SetSliceThickness(superCellBoxPtr);
+
+    unsigned _nbout = 1;				/* number of recorded beams */
     float_tt **_pendelloesung;
     bool _lbeams;			/* flag indicating whether to record beams */
     float_tt _scanXStart, _scanYStart;     /* The beam position on the sample */

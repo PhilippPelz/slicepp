@@ -596,8 +596,7 @@ int readParams(char *datFileName) {
 void showData() {
 	int g,p;
 
-	printf("Supercell dimensions: %g x %g x %g A\n",
-		superCell.ax,superCell.by,superCell.cz);
+//	BOOST_LOG_TRIVIAL(trace) << format("Supercell dimensions: %g x %g x %g A") % superCell.ax % superCell.by % superCell.cz;
 
 	for (g=0;g<nGrains;g++) {
 		if (grains[g].amorphFlag == 0) {

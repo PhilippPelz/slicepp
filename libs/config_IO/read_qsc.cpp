@@ -31,7 +31,7 @@ using boost::format;
 namespace QSTEM
 {
 void StructureConfig::Read(ptree& t){
-	structureFilename=t.get<string>("structure.structure_filename");
+	structureFilename=boost::filesystem::path(t.get<string>("structure.structure_filename"));
 	nCellX=t.get<int>("structure.ncellx");
 	nCellY=t.get<int>("structure.ncelly");
 	nCellZ=t.get<int>("structure.ncellz");
@@ -74,8 +74,7 @@ void ModelConfig::Read(ptree& t){
 	nSlices =t.get<int>("model.slices");
 	SliceThicknessCalculation = static_cast<QSTEM::SliceThicknessCalculation>(t.get<int>("model.sliceThicknessCalculation"));
 	ResolutionCalculation = static_cast<QSTEM::ResolutionCalculation>(t.get<int>("model.resolutionCalculation"));
-	sliceThicknessAngstrom=t.get<float_tt>("model.sliceThicknessAngstrom");
-
+	dz=t.get<float_tt>("model.sliceThicknessAngstrom");
 	dx=t.get<float_tt>("model.resolutionXAngstrom");
 	dy=t.get<float_tt>("model.resolutionYAngstrom");
 	beamTiltX=t.get<float_tt>("model.beamTiltX");
@@ -87,16 +86,12 @@ void PotentialConfig::Read(ptree& t){
 	UseFFT=t.get<bool>("model.potential.FFT");
 	periodicXY=t.get<bool>("model.potential.periodicXY");
 	periodicZ=t.get<bool>("model.potential.periodicZ");
-	BandlimitTransmissionFunction=t.get<bool>("model.potential.bandlimitTransmissionFunction");
-	OneTimeIntegration=t.get<bool>("model.potential.oneTimeIntegration");
 	StructureFactorType  = static_cast<QSTEM::StructureFactorType>(t.get<int>("model.potential.structureFactors"));
 	AtomRadiusAngstrom=t.get<float_tt>("model.potential.atomRadiusAngstrom");
-	NSubSlabs=t.get<int>("model.potential.NSubSlabs");
 }
 void OutputConfig::Read(ptree& t){
 	LogLevel=t.get<int>("output.loglevel");
-	SaveSliceAfterIterations=t.get<int>("output.saveSliceAfter");
-	SaveLevel= static_cast<QSTEM::SaveLevel>(t.get<int>("output.savelevel"));
+	SaveWaveIterations=t.get<int>("output.SaveWaveAfterNSlices");
 	ShowProbe=t.get<bool>("output.showProbe");
 	PendelloesungPlot=t.get<bool>("output.pendelloesungPlot");
 	SavePotential=t.get<bool>("output.savePotential");
@@ -105,6 +100,7 @@ void OutputConfig::Read(ptree& t){
 	SaveWaveAfterSlice=t.get<bool>("output.SaveWaveAfterSlice");
 	SaveWaveAfterPropagation=t.get<bool>("output.SaveWaveAfterPropagation");
 	saveProbe = t.get<bool>("output.saveProbe");
+	SaveAtomicPotential=t.get<bool>("output.SaveAtomicPotential");
 	SaveProjectedPotential=t.get<bool>("output.saveProjectedPotential");
 	readPotential=t.get<bool>("output.readPotential");
 	string p = t.get<string>("output.savePath");

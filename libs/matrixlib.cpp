@@ -22,7 +22,6 @@ QSTEM - image simulation for TEM/STEM/CBED
 #include <string.h>
 #include <math.h> 
 #include "matrixlib.hpp"
-#include "memory_fftw3.hpp"
 
 #define _CRTDBG_MAP_ALLOC
 #include <stdio.h>	/* ANSI C libraries */
@@ -516,7 +515,7 @@ float_tt dotProduct(const float_tt *a, const float_tt *b) {
  * in reversed order, i.e. a[0]=z, a[1]=y, a[2]=x.
  */
 
-void vectDiff_f(float_tt *a, float_tt *b, float_tt *c,int revFlag) {
+void vectDiff_f(const float_tt *a,const float_tt *b, float_tt *c,int revFlag) {
 	if (revFlag > 0) {
 		c[0] = a[0]-b[0];
 		c[1] = a[1]-b[1];
@@ -549,7 +548,7 @@ void showMatrix(float_tt **M,int Nx, int Ny,char *name) {
  * forward(1) (x,y,z), or reversed(-1) (z,y,x) order.
  * This is important for using the reversed order in the atom struct.
  */
-float_tt findLambda(plane *p, float_tt *point, int revFlag) {
+float_tt findLambda(plane *p,const float_tt *point, int revFlag) {
 	FloatArray2D M(boost::extents[3][3]),
 			Minv(boost::extents[3][3]);
 	//static float_tt *diff=NULL;
@@ -571,16 +570,16 @@ float_tt findLambda(plane *p, float_tt *point, int revFlag) {
 	//	M[0][2] = p->vect2X;
 	//	M[1][2] = p->vect2Y;
 	//	M[2][2] = p->vect2Z;
-	M[0][0] = -((*p).normX);
-	M[1][0] = -((*p).normY);
-	M[2][0] = -((*p).normZ);
-	M[0][1] = p->vect1X;
-	M[1][1] = p->vect1Y;
-	M[2][1] = p->vect1Z;
-	M[0][2] = p->vect2X;
-	M[1][2] = p->vect2Y;
-	M[2][2] = p->vect2Z;
-	vectDiff_f(point,&(p->pointX),&diff[0],revFlag);
+	M[0][0] = -((*p).n[0]);
+	M[1][0] = -((*p).n[1]);
+	M[2][0] = -((*p).n[2]);
+	M[0][1] = p->v1[0];
+	M[1][1] = p->v1[1];
+	M[2][1] = p->v1[2];
+	M[0][2] = p->v2[0];
+	M[1][2] = p->v2[1];
+	M[2][2] = p->v2[2];
+	vectDiff_f(point,p->p.mem,&diff[0],revFlag);
 
 
 	inverse_3x3 (Minv,M);
@@ -593,7 +592,6 @@ float_tt findLambda(plane *p, float_tt *point, int revFlag) {
 	lambda = dotProduct( Minv.data(),&diff[0]);
 	// printf("lambda: %g\n",lambda);
 	return lambda;
-
 }
 
 
@@ -607,19 +605,9 @@ float_tt findLambda(plane *p, float_tt *point, int revFlag) {
  * The same vector can be specified as input, as well as output vector.
  */
 void rotateVect(float_tt *vectIn,float_tt *vectOut, float_tt phi_x, float_tt phi_y, float_tt phi_z) {
-	static float_tt **Mrot = NULL;
-	//static float_tt *vectOutTemp = NULL;
+	static FloatArray2D Mrot(boost::extents[3][3]);
 	std::vector<float_tt>vectOutTemp(3);
 	static float_tt sphi_x=0, sphi_y=0, sphi_z=0;
-	//  static float_tt *vectOut = NULL;
-	// printf("angles: %g %g %g\n",phi_x,phi_y,phi_z);
-
-	if (Mrot == NULL) {
-		Mrot = float2D(3,3,"Mrot");
-		memset(Mrot[0],0,9*sizeof(float_tt));
-		Mrot[0][0] = 1;Mrot[1][1] = 1;Mrot[2][2] = 1;
-		//vectOutTemp = float1D(3,"vectOutTemp");
-	}
 	if ((phi_x!=sphi_x) || (phi_y!=sphi_y) || (phi_z!=sphi_z)) {
 		Mrot[0][0] = cos(phi_z)*cos(phi_y);
 		Mrot[0][1] = cos(phi_z)*sin(phi_y)*sin(phi_x)-sin(phi_z)*cos(phi_x);
@@ -647,19 +635,10 @@ void rotateVect(float_tt *vectIn,float_tt *vectOut, float_tt phi_x, float_tt phi
 
 void rotateMatrix(const FloatArray2D& matrixIn, FloatArray2D& matrixOut, float_tt phi_x, float_tt phi_y, float_tt phi_z) {
 	int i,j,k;
-	static float_tt **Mrot = NULL;
+	static FloatArray2D Mrot(boost::extents[3][3]);
 	std::vector<float_tt>matrixOutTemp(9);
 	//static float_tt *matrixOutTemp = NULL;
 	static float_tt sphi_x=0, sphi_y=0, sphi_z=0;
-	// static float_tt *vectOut = NULL;
-	// printf("angles: %g %g %g\n",phi_x,phi_y,phi_z);
-
-	if (Mrot == NULL) {
-		Mrot = float2D(3,3,"Mrot");
-		memset(Mrot[0],0,9*sizeof(float_tt));
-		Mrot[0][0] = 1;Mrot[1][1] = 1;Mrot[2][2] = 1;
-		//matrixOutTemp = float1D(9,"vectOutTemp");
-	}
 	if ((phi_x!=sphi_x) || (phi_y!=sphi_y) || (phi_z!=sphi_z)) {
 		Mrot[0][0] = cos(phi_z)*cos(phi_y);
 		Mrot[0][1] = cos(phi_z)*sin(phi_y)*sin(phi_x)-sin(phi_z)*cos(phi_x);

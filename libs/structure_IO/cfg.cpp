@@ -151,9 +151,7 @@ int CCfgReader::ReadNextAtom(atom *newAtom) {
 		m_atomData[j] = atof(str); str=strnext(str," \t");
 	}
 
-	newAtom->x    = m_atomData[0];
-	newAtom->y    = m_atomData[1];
-	newAtom->z    = m_atomData[2];
+	newAtom->r    = arma::vec({m_atomData[0], m_atomData[1],m_atomData[2]});
 	// Temporary initialization: dw, occ, q are read if they exist
 	newAtom->dw   = 0.45*28.0/mass;
 	newAtom->occ  = 1.0;
@@ -170,7 +168,7 @@ int CCfgReader::ReadNextAtom(atom *newAtom) {
 	// read the atom's charge:
 	if (m_entryCount > 5+3*(1-(int)m_noVelocity))
 		newAtom->q = m_atomData[5+3*(1-(int)m_noVelocity)];
-	BOOST_LOG_TRIVIAL(trace)  << boost::format("Atom: %d (%g %g %g), occ=%g, q=%g\n") %newAtom->Znum%newAtom->x%newAtom->y%newAtom->z%
+	BOOST_LOG_TRIVIAL(trace)  << boost::format("Atom: %d (%g %g %g), occ=%g, q=%g\n") %newAtom->Znum%newAtom->r[0]%newAtom->r[1]%newAtom->r[2]%
 			newAtom->occ%newAtom->q;
 
 	return 0;
@@ -225,7 +223,7 @@ int CCfgWriter::Write(std::vector<atom> &atoms, std::string run_id) {
 	// printf("ax: %g, by: %g, cz: %g n: %d\n",muls->ax,muls->by,muls->c,natoms);
 	if (elem[1] == ' ') elem[1] = '\0';
 	fprintf(fp,"%g\n%s\n",atoms[0].mass,elem);
-	fprintf(fp,"%g %g %g %g %.4f %.4f\n",atoms[0].x/m_ax,atoms[0].y/m_by,atoms[0].z/m_cz,
+	fprintf(fp,"%g %g %g %g %.4f %.4f\n",atoms[0].r[0]/m_ax,atoms[0].r[1]/m_by,atoms[0].r[2]/m_cz,
 			atoms[0].dw,atoms[0].occ,atoms[0].q);
 
 	for (j=1;j<atoms.size();j++) {
@@ -236,7 +234,7 @@ int CCfgWriter::Write(std::vector<atom> &atoms, std::string run_id) {
 			fprintf(fp,"%g\n%s\n",atoms[j].mass,elem);
 			// printf("%d: %g\n%s\n",j,2.0*atoms[j].Znum,elem);
 		}
-		fprintf(fp,"%g %g %g %g %.4f %.4f\n",atoms[j].x/m_ax,atoms[j].y/m_by,atoms[j].z/m_cz,
+		fprintf(fp,"%g %g %g %g %.4f %.4f\n",atoms[j].r[0]/m_ax,atoms[j].r[1]/m_by,atoms[j].r[2]/m_cz,
 				atoms[j].dw,atoms[j].occ,atoms[j].q);
 		// if (atoms[j].occ != 1) printf("Atom %d: occ = %g\n",j,atoms[j].occ);
 	}

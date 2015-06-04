@@ -55,7 +55,7 @@ void CBaseWave::InitializePropagators()
 //	m_propxi.resize(_nx);
 //	m_propyr.resize(_ny);
 //	m_propyi.resize(_ny);
-	float_tt scale = _config->Model.sliceThicknessAngstrom * PI * GetWavelength();
+	float_tt scale = _config->Model.dz * PI * GetWavelength();
 //t = exp(-i pi lam k^2 dz)
 	for(int ixa = 0; ixa < _nx; ixa++)
 		for(int iya = 0; iya < _ny; iya++){
@@ -141,19 +141,10 @@ CBaseWave::~CBaseWave()
 {
 }
 
-void CBaseWave::Resize(int x, int y)
-{
-	_nx=x;
-	_ny=y;
-	_wave.resize(boost::extents[_nx][_ny]);
-}
-
 
 void CBaseWave::Initialize(std::string input_ext, std::string output_ext)
 {
 	m_wavlen = Wavelength(m_v0);
-	_wave.resize(boost::extents[_nx][_ny]);
-	InitializeKVectors();
 }
 
 void CBaseWave::InitializeKVectors()
@@ -195,6 +186,14 @@ void CBaseWave::InitializeKVectors()
 void  CBaseWave::GetExtents(int& nx, int& ny) const{
 	nx = _nx;
 	ny=_ny;
+}
+void CBaseWave::FormProbe(){
+	_nx = _config->Model.nx;
+	_ny = _config->Model.ny;
+	_wave.resize(boost::extents[_nx][_ny]);
+	_forward = fftwpp::fft2d(_nx,_ny,FFTW_FORWARD);
+	_backward = fftwpp::fft2d(_nx,_ny,FFTW_BACKWARD);
+	InitializeKVectors();
 }
 void CBaseWave::DisplayParams()
 {
@@ -260,13 +259,12 @@ float_tt CBaseWave::GetIntegratedIntensity() const
 	return intIntensity/(_nx*_ny);
 }
 
-void CBaseWave::ApplyTransferFunction(boost::shared_array<complex_tt> &wave)
+void CBaseWave::ApplyTransferFunction(std::vector<complex_tt> &wave)
 {
 	// TODO: transfer function should be passed as a 1D vector that is half the size of the wavefunc.
 	//       It should be applied by a radial lookup table (with interpolation?)
 	//       Alternatively, is it easier to just use a 2D CTF?
 	//       Whatever you do, use m_transferFunction as the storage for it.
-	if (wave == boost::shared_array<complex_tt>()) wave = complex1D(_nx*_ny,"imageWave");
 	int px=GetTotalPixels();
 
 	// multiply wave (in rec. space) with transfer function and write result to imagewave

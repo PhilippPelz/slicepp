@@ -26,7 +26,6 @@ public:
 	virtual int ReadAtoms(std::vector<atom> &atoms,
 			std::vector<int> &uniqueAtoms,bool fillUnitCell);
 protected:
-	std::string _filepath;
 //	OBUnitCell* _unitCell;
 //	OBConversion _conversion;
 //	OBMol _mol;

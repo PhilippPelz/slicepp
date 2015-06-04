@@ -28,7 +28,6 @@ QSTEM - image simulation for TEM/STEM/CBED
 
 // #include "../lib/floatdef.hpp"
 #include "stemtypes_fftw3.hpp"
-#include "memory_fftw3.hpp"	/* memory allocation routines */
 // #include "tiffsubs.hpp"
 #include "matrixlib.hpp"
 #include "readparams.hpp"
@@ -207,14 +206,14 @@ void writeFrameWork(FILE *fp,superCellBox superCell) {
 	  default: charge = 0.0; 
 			}
 
-			if (fp != NULL) fprintf(fp,"%d %7.3f %7.3f %7.3f %6.3f %6.3f %c%c\n",id+1,superCell.atoms[i].x,
-				superCell.atoms[i].y,superCell.atoms[i].z,
+			if (fp != NULL) fprintf(fp,"%d %7.3f %7.3f %7.3f %6.3f %6.3f %c%c\n",id+1,superCell.atoms[i].r[0],
+				superCell.atoms[i].r[1],superCell.atoms[i].r[2],
 				massArray[superCell.atoms[i].Znum-1],charge,
 				elTable[2*superCell.atoms[i].Znum-2],elTable[2*superCell.atoms[i].Znum-1]);
 		}
 		else
-			if (fp != NULL) fprintf(fp,"%d %7.3f %7.3f %7.3f\n",id+1,superCell.atoms[i].x,
-			superCell.atoms[i].y,superCell.atoms[i].z);
+			if (fp != NULL) fprintf(fp,"%d %7.3f %7.3f %7.3f\n",id+1,superCell.atoms[i].r[0],
+					superCell.atoms[i].r[1],superCell.atoms[i].r[2]);
 	}
 }
 
@@ -344,9 +343,9 @@ void writeAmorphous(FILE *fp,superCellBox superCell,int nstart,int nstop) {
 		* in FRACTIONAL COORDINATES !!!
 		*/
 		for(i=nstart;i<nstop;i++) {   
-			x = superCell.atoms[i].x/superCell.ax;
-			y = superCell.atoms[i].y/superCell.by;
-			z = superCell.atoms[i].z/superCell.cz;
+			x = superCell.atoms[i].r[0]/superCell.ax;
+			y = superCell.atoms[i].r[1]/superCell.by;
+			z = superCell.atoms[i].r[2]/superCell.cz;
 			if (fabs(x-1.0) < 1e-5) x = 0.0;
 			if (fabs(y-1.0) < 1e-5) y = 0.0;
 			if (fabs(z-1.0) < 1e-5) z = 0.0;

@@ -43,7 +43,7 @@ void CExperimentTEM::Run()
 	char buf[256];//,avgName[256],systStr[512];
 	std::string comment;
 	float_tt t;
-	float_tt **avgPendelloesung = NULL;
+	FloatArray2D avgPendelloesung(boost::extents[m_nbout][_config->Model.nSlices]);
 	int oldMulsRepeat1 = 1;
 	int oldMulsRepeat2 = 1;
 	long iseed=0;
@@ -60,14 +60,6 @@ void CExperimentTEM::Run()
 
 	m_chisq.resize(m_avgRuns);
 
-	if (m_lbeams) {
-		m_pendelloesung = NULL;
-		if (avgPendelloesung == NULL) {
-			avgPendelloesung = float2D(m_nbout,
-					_config->Model.nSlices*oldMulsRepeat1*oldMulsRepeat2*m_cellDiv,
-					"pendelloesung");
-		}
-	}
 
 	timerTot = 0; /* cputim();*/
 	DisplayProgress(-1);
@@ -88,19 +80,6 @@ void CExperimentTEM::Run()
 		//m_nslic0 = 0;
 		// produce an incident plane wave:
 		m_wave->FormProbe();
-
-		/***********************************************************
-		 * make sure we have enough memory for the pendelloesung plot
-		 */
-		if (m_lbeams)
-		{
-			if (m_pendelloesung != NULL)  free(m_pendelloesung[0]);
-			free(avgPendelloesung[0]);
-			m_pendelloesung = NULL;
-			avgPendelloesung = float2D(m_nbout, _config->Model.nSlices*m_cellDiv,
-					"pendelloesung");
-		}
-		/*********************************************************/
 
 		// printf("Stacking sequence: %s\n",buf);
 
@@ -223,7 +202,8 @@ void CExperimentTEM::Run()
 			 * all the different defoci, inverse FFT and save each image.
 			 * diffArray will be overwritten with the image.
 			 **********************************************************/
-			m_wave->ApplyTransferFunction(imageWave);
+//			m_wave->ApplyTransferFunction(imageWave);
+//			TODO: write applytransferfunction somewhere
 
 			// save the amplitude squared:
 //			m_wave->ReadImage();
@@ -257,7 +237,7 @@ void CExperimentTEM::Run()
 				printf("Writing Pendelloesung data\n");
 				for (iy=0;iy<_config->Model.nSlices*m_cellDiv;iy++) {
 					/* write the thicknes in the first column of the file */
-					fprintf(fp,"%g",iy*_config->Model.sliceThicknessAngstrom/((float)(_config->Model.nSlices*m_cellDiv)));
+					fprintf(fp,"%g",iy*_config->Model.dz/((float)(_config->Model.nSlices*m_cellDiv)));
 					/* write the beam intensities in the following columns */
 					for (ix=0;ix<m_nbout;ix++) {
 						// store the AMPLITUDE:
@@ -289,13 +269,6 @@ void CExperimentTEM::WriteBeams(unsigned int absoluteSlice)
 	m_wave->GetSizePixels(nx, ny);
 	float_tt scale = 1.0/(nx*ny);
 
-	if (m_pendelloesung == NULL)
-	{
-		m_pendelloesung = float2D(m_nbout, _config->Model.nSlices*m_cellDiv,
-				"pendelloesung");
-		printf("Allocated memory for pendelloesung plot (%d x %d)\n",
-				m_nbout,_config->Model.nSlices);
-	}
 	for(unsigned ib=0; ib<m_nbout; ib++) {
 		m_pendelloesung[ib][absoluteSlice] = scale*m_wave->GetPixelIntensity(m_hbeams[ib],m_kbeams[ib]);
 		// printf("slice: %d beam: %d [%d,%d], intensity: %g\n",muls->nslic0,ib,muls->hbeam[ib],muls->kbeam[ib],muls->pendelloesung[ib][muls->nslic0]);

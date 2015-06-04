@@ -22,7 +22,7 @@
 
 #include "experiment_interface.hpp"
 #include "potentials/pot_factory.hpp"
-#include "wavefunctions/wave_factory.hpp"
+#include "wavefunctions/wave_interface.hpp"
 #include "structure_IO/crystal.hpp"
 #include "data_IO/PersistenceManager.hpp"
 #include "fftw++.hpp"
@@ -36,11 +36,11 @@ namespace QSTEM
 {
 
 
-
 class QSTEM_HELPER_DLL_EXPORT CExperimentBase : public IExperiment
 {
 public:
     CExperimentBase(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers);
+    virtual ~CExperimentBase(){};
     virtual void DisplayProgress(int flag);
     virtual void DisplayParams();
     virtual void Run()=0;

@@ -8,24 +8,27 @@
 #include "PersistenceManager.hpp"
 
 namespace QSTEM {
-PersistenceManager::PersistenceManager() {
+PersistenceManager::PersistenceManager() :
+	_waveSlicesAfterFT(ComplexArray3D(boost::extents[1][1][1])),
+	_waveSlicesAfterTransmit(ComplexArray3D(boost::extents[1][1][1])),
+	_waveSlicesAfterProp(ComplexArray3D(boost::extents[1][1][1])),
+	_waveSlicesAfterSlice(ComplexArray3D(boost::extents[1][1][1])),
+	_probe(ComplexArray2D(boost::extents[1][1])),
+	_projectedPotential(ComplexArray2D(boost::extents[1][1])),
+	_info(NULL)
+{
 }
 PersistenceManager::PersistenceManager(const ConfigPtr c) : PersistenceManager() {
 	_c = c;
 	_file = HDFFile(_c->Output.savePath);
 	_info = _file.CreateGroup("config");
-	_waveSlicesAfterSlice.resize(extents[_c->Model.nSlices][_c->Model.nx][_c->Model.ny]);
-	_waveSlicesAfterTransmit.resize(extents[_c->Model.nSlices][_c->Model.nx][_c->Model.ny]);
-	_waveSlicesAfterFT.resize(extents[_c->Model.nSlices][_c->Model.nx][_c->Model.ny]);
-	_waveSlicesAfterProp.resize(extents[_c->Model.nSlices][_c->Model.nx][_c->Model.ny]);
-	_potential.resize(extents[_c->Model.nSlices][_c->Model.nx][_c->Model.ny]);
 }
 
 PersistenceManager::~PersistenceManager() {
 	delete _info;
 }
 void PersistenceManager::SaveProbe(ComplexArray2DPtr a){
-	_probe.resize(extents[_c->Model.nx][_c->Model.ny]);
+
 	_probe = ComplexArray2D(a);
 }
 void PersistenceManager::SaveWaveAfterTransmit(ComplexArray2DPtr a,int slice){
@@ -61,17 +64,31 @@ void PersistenceManager::SaveWaveAfterSlice(ComplexArray2DPtr a,int slice){
 		}
 }
 void PersistenceManager::SavePotential(ComplexArray3D a){
-
-//	BOOST_LOG_TRIVIAL(info) << a.shape()[0] << " " << _potential.shape()[0]<< a.shape()[1] << _potential.shape()[1]<< a.shape()[2] << _potential.shape()[2];
-	_potential = ComplexArray3D(a);
+	_potential = a;
 }
 void PersistenceManager::SaveProjectedPotential(ComplexArray2DPtr a){
-	_projectedPotential.resize(extents[_c->Model.nx][_c->Model.ny]);
+
 	_projectedPotential = ComplexArray2D(a);
+}
+void PersistenceManager::Save3DDataSet(ComplexArray3DPtr a, string name){
+	_file.SaveComplexArray3D(ComplexArray3D(a),name);
 }
 void PersistenceManager::Save2DDataSet(ComplexArray2DPtr a, string name){
 	_file.SaveComplexArray2D(ComplexArray2D(a),name);
 }
+
+void PersistenceManager::InitStorage(){
+	auto e3 = boost::extents[_c->Model.nSlices][_c->Model.nx][_c->Model.ny];
+	auto e2 = boost::extents[_c->Model.nx][_c->Model.ny];
+	_potential.resize(e3);
+	_waveSlicesAfterSlice.resize(e3);
+	_waveSlicesAfterProp.resize(e3);
+	_waveSlicesAfterFT.resize(e3);
+	_waveSlicesAfterTransmit.resize(e3);
+	_probe.resize(e2);
+	_projectedPotential.resize(e2);
+}
+
 void PersistenceManager::StoreToDisc(){
 	_file.SaveComplexArray2D(_probe,"probe");
 	_file.SaveComplexArray2D(_projectedPotential,"projectedPotential");

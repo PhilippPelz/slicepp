@@ -21,7 +21,6 @@
 #define CRYSTAL_H
 
 #include "stemtypes_fftw3.hpp"
-#include "config_IO/config_reader_factory.hpp"
 #include "config_IO/read_qsc.hpp"
 #include "structure_readers.hpp"
 #include <string>
@@ -49,9 +48,7 @@ typedef boost::shared_ptr<CrystalBuilder> StructurePtr;
 
 class  CrystalBuilder : public IStructureBuilder{
 public:
-
-	CrystalBuilder(boost::filesystem::path p);
-	CrystalBuilder(StructureReaderFactory& sfac,const ConfigPtr& c);
+	CrystalBuilder(StructureReaderPtr& r,const ConfigPtr& c);
 	~CrystalBuilder();
 
 	void ReadFromFile();
@@ -63,7 +60,6 @@ public:
 	void ReplicateUnitCell(int handleVacancies);
 	void WriteStructure(unsigned run_number);
 
-	void DisplaceAtoms();
 	void CalculateCrystalBoundaries();
 	void CalculateTiltAnglesFromZoneAxis();
 
@@ -77,9 +73,9 @@ public:
 	void GetCrystalBoundaries(float_tt &min_x, float_tt &max_x, float_tt &min_y, float_tt &max_y,
 			float_tt &min_z, float_tt &max_z);
 	inline arma::mat GetCellMatrix(){
-		arma::mat M = {m_Mm[0][0],m_Mm[1][0],m_Mm[2][0],
-			m_Mm[0][1],m_Mm[1][1],m_Mm[2][1],
-			m_Mm[0][2],m_Mm[1][2],m_Mm[2][2]};
+		arma::mat M = {_Mm[0][0],_Mm[1][0],_Mm[2][0],
+			_Mm[0][1],_Mm[1][1],_Mm[2][1],
+			_Mm[0][2],_Mm[1][2],_Mm[2][2]};
 		M.reshape(3,3);
 			return M;}
 	inline unsigned GetNumberOfAtomTypes(){return m_u2.size();}
@@ -89,8 +85,8 @@ public:
 	inline unsigned GetNumberOfCellAtoms(){return _baseAtoms.size();}
 	inline unsigned GetNumberOfAtoms(){return _atoms.size();}
 	inline virtual float_tt GetU2(unsigned znum){return m_u2[znum];}
-	inline const std::vector<atom> GetUnitCellAtoms(){return _baseAtoms;}
-
+	inline std::vector<atom> GetUnitCellAtoms(){return _baseAtoms;}
+	virtual superCellBoxPtr DisplaceAtoms();
 	virtual superCellBoxPtr Build();
 	virtual void DisplayParams();
 	virtual std::vector<int> GetUniqueAtoms();
@@ -105,11 +101,9 @@ public:
 	std::vector<int> _uniqueAtoms;
 	float_tt _sizeX,_sizeY,_sizeZ;
 protected:
-
-	CrystalBuilder();
 	boost::filesystem::path m_structureFile;
 	bool _fillUnitCell;
-	FloatArray2D m_Mm;                     /* metric matrix Mm(ax,by,cz,alpha,beta,gamma).  Used to go from fractional
+	FloatArray2D _Mm;                     /* metric matrix Mm(ax,by,cz,alpha,beta,gamma).  Used to go from fractional
                                           coordinates to physical cartesian coordinates.  */
 	FloatArray2D m_MmInv;                  /* inverse of metric matrix.  Used to go from physical, cartesian coordinates
                                           back to fractional coordinates. */
@@ -128,10 +122,7 @@ protected:
 	std::map<unsigned, unsigned> m_u2Count; /* count of atoms that have been displaced.  Used for computing m_u2avg. */
 
 	boost::filesystem::path m_phononFile;
-
-	StructureReaderPtr _structureReader;
 	StructureWriterPtr _structureWriter;
-	ConfigPtr _config;
 	superCellBoxPtr _superCellBox;
 
 	void CalculateCellDimensions();

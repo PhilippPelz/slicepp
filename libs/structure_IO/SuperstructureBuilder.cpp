@@ -13,34 +13,44 @@ using boost::format;
 using boost::algorithm::trim;
 namespace QSTEM {
 
-SuperstructureBuilder::SuperstructureBuilder(StructureReaderFactory& sfac,const ConfigPtr& c) : IStructureBuilder(sfac,c) {
-	atRad = atRadf;
-	covRad = covRadf;
+SuperstructureBuilder::SuperstructureBuilder(StructureReaderPtr& r,const ConfigPtr& c) : IStructureBuilder(r,c)
+{
+	_atRadf = {0.79,0.49, 2.05,1.40,1.17,0.91,0.75,0.65,0.57,0.51, 2.23,1.72,0.00,1.46,0.00,0.00,0.97,0.88, 2.77,2.23,2.09,2.00,1.92,1.85,1.79,1.72,1.67,1.62,1.57,1.53,1.81,1.52,1.33,1.22,1.12,1.03};
+	_covRadf = {0.32,0.93, 1.23,0.90,0.82,0.77,0.75,0.73,0.72,0.71, 1.54,1.36,0.00,1.90,0.00,0.00,0.99,0.98, 2.03,1.74,1.44,1.32,1.63,1.18,1.17,1.17,1.16,1.15,1.17,1.25,1.26,1.22,1.20,1.16,1.14,1.12};
+	_atRad = {0.79,0.49, 2.05,1.40,1.17,0.91,0.75,0.65,0.57,0.51, 2.23,1.72,0.00,1.46,0.00,0.00,0.97,0.88, 2.77,2.23,2.09,2.00,1.92,1.85,1.79,1.72,1.67,1.62,1.57,1.53,1.81,1.52,1.33,1.22,1.12,1.03};
+	_covRad = {0.32,0.93, 1.23,0.90,0.82,0.77,0.75,0.73,0.72,0.71, 1.54,1.36,0.00,1.90,0.00,0.00,0.99,0.98, 2.03,1.74,1.44,1.32,1.63,1.18,1.17,1.17,1.16,1.15,1.17,1.25,1.26,1.22,1.20,1.16,1.14,1.12};
 	_nGrains = 0;
-	_sfac = sfac;
-	_filePath = boost::filesystem::path(c->Structure.structureFilename);
+	_filePath = c->Structure.structureFilename;
 	_superCell = superCellBoxPtr(new superCellBox());
+	/* Let's set the radii of certain elements by hand:*/
+	_atRad[39-1]=2.27; _covRad[39-1]=2.62;  // Y
+	_atRad[57-1]=2.74; _covRad[57-1]=1.69;  // La
+	_atRad[71-1]=2.25; _covRad[71-1]=1.56;  // Lu
 }
 
 SuperstructureBuilder::~SuperstructureBuilder() {
-	// TODO Auto-generated destructor stub
+}
+superCellBoxPtr SuperstructureBuilder::DisplaceAtoms(){
+	//	std::vector<atom>::iterator at = _atoms.begin(), end = _atoms.end();
+	//	FloatArray2D u(boost::extents[1][3]);
+	//
+	//	for (at; at != end; ++at) {
+	//		EinsteinDisplacement(u, (*at));
+	//		// Add obtained u to atomic position
+	//		(*at).r[0] += u[0][0];
+	//		(*at).r[1] += u[0][1];
+	//		(*at).r[2] += u[0][2];
+	//	}
+	return _superCell;
 }
 superCellBoxPtr SuperstructureBuilder::Build(){
 	char outFileName[64],datFileName[64],moldyName[128];
 	char *str;
-	// atom *atomPtr;
 	int g,nstart,j,ak,count;
 	FILE *mainfp;
 	double charge;
 	int moldyFlag = 0;     // suppress creation of ..._moldy.in file
 	int distPlotFlag = 0;  // suppress creation of disList.dat
-
-
-	/* Let's set the radii of certain elements by hand:*/
-	atRad[39-1]=2.27; covRad[39-1]=2.62;  // Y
-	atRad[57-1]=2.74; covRad[57-1]=1.69;  // La
-	atRad[71-1]=2.25; covRad[71-1]=1.56;  // Lu
-
 
 	_c->Structure.nCellX = 1;
 	_c->Structure.nCellY = 1;
@@ -48,7 +58,7 @@ superCellBoxPtr SuperstructureBuilder::Build(){
 
 	BOOST_LOG_TRIVIAL(info) << format("Starting to build superstructure...");
 
-	if (!readParams(_c->Structure.structureFilename.c_str()))
+	if (!readParams(_c->Structure.structureFilename.string().c_str()))
 		exit(0);
 	if (_nGrains > 0) {
 		// loop, until we find crystalline grains:
@@ -158,11 +168,7 @@ superCellBoxPtr SuperstructureBuilder::Build(){
 			charge += _superCell->atoms[j].q*_superCell->atoms[j].occ;
 		}
 	}
-	// BOOST_LOG_TRIVIAL(info) << format("Total charge: %g, i.e. %g %s\n",charge,charge,(charge > 0) ? "holes" : "electrons");
-	BOOST_LOG_TRIVIAL(info) << format("Total charge: %g")%charge;
-	if (charge > 0) BOOST_LOG_TRIVIAL(info) << format(", i.e. %g holes")%charge;
-	if (charge < 0) BOOST_LOG_TRIVIAL(info) << format(", i.e. %g electrons")%-charge;
-
+	BOOST_LOG_TRIVIAL(info) << format("Total charge: %g, i.e. %g %s") %charge%(int)abs(charge)%((charge > 0) ? "holes" : "electrons");
 	return _superCell;
 }
 int SuperstructureBuilder::removeVacancies(std::vector<atom>& atoms){
@@ -182,7 +188,7 @@ int SuperstructureBuilder::removeVacancies(std::vector<atom>& atoms){
 			for (j=i+1;j<atoms.size();j++) {
 				// if there is anothe ratom that comes close to within 0.1*sqrt(3) A we will increase
 				// the total occupany and the counter j.
-				if ((fabs(atoms[i].x-atoms[j].x) < 0.1) && (fabs(atoms[i].y-atoms[j].y) < 0.1) && (fabs(atoms[i].z-atoms[j].z) < 0.1)) {
+				if ((fabs(atoms[i].r[0]-atoms[j].r[0]) < 0.1) && (fabs(atoms[i].r[1]-atoms[j].r[1]) < 0.1) && (fabs(atoms[i].r[2]-atoms[j].r[2]) < 0.1)) {
 					totOcc += atoms[j].occ;
 				}
 				else break;
@@ -223,7 +229,7 @@ int SuperstructureBuilder::removeVacancies(std::vector<atom>& atoms){
 	// We now need to move all the atoms with zero Znum to the very end.
 	if (jz > 0) {
 		qsort(&atoms[0],atoms.size(),sizeof(atom),&CrystalBuilder::AtomCompareZnum);
-		// for (i=0;i<atoms.size()Final;i++) printf("%3d: %d (%.1f %.1f %.1f): occ=%.1f\n",i,atoms[i].Znum,atoms[i].x,atoms[i].y,atoms[i].z,atoms[i].occ);
+		// for (i=0;i<atoms.size()Final;i++) printf("%3d: %d (%.1f %.1f %.1f): occ=%.1f\n",i,atoms[i].Znum,atoms[i].r[0],atoms[i].r[1],atoms[i].r[2],atoms[i].occ);
 	}
 	return natomsFinal;
 }
@@ -232,9 +238,9 @@ void SuperstructureBuilder::computeCenterofMass(){
 	double cmx=0.0,cmy=0.0,cmz=0.0;
 
 	for (i=0;i<_superCell->atoms.size();i++) {
-		cmx += _superCell->atoms[i].x;
-		cmy += _superCell->atoms[i].y;
-		cmz += _superCell->atoms[i].z;
+		cmx += _superCell->atoms[i].r[0];
+		cmy += _superCell->atoms[i].r[1];
+		cmz += _superCell->atoms[i].r[2];
 	}
 	_superCell->cmx = cmx/(_superCell->atoms.size()*_superCell->ax);
 	_superCell->cmy = cmy/(_superCell->atoms.size()*_superCell->by);
@@ -294,7 +300,7 @@ int SuperstructureBuilder::readParams(const char *datFileName){
 	 * data for each grain
 	 */
 	if (readparam(_fpParam, "box:",parStr,1)) {
-//		BOOST_LOG_TRIVIAL(info) << parStr;
+		//		BOOST_LOG_TRIVIAL(info) << parStr;
 		sscanf(parStr.c_str(),"%lf %lf %lf",&(_superCell->ax),&(_superCell->by),&(_superCell->cz));
 	}
 	else {
@@ -341,11 +347,10 @@ int SuperstructureBuilder::readParams(const char *datFileName){
 				return 0;
 			}
 
-			grains[gCount].nplanes = 0;
-			grains[gCount].planes = NULL;
+			grains[gCount].planes.clear();
 			boost::filesystem::path p(unitCellFile);
-			_c->Structure.structureFilename = p.string();
-			CrystalBuilder cryst(_sfac,_c);
+			_c->Structure.structureFilename = p;
+			CrystalBuilder cryst(_r,_c);
 			cryst.ReadFromFile();
 			auto atoms = cryst.GetUnitCellAtoms();
 			auto unique = cryst.GetUniqueAtoms();
@@ -389,12 +394,11 @@ int SuperstructureBuilder::readParams(const char *datFileName){
 			}
 
 			// sscanf(parStr,"%s %s",grains[gCount].name,unitCellFile);
-			grains[gCount].nplanes = 0;
-			grains[gCount].planes = NULL;
+			grains[gCount].planes.clear();
 
 			boost::filesystem::path p(unitCellFile);
-			_c->Structure.structureFilename = p.string();
-			CrystalBuilder cryst(_sfac,_c);
+			_c->Structure.structureFilename = p;
+			CrystalBuilder cryst(_r,_c);
 			cryst.SetFillUnitCell(true);
 			cryst.ReadFromFile();
 			auto atoms = cryst.GetUnitCellAtoms();
@@ -426,8 +430,7 @@ int SuperstructureBuilder::readParams(const char *datFileName){
 			 */
 			grains[gCount].name = string(parStr1);
 			grains[gCount].unitCell = std::vector<atom>();
-			grains[gCount].nplanes = 0;
-			grains[gCount].planes = NULL;
+			grains[gCount].planes.clear();
 			grains[gCount].alpha = 0;
 			grains[gCount].beta  = 0;
 			grains[gCount].gamma = 0;
@@ -470,26 +473,13 @@ int SuperstructureBuilder::readParams(const char *datFileName){
 			}
 			/* if we found a new plane for this crystal */
 			else if (strncmp(title,"plane:",6) == 0) {
-				grains[gCount].nplanes++;
-				grains[gCount].planes = (plane *) realloc(grains[gCount].planes,
-						grains[gCount].nplanes*sizeof(plane));
-				if (grains[gCount].planes == NULL) {
-					printf("Sorry, could not allocate memory for new plane\n");
-					return 0;
-				}
+				plane pl;
 				sscanf(parStr1,"%lf %lf %lf %lf %lf %lf %lf %lf %lf",
-						&(grains[gCount].planes[grains[gCount].nplanes-1].pointX),
-						&(grains[gCount].planes[grains[gCount].nplanes-1].pointY),
-						&(grains[gCount].planes[grains[gCount].nplanes-1].pointZ),
-						&(grains[gCount].planes[grains[gCount].nplanes-1].vect1X),
-						&(grains[gCount].planes[grains[gCount].nplanes-1].vect1Y),
-						&(grains[gCount].planes[grains[gCount].nplanes-1].vect1Z),
-						&(grains[gCount].planes[grains[gCount].nplanes-1].vect2X),
-						&(grains[gCount].planes[grains[gCount].nplanes-1].vect2Y),
-						&(grains[gCount].planes[grains[gCount].nplanes-1].vect2Z));
-				crossProduct(&(grains[gCount].planes[grains[gCount].nplanes-1].vect1X),
-						&(grains[gCount].planes[grains[gCount].nplanes-1].vect2X),
-						&(grains[gCount].planes[grains[gCount].nplanes-1].normX));
+						&(pl.p[0]), &(pl.p[1]), &(pl.p[2]),
+						&(pl.v1[0]), &(pl.v1[1]), &(pl.v1[2]),
+						&(pl.v2[0]), &(pl.v2[1]), &(pl.v2[2]));
+				pl.n = arma::cross(pl.v1,pl.v2);
+				grains[gCount].planes.push_back(pl);
 			} /* end of if plane ... */
 			else if (strncmp(title,"atom:",5) == 0) {
 				//				grains[gCount].natoms++;
@@ -497,11 +487,11 @@ int SuperstructureBuilder::readParams(const char *datFileName){
 				//					grains[gCount].natoms*sizeof(atom));
 				//				// Now read Znum, r (->z), and count (->y)
 				//				sscanf(parStr1,"%d %f %d %f",&(grains[gCount].unitCell[grains[gCount].natoms-1].Znum),
-				//					&(grains[gCount].unitCell[grains[gCount].natoms-1].z),&Nkind,
-				//					&(grains[gCount].unitCell[grains[gCount].natoms-1].y));
+				//					&(grains[gCount].unitCell[grains[gCount].natoms-1].r[2]),&Nkind,
+				//					&(grains[gCount].unitCell[grains[gCount].natoms-1].r[1]));
 				//
 				//				// assign number of atoms directly, if specified in input file
-				//				if (Nkind > 0) grains[gCount].unitCell[grains[gCount].natoms-1].y = (float)Nkind;
+				//				if (Nkind > 0) grains[gCount].unitCell[grains[gCount].natoms-1].r[1] = (float)Nkind;
 				//				for (i=0;i<superCrystal->GetNumberOfAtomTypes();i++)
 				//					if (superCrystal->GetAtomTypes()[i] == grains[gCount].unitCell[grains[gCount].natoms-1].Znum) break;
 				//				if (i == superCrystal->GetNumberOfAtomTypes()) {
@@ -524,7 +514,7 @@ void SuperstructureBuilder::parClose()
 }
 
 void SuperstructureBuilder::makeSuperCell(){
-	int g,p,iatom,ix,iy,iz,atomCount = 0;
+	int p;
 	static std::vector<float_tt> axCell(3),byCell(3),czCell(3);
 	FloatArray2D Mm(boost::extents[3][3]),
 			Mminv(boost::extents[3][3]),
@@ -533,7 +523,6 @@ void SuperstructureBuilder::makeSuperCell(){
 			Mr2(boost::extents[3][3]);
 	arma::rowvec a(3),b(3);
 	float_tt maxLength,dx,dy,dz,d,dxs,dys,dzs;
-	atom newAtom;
 	// float_tt xpos,ypos,zpos;
 	int nxmin = 20000,nxmax=0,nymin=20000,nymax=0,nzmin=20000,nzmax=0;
 
@@ -546,22 +535,21 @@ void SuperstructureBuilder::makeSuperCell(){
 			_superCell->cz*_superCell->cz);
 
 
-	atomCount = _superCell->atoms.size();
-	for (g=0;g<_nGrains;g++) {
+	for (int i=0;i<_nGrains;i++) {
 		/********************************************************
 		 * if this grain is a crystalline one ...
 		 */
-		if (grains[g].amorphFlag == 0) {
-			dx = grains[g].shiftx/_superCell->ax;
-			dy = grains[g].shifty/_superCell->by;
-			dz = grains[g].shiftz/_superCell->cz;
+		if (grains[i].amorphFlag == 0) {
+			dx = grains[i].shiftx/_superCell->ax;
+			dy = grains[i].shifty/_superCell->by;
+			dz = grains[i].shiftz/_superCell->cz;
 			/* find the rotated unit cell vectors .. */
-			makeCellVect(grains[g], axCell, byCell, czCell);
+			makeCellVect(grains[i], axCell, byCell, czCell);
 			// showMatrix(Mm,3,3,"M");
 			///////////////////////////////////////////////////////////////////
-			float_tt	phi_x = grains[g].tiltx;
-			float_tt	phi_y = grains[g].tilty;
-			float_tt	phi_z = grains[g].tiltz;
+			float_tt	phi_x = grains[i].tiltx;
+			float_tt	phi_y = grains[i].tilty;
+			float_tt	phi_z = grains[i].tiltz;
 			float_tt cx = cos(phi_x),sx = sin(phi_x),
 					cy = cos(phi_y),    sy = sin(phi_y),
 					cz = cos(phi_z)  ,  sz = sin(phi_z);
@@ -572,24 +560,24 @@ void SuperstructureBuilder::makeSuperCell(){
 			My.reshape(3,3);
 			Mz.reshape(3,3);
 			arma::mat Mrot = Mx*My*Mz;
-			arma::mat M = grains[g].M;
+			arma::mat M = grains[i].M;
 			arma::mat Minv = arma::inv(M);
 			arma::mat Mnew = M*Mrot;
 			arma::mat MnewInv = arma::inv(Mnew);
 
-//			std::cout << "Mrot: "<< endl<< Mrot << std::endl;
-//			std::cout << "M: "<< endl<< M << std::endl;
-//			std::cout << "Minv: "<< endl<< Minv << std::endl;
-//			std::cout << "Mnew: "<< endl<< Mnew << std::endl;
-//			std::cout << "MnewInv: "<< endl<< MnewInv << std::endl;
+			//			std::cout << "Mrot: "<< endl<< Mrot << std::endl;
+			//			std::cout << "M: "<< endl<< M << std::endl;
+			//			std::cout << "Minv: "<< endl<< Minv << std::endl;
+			//			std::cout << "Mnew: "<< endl<< Mnew << std::endl;
+			//			std::cout << "MnewInv: "<< endl<< MnewInv << std::endl;
 
-			for (ix=0;ix<=1;ix++) for (iy=0;iy<=1;iy++) for (iz=0;iz<=1;iz++) {
+			for (int ix=0;ix<=1;ix++) for (int iy=0;iy<=1;iy++) for (int iz=0;iz<=1;iz++) {
 				a[0]=ix*_superCell->ax;
 				a[1]=iy*_superCell->by;
 				a[2]=iz*_superCell->cz;
 
 				b = a*MnewInv;
-//				std::cout << "b: "<< endl<< b << std::endl;
+				//				std::cout << "b: "<< endl<< b << std::endl;
 				if (nxmin > (int)floor(b[0]-dx)) nxmin=(int)floor(b[0]-dx);
 				if (nxmax < (int)ceil( b[0]-dx)) nxmax=(int)ceil( b[0]-dx);
 				if (nymin > (int)floor(b[1]-dy)) nymin=(int)floor(b[1]-dy);
@@ -597,93 +585,63 @@ void SuperstructureBuilder::makeSuperCell(){
 				if (nzmin > (int)floor(b[2]-dz)) nzmin=(int)floor(b[2]-dz);
 				if (nzmax < (int)ceil( b[2]-dz)) nzmax=(int)ceil( b[2]-dz);
 			}
-			// nxmin--;nxmax++;nymin--;nymax++;nzmin--;nzmax++;
-			//			superCell.atoms = (atom *)realloc(superCell.atoms,(superCell.natoms+1+
-			//				(nxmax-nxmin)*(nymax-nymin)*
-			//				(nzmax-nzmin)*grains[g].natoms)*
-			//				sizeof(atom));
-			_superCell->atoms.resize(_superCell->atoms.size()+1+ (nxmax-nxmin)*(nymax-nymin)* (nzmax-nzmin)*grains[g].unitCell.size());
-			// showMatrix(Mm,3,3,"Mm");
-			// showMatrix(Mminv,3,3,"Mminv");
-			printf("Grain %d: range: (%d..%d, %d..%d, %d..%d)\n", g,nxmin,nxmax,nymin,nymax,nzmin,nzmax);
 
-			dx = grains[g].shiftx;
-			dy = grains[g].shifty;
-			dz = grains[g].shiftz;
-			for (iatom=0;iatom<grains[g].unitCell.size();iatom++) {
-				memcpy(&newAtom,&(grains[g].unitCell[iatom]),sizeof(atom));
-				// We need to convert the cartesian coordinates of this atom
-				// to fractional ones:
-				b[0] = newAtom.x;
-				b[1] = newAtom.y;
-				b[2] = newAtom.z;
-				a = b*Minv;
-				newAtom.x = a[0];
-				newAtom.y = a[1];
-				newAtom.z = a[2];
-				//printf("%2d: %d (%g,%g,%g) (%g,%g,%g)\n",iatom,newAtom.Znum,
-				//		 b[0][0],b[0][1],b[0][2],a[0][0],a[0][1],a[0][2]);
-				for (ix=nxmin;ix<=nxmax;ix++) {
-					for (iy=nymin;iy<=nymax;iy++) {
-						for (iz=nzmin;iz<=nzmax;iz++) {
+			//			_superCell->atoms.resize(_superCell->atoms.size()+1+ (nxmax-nxmin)*(nymax-nymin)* (nzmax-nzmin)*grains[i].unitCell.size());
+			BOOST_LOG_TRIVIAL(info)<< format("Grain %d: range: (%d..%d, %d..%d, %d..%d)")% i%nxmin%nxmax%nymin%nymax%nzmin%nzmax;
+
+			dx = grains[i].shiftx;
+			dy = grains[i].shifty;
+			dz = grains[i].shiftz;
+			for (int j=0;j<grains[i].unitCell.size();j++) {
+
+				for (int ix=nxmin;ix<=nxmax;ix++) {
+					for (int iy=nymin;iy<=nymax;iy++) {
+						for (int iz=nzmin;iz<=nzmax;iz++) {
 							/* atom position in reduced coordinates: */
-							// a[0][0] = ix+newAtom.x; a[0][1] = iy+newAtom.y; a[0][2] = iz+newAtom.z;
-							a[0] = newAtom.x+ix;
-							a[1] = newAtom.y+iy;
-							a[2] = newAtom.z+iz;
-//							matrixProduct(a,1,3,Mm,3,3,b);
+							atom at(grains[i].unitCell[j]);
+							// We need to convert the cartesian coordinates of this atom to fractional ones:
+							b[0] = at.r[0];
+							b[1] = at.r[1];
+							b[2] = at.r[2];
+							a = b*Minv;
+							at.r[0] = a[0];
+							at.r[1] = a[1];
+							at.r[2] = a[2];
+							a[0] = at.r[0]+ix;
+							a[1] = at.r[1]+iy;
+							a[2] = at.r[2]+iz;
+							//							matrixProduct(a,1,3,Mm,3,3,b);
 							b = a*M;
-							_superCell->atoms[atomCount].x  = b[0]+dx;
-							_superCell->atoms[atomCount].y  = b[1]+dy;
-							_superCell->atoms[atomCount].z  = b[2]+dz;
-							if ((_superCell->atoms[atomCount].x >= 0) &&
-									(_superCell->atoms[atomCount].x < _superCell->ax) &&
-									(_superCell->atoms[atomCount].y >= 0) &&
-									(_superCell->atoms[atomCount].y < _superCell->by) &&
-									(_superCell->atoms[atomCount].z >= 0) &&
-									(_superCell->atoms[atomCount].z < _superCell->cz)) {
+							at.r[0]  = b[0]+dx;
+							at.r[1]  = b[1]+dy;
+							at.r[2]  = b[2]+dz;
+
+							if ((at.r[0] >= 0) && (at.r[0] < _superCell->ax) &&
+									(at.r[1] >= 0) && (at.r[1] < _superCell->by) &&
+									(at.r[2] >= 0) && (at.r[2] < _superCell->cz)) {
 								// If this is a sphere:
-								if (grains[g].sphereRadius > 0) {
-									dxs = _superCell->atoms[atomCount].x - grains[g].sphereX;
-									dys = _superCell->atoms[atomCount].y - grains[g].sphereY;
-									dzs = _superCell->atoms[atomCount].z - grains[g].sphereZ;
-									if (dxs*dxs+dys*dys+dzs*dzs < grains[g].sphereRadius*grains[g].sphereRadius) {
-										_superCell->atoms[atomCount].dw = newAtom.dw;
-										_superCell->atoms[atomCount].occ = newAtom.occ;
-										_superCell->atoms[atomCount].q = newAtom.q;
-										_superCell->atoms[atomCount].Znum = newAtom.Znum;
-										atomCount++;
+								if (grains[i].sphereRadius > 0) {
+									dxs = at.r[0] - grains[i].sphereX;
+									dys = at.r[1] - grains[i].sphereY;
+									dzs = at.r[2] - grains[i].sphereZ;
+
+									if (dxs*dxs+dys*dys+dzs*dzs < grains[i].sphereRadius*grains[i].sphereRadius) {
+										_superCell->atoms.push_back(at);
+										BOOST_LOG_TRIVIAL(info)<< format("atom %d in sphere: (%3.3f,%3.3f,%3.3f)") % _superCell->atoms.size() % at.r[0]%at.r[1]%at.r[2];
 									}
 								}
 								// If this is a straight-edged grain
 								else {
-									for (p=0;p<grains[g].nplanes;p++) {
-										/*
-											printf("hello %d (%g %g %g)\n",g,
-											_superCell->atoms[atomCount].x,_superCell->atoms[atomCount].y,
-											_superCell->atoms[atomCount].z);
-										 */
-										d = findLambda(grains[g].planes+p,&(_superCell->atoms[atomCount].z),-1);
-
-										/*
-											printf("%3d lambda: %g (%g %g %g), (%g %g %g), %d\n",atomCount,d,
-											newAtom.x,newAtom.y,newAtom.z,
-											_superCell->atoms[atomCount].x,_superCell->atoms[atomCount].y,
-											_superCell->atoms[atomCount].z,grains[g].nplanes);
-										 */
-										if (d < 0)
-											break;
+									for(auto& p : grains[i].planes){
+										d = findLambda(&p,at.r.mem,1);
+										if (d < 0) break;
 									}
 									/* if all the previous test have been successful, this atom is IN,
 									 * which means that we also need to copy the other data elements
-									 * for this atom.
-									 */
-									if (p == grains[g].nplanes) {
-										_superCell->atoms[atomCount].q = newAtom.q;
-										_superCell->atoms[atomCount].dw = newAtom.dw;
-										_superCell->atoms[atomCount].occ = newAtom.occ;
-										_superCell->atoms[atomCount].Znum = newAtom.Znum;
-										atomCount++;
+									 * for this atom. */
+									if (p == grains[i].planes.size()) {
+										_superCell->atoms.push_back(at);
+										BOOST_LOG_TRIVIAL(info)<< format("atom %d in grain: (%3.3f,%3.3f,%3.3f)") % _superCell->atoms.size() % at.r[0]%at.r[1]%at.r[2];
 									}
 								} // if this is a sphere or not ...
 							}
@@ -691,20 +649,17 @@ void SuperstructureBuilder::makeSuperCell(){
 					} /* iy ... */
 				} /* ix ... */
 			} /* iatom ... */
-			//			_superCell->natoms = atomCount;
-			_superCell->atoms.resize(atomCount);
 		} /* end of if !amorph,i.e. crystalline */
 	} /* g=0..nGrains .. */
 	BOOST_LOG_TRIVIAL(info) << format("Supercell contains %d atoms.") % _superCell->atoms.size();
 }
 std::vector<int> SuperstructureBuilder::GetUniqueAtoms(){
-
+	return _superCell->uniqueatoms;
 }
 void SuperstructureBuilder::DisplayParams(){
 	int g,p;
 
-	printf("Supercell dimensions: %g x %g x %g A\n",
-			_superCell->ax,_superCell->by,_superCell->cz);
+	BOOST_LOG_TRIVIAL(info) << format("Supercell dimensions: %g x %g x %g A") % _superCell->ax % _superCell->by%_superCell->cz;
 
 	for (g=0;g<_nGrains;g++) {
 		if (grains[g].amorphFlag == 0) {
@@ -721,41 +676,32 @@ void SuperstructureBuilder::DisplayParams(){
 					g%grains[g].name%grains[g].density%grains[g].rmin%grains[g].rFactor;
 		}
 		printf("planes:\n");
-		for (p=0;p<grains[g].nplanes;p++)
+		for (auto& p : grains[g].planes)
 			printf("vect1=(%g %g %g) vect2=(%g %g %g) point=(%g %g %g) normal=(%g %g %g)\n",
-					grains[g].planes[p].vect1X,grains[g].planes[p].vect1Y,
-					grains[g].planes[p].vect1Z,
-					grains[g].planes[p].vect2X,grains[g].planes[p].vect2Y,
-					grains[g].planes[p].vect2Z,
-					grains[g].planes[p].pointX,grains[g].planes[p].pointY,
-					grains[g].planes[p].pointZ,
-					grains[g].planes[p].normX,grains[g].planes[p].normY,
-					grains[g].planes[p].normZ);
+					p.v1[0],p.v1[1], p.v1[2],
+					p.v2[0],p.v2[1], p.v2[2],
+					p.p[0],p.p[1], p.p[2],
+					p.n[0],p.n[1], p.n[2]);
 	} // for g=0 ...
 }
 void SuperstructureBuilder::SetSliceThickness(ModelConfig& mc){
-
 }
 void SuperstructureBuilder::SetResolution(ModelConfig& mc, const PotentialConfig pc){
-
 }
 void SuperstructureBuilder::makeAmorphous(){
-	int g,p,iatom,ix,iy,iz,ic,atomCount = 0,amorphSites,amorphAtoms,randCount;
+	int g,p,iatom,ix,iy,iz,ic ,amorphSites,amorphAtoms,randCount;
 	static double *axCell,*byCell,*czCell=NULL;
-	static double **Mm = NULL;
+	static FloatArray2D Mm;
 	double rCellx,rCelly,rCellz;
 	double d,r;
 	std::vector<atom> amorphCell;
-	// atom newAtom;
-	// double xpos,ypos,zpos;
 	int nx,ny,nz;
 	std::vector<int> randArray;
 
-
-	if (Mm == NULL) {
-		Mm = double2D(3,3,"Mm");
-		axCell=Mm[0]; byCell=Mm[1]; czCell=Mm[2];
-	}
+	Mm.resize(boost::extents[3][3]);
+	axCell=&Mm[0][0];
+	byCell=&Mm[1][0];
+	czCell=&Mm[2][0];
 
 	for (g=0;g<_nGrains;g++) {
 		/********************************************************
@@ -779,29 +725,31 @@ void SuperstructureBuilder::makeAmorphous(){
 			amorphSites = 4*nx*ny*nz;
 			amorphCell.resize(amorphSites+1);
 
-			atomCount = 0;
+			int atomCount = 0;
 			for (ix=0;ix<=nx;ix++) {
 				for (iy=0;iy<=ny;iy++) {
 					for (iz=0;iz<=nz;iz++) {
 						for (ic=0;ic<4;ic++) {
 							/* check if this atom and any of the 4 atoms per rect. unit cell lie within the super cell
 							 */
-							amorphCell[atomCount].x  = ix*rCellx-(ic==3)*axCell[0]+(ic % 2)*byCell[0]+(ic>1)*czCell[0];
-							amorphCell[atomCount].y  = iy*rCelly-(ic==3)*axCell[1]+(ic % 2)*byCell[1]+(ic>1)*czCell[1];
-							amorphCell[atomCount].z  = iz*rCellz-(ic==3)*axCell[2]+(ic % 2)*byCell[2]+(ic>1)*czCell[2];
-							if ((amorphCell[atomCount].x >= 0) &&
-									(amorphCell[atomCount].x < _superCell->ax) &&
-									(amorphCell[atomCount].y >= 0) &&
-									(amorphCell[atomCount].y < _superCell->by) &&
-									(amorphCell[atomCount].z >= 0) &&
-									(amorphCell[atomCount].z < _superCell->cz)) {
-								for (p=0;p<grains[g].nplanes;p++) {
-									d = findLambda(grains[g].planes+p,&(amorphCell[atomCount].z),-1);
-									if (d < 0)
+							amorphCell[atomCount].r[0]  = ix*rCellx-(ic==3)*axCell[0]+(ic % 2)*byCell[0]+(ic>1)*czCell[0];
+							amorphCell[atomCount].r[1]  = iy*rCelly-(ic==3)*axCell[1]+(ic % 2)*byCell[1]+(ic>1)*czCell[1];
+							amorphCell[atomCount].r[2]  = iz*rCellz-(ic==3)*axCell[2]+(ic % 2)*byCell[2]+(ic>1)*czCell[2];
+							if ((amorphCell[atomCount].r[0] >= 0) &&
+									(amorphCell[atomCount].r[0] < _superCell->ax) &&
+									(amorphCell[atomCount].r[1] >= 0) &&
+									(amorphCell[atomCount].r[1] < _superCell->by) &&
+									(amorphCell[atomCount].r[2] >= 0) &&
+									(amorphCell[atomCount].r[2] < _superCell->cz)) {
+								bool isIn = true;
+								for (auto& p: grains[g].planes) {
+									d = findLambda(&p,&(amorphCell[atomCount].r[2]),-1);
+									if (d < 0) {
+										isIn = false;
 										break;
+									}
 								}
-								/* if all the previous test have been successful, this atom is IN */
-								if (p == grains[g].nplanes) atomCount++;
+								if (isIn) atomCount++;
 							}
 						} /* ic ... */
 					} /* iz ... */
@@ -833,7 +781,7 @@ void SuperstructureBuilder::makeAmorphous(){
 					iz = randArray[iy];
 					if (iz > amorphSites) {
 						printf("%5d, iy: %d, sites: %d, atoms: %d  ",ix,iy,randCount,amorphAtoms);
-						printf("iz: %d (%d)\n",iz,(int)_superCell->atoms[atomCount].z);
+						printf("iz: %d (%d)\n",iz,(int)_superCell->atoms[atomCount].r[2]);
 						printf("makeAmorphous: Error because of overlapping memory areas!\n");
 						for (iz=0;iz<=amorphAtoms;iz++)
 							printf("iz=%d: %d\n",iz,randArray[iz]);
@@ -857,9 +805,9 @@ void SuperstructureBuilder::makeAmorphous(){
 				a.dw = grains[g].unitCell[iatom].dw;
 				a.occ = grains[g].unitCell[iatom].occ;
 				a.Znum = grains[g].unitCell[iatom].Znum;
-				a.x = amorphCell[iz].x;
-				a.y = amorphCell[iz].y;
-				a.z = amorphCell[iz].z;
+				a.r[0] = amorphCell[iz].r[0];
+				a.r[1] = amorphCell[iz].r[1];
+				a.r[2] = amorphCell[iz].r[2];
 				_superCell->atoms.push_back(a);
 			}
 		} /* end of if amorph,i.e. crystalline */
@@ -868,7 +816,8 @@ void SuperstructureBuilder::makeAmorphous(){
 #define SQR(x) ((x)*(x))
 #define TRIAL_COUNT 1000000
 void SuperstructureBuilder::makeSpecial(int distPlotFlag) {
-	int p,g,iatom,atomCount = 0,amorphAtoms;
+	//TODO what is atomcount, not tested
+	int g,iatom,atomCount = 0,amorphAtoms;
 	double d,r,x,y,z,dist,volume;
 	int i,j,Znum,count;
 	long seed;
@@ -879,157 +828,155 @@ void SuperstructureBuilder::makeSpecial(int distPlotFlag) {
 	seed = -(long)(time(NULL));  // initialize random number generator.
 
 	for (g=0;g<_nGrains;g++) {
-		/********************************************************
-		 * if this grain is a special one ...
-		 */
-		if (grains[g].amorphFlag == SPECIAL_GRAIN) {
-			//  type = atoi(grains[g].name);
-			trim(grains[g].name);
-			type = std::stoi(grains[g].name);
-			// printf("Distribution type: %d \n",type);
-			BOOST_LOG_TRIVIAL(info) << format("%s: distribution type: %d (%s)")%grains[g].name,type%
-					(type == 2) ? "double gaussian" : (type == 1 ? "single gaussian" : "random");
-			/**************************************************************
-			 * We would like to calculate the Volume of this grain.
-			 * We do this by brute force, by simply checking, if randomly
-			 * distributed points are within the grain, or not.
-			 *************************************************************/
-			grainBound[0] = _superCell->ax;  grainBound[1] = 0;
-			grainBound[2] = _superCell->by;  grainBound[3] = 0;
-			grainBound[4] = _superCell->cz;  grainBound[5] = 0;
-			for (count=0, i=0; i<TRIAL_COUNT;i++) {
-				// remember that we have to create a vector with
-				// z,y,x, because that is the way the atom struct is
-				pos[2] = _superCell->ax*ran1( );
-				pos[1] = _superCell->by*ran1( );
-				pos[0] = _superCell->cz*ran1( );
-				for (p=0;p<grains[g].nplanes;p++) {
-					d = findLambda((plane*)(grains[g].planes+p),pos,-1);
-					if (d < 0) break;
-				}
-				// if all the previous tests have been successful, this atom is IN
-				if (p == grains[g].nplanes) {
-					count++;
-					// center of this grain
-					center[0] += pos[2]; center[1] += pos[1]; center[2] += pos[0];
-					// boundaries in X-direction of this grain
-					if (grainBound[0] > pos[2]) grainBound[0] = pos[2]; // xmin
-					if (grainBound[1] < pos[2]) grainBound[1] = pos[2]; // xmax
-					if (grainBound[2] > pos[1]) grainBound[2] = pos[1]; // ymin
-					if (grainBound[3] < pos[1]) grainBound[3] = pos[1]; // ymax
-					if (grainBound[4] > pos[0]) grainBound[4] = pos[0]; // zmin
-					if (grainBound[5] < pos[0]) grainBound[5] = pos[0]; // zmax
+		trim(grains[g].name);
+		type = std::stoi(grains[g].name);
+		BOOST_LOG_TRIVIAL(info) << format("%s: distribution type: %d (%s)")%grains[g].name,type%
+				(type == 2) ? "double gaussian" : (type == 1 ? "single gaussian" : "random");
+		/**************************************************************
+		 * We would like to calculate the Volume of this grain.
+		 * We do this by brute force, by simply checking, if randomly
+		 * distributed points are within the grain, or not.
+		 *************************************************************/
+		grainBound[0] = _superCell->ax;  grainBound[1] = 0;
+		grainBound[2] = _superCell->by;  grainBound[3] = 0;
+		grainBound[4] = _superCell->cz;  grainBound[5] = 0;
+		for (count=0, i=0; i<TRIAL_COUNT;i++) {
+			// remember that we have to create a vector with
+			// z,y,x, because that is the way the atom struct is
+			pos[2] = _superCell->ax*ran1( );
+			pos[1] = _superCell->by*ran1( );
+			pos[0] = _superCell->cz*ran1( );
+
+			bool isIn = true;
+			for (auto& p: grains[g].planes) {
+				d = findLambda(&p,pos,-1);
+				if (d < 0) {
+					isIn = false;
+					break;
 				}
 			}
-			center[0] /= (double)count;
-			center[1] /= (double)count;
-			center[2] /= (double)count;
-			volume = _superCell->ax*_superCell->by*_superCell->cz*(double)count/(double)TRIAL_COUNT;
-			printf("Volume: %gA^3, %g %%\n",volume,(double)(100*count)/(double)TRIAL_COUNT);
-			printf("boundaries: x: %g..%g, y: %g..%g, z: %g..%g\n",
-					grainBound[0],grainBound[1],grainBound[2],
-					grainBound[3],grainBound[4],grainBound[5]);
-
-			// First we need to find out how much memory we need to reserve for this grain
-			amorphAtoms = 0;
-			for (iatom=0;iatom<grains[g].unitCell.size();iatom++) {
-				if (grains[g].unitCell[iatom].y < 1.0) {  // if this is a concentration, and no count
-					grains[g].unitCell[iatom].y *= volume;  // then convert it to number of atoms
-				}
-				amorphAtoms += (int)(grains[g].unitCell[iatom].y);
+			// if all the previous tests have been successful, this atom is IN
+			if (isIn) {
+				count++;
+				// center of this grain
+				center[0] += pos[2];
+				center[1] += pos[1];
+				center[2] += pos[0];
+				// boundaries in X-direction of this grain
+				if (grainBound[0] > pos[2]) grainBound[0] = pos[2]; // xmin
+				if (grainBound[1] < pos[2]) grainBound[1] = pos[2]; // xmax
+				if (grainBound[2] > pos[1]) grainBound[2] = pos[1]; // ymin
+				if (grainBound[3] < pos[1]) grainBound[3] = pos[1]; // ymax
+				if (grainBound[4] > pos[0]) grainBound[4] = pos[0]; // zmin
+				if (grainBound[5] < pos[0]) grainBound[5] = pos[0]; // zmax
 			}
+		}
+		center[0] /= (double)count;
+		center[1] /= (double)count;
+		center[2] /= (double)count;
+		volume = _superCell->ax*_superCell->by*_superCell->cz*(double)count/(double)TRIAL_COUNT;
+		printf("Volume: %gA^3, %g %%\n",volume,(double)(100*count)/(double)TRIAL_COUNT);
+		printf("boundaries: x: %g..%g, y: %g..%g, z: %g..%g\n",
+				grainBound[0],grainBound[1],grainBound[2],
+				grainBound[3],grainBound[4],grainBound[5]);
 
-			atomCount = _superCell->atoms.size();  // start adding amorphous atoms, where we left off.
+		// First we need to find out how much memory we need to reserve for this grain
+		amorphAtoms = 0;
+		for (iatom=0;iatom<grains[g].unitCell.size();iatom++) {
+			if (grains[g].unitCell[iatom].r[1] < 1.0) {  // if this is a concentration, and no count
+				grains[g].unitCell[iatom].r[1] *= volume;  // then convert it to number of atoms
+			}
+			amorphAtoms += (int)(grains[g].unitCell[iatom].r[1]);
+		}
 
-			// Now we can loop through and add these atoms randomly to the grain
-			for (iatom=0;iatom<grains[g].unitCell.size();iatom++) {
-				r = grains[g].unitCell[iatom].z;             // radius of this atom
-				count = (int)(grains[g].unitCell[iatom].y);  // number of atoms of this kind
-				Znum = grains[g].unitCell[iatom].Znum;
-				covRad[Znum-1] = r;                          // set radius of other atoms also
-				for (j=0;j<count;j++) {
-					do { // make it lie within the grain bounding planes
-						do { // make the atoms not touch eachother
-							// z = superCell.cz*ran1();
-							// y = superCell.by*ran1();
-							z = grainBound[4]+ran1()*(grainBound[5]-grainBound[4]);
-							y = grainBound[2]+ran1()*(grainBound[3]-grainBound[2]);
-							if (fabs(_superCell->cz-z) < 2e-5) z = 0.0;
-							if (fabs(_superCell->by-y) < 2e-5) y = 0.0;
-							if (iatom > 0) {
+
+		// Now we can loop through and add these atoms randomly to the grain
+		for (iatom=0;iatom<grains[g].unitCell.size();iatom++) {
+			r = grains[g].unitCell[iatom].r[2];             // radius of this atom
+			count = (int)(grains[g].unitCell[iatom].r[1]);  // number of atoms of this kind
+			Znum = grains[g].unitCell[iatom].Znum;
+			_covRad[Znum-1] = r;                          // set radius of other atoms also
+			for (j=0;j<count;j++) {
+				bool isIn = true;
+				do { // make it lie within the grain bounding planes
+					do { // make the atoms not touch eachother
+						// z = superCell.cz*ran1();
+						// y = superCell.by*ran1();
+						z = grainBound[4]+ran1()*(grainBound[5]-grainBound[4]);
+						y = grainBound[2]+ran1()*(grainBound[3]-grainBound[2]);
+						if (fabs(_superCell->cz-z) < 2e-5) z = 0.0;
+						if (fabs(_superCell->by-y) < 2e-5) y = 0.0;
+						if (iatom > 0) {
+							x = grainBound[0]+ran1()*(grainBound[1]-grainBound[0]);
+						}
+						else {
+							switch (type) {
+							case 0:
+								x = grainBound[0]+ran1()*(grainBound[1]-grainBound[0]);
+								break;
+							case 1:
+								x = xDistrFun1(center[0],0.08*(grainBound[1]-grainBound[0]));
+								break;
+							case 2:
+								x = xDistrFun2(center[0],0.80*(grainBound[1]-grainBound[0]),
+										0.08*(grainBound[1]-grainBound[0]));
+								break;
+							default:
 								x = grainBound[0]+ran1()*(grainBound[1]-grainBound[0]);
 							}
-							else {
-								switch (type) {
-								case 0:
-									x = grainBound[0]+ran1()*(grainBound[1]-grainBound[0]);
-									break;
-								case 1:
-									x = xDistrFun1(center[0],0.08*(grainBound[1]-grainBound[0]));
-									break;
-								case 2:
-									x = xDistrFun2(center[0],0.80*(grainBound[1]-grainBound[0]),
-											0.08*(grainBound[1]-grainBound[0]));
-									break;
-								default:
-									x = grainBound[0]+ran1()*(grainBound[1]-grainBound[0]);
-								}
-							}
-							if (fabs(_superCell->ax-x) < 2e-5) x = 0.0;
-							// Now we must check, whether atoms overlap
-							for (i=0;i<atomCount;i++) {
-								for (p=-1;p<=1;p++) {
-									dist = sqrt(SQR(x-_superCell->atoms[i].x)+
-											SQR(y-_superCell->atoms[i].y+p*_superCell->by)+
-											SQR(z-_superCell->atoms[i].z));
-									if (dist < r+covRad[_superCell->atoms[i].Znum-1]) break;
-								}
-								if (p < 2) break;
-							}
-							trials++;
-							if (trials % amorphAtoms == 0)
-								printf("Average trials per atom: %d times, success: %g %%\n",
-										trials/amorphAtoms,100.0*(atomCount-_superCell->atoms.size())/
-										(double)amorphAtoms);
-						} while (i < atomCount);
-						// try until we find one that does not touch any other
-
-						// _superCell->atoms[atomCount].dw = 0.0;
-						atom a;
-
-						a.dw = 0.45*28.0/(double)(2.0*Znum);
-						a.occ  = 1.0;
-						a.q    = 0;
-						a.Znum = Znum;
-						a.x    = x;
-						a.y    = y;
-						a.z    = z;
-
-						_superCell->atoms.push_back(a);
-
-						for (p=0;p<grains[g].nplanes;p++) {
-							d = findLambda(grains[g].planes+p,&(_superCell->atoms[atomCount].z),-1);
-							if (d < 0) break;
 						}
-						// if all the previous tests have been successful, this atom is IN
-					} while(p < grains[g].nplanes);
-					atomCount++;
-				} // for j=0..count
-				printf("%d (%d): %d \n",iatom,Znum,count);
-			} // for iatom = 0..natoms
-			printf("\n%d amorphous atoms, volume: %gA^3 (%g%%), center: %g, width: %g\n",
-					_superCell->atoms.size(),
-					volume,100.0*volume/(_superCell->ax*_superCell->by*_superCell->cz),center[0],
-					grainBound[1]-grainBound[0]);
-			switch (type) {
-			case 2:
-				xDistrFun2(0.0,0.0,0.0);
-				break;
-			case 1:
-				xDistrFun1(0.0,0.0);
-				break;
-			}
-		} // if special_grain
+						if (fabs(_superCell->ax-x) < 2e-5) x = 0.0;
+						// Now we must check, whether atoms overlap
+						for (i=0;i<atomCount;i++) {
+							int p =0;
+							for (p=-1;p<=1;p++) {
+								dist = sqrt(SQR(x-_superCell->atoms[i].r[0])+
+										SQR(y-_superCell->atoms[i].r[1]+p*_superCell->by)+
+										SQR(z-_superCell->atoms[i].r[2]));
+								if (dist < r+_covRad[_superCell->atoms[i].Znum-1]) break;
+							}
+							if (p < 2) break;
+						}
+						trials++;
+						if (trials % amorphAtoms == 0)
+							printf("Average trials per atom: %d times, success: %g %%\n",
+									trials/amorphAtoms,100.0*(atomCount-_superCell->atoms.size())/
+									(double)amorphAtoms);
+					} while (i < atomCount);
+					// try until we find one that does not touch any other
+
+					atom a;
+					a.dw = 0.45*28.0/(double)(2.0*Znum);
+					a.occ  = 1.0;
+					a.q    = 0;
+					a.Znum = Znum;
+					a.r = arma::vec({x,y,z});
+					_superCell->atoms.push_back(a);
+
+					for (auto& p: grains[g].planes) {
+						d = findLambda(&p,a.r.mem,1);
+						if (d < 0){
+							isIn = false;
+							break;
+						}
+					}
+					// if all the previous tests have been successful, this atom is IN
+				} while(isIn);
+			} // for j=0..count
+			printf("%d (%d): %d \n",iatom,Znum,count);
+		} // for iatom = 0..natoms
+		printf("\n%d amorphous atoms, volume: %gA^3 (%g%%), center: %g, width: %g\n",
+				_superCell->atoms.size(),
+				volume,100.0*volume/(_superCell->ax*_superCell->by*_superCell->cz),center[0],
+				grainBound[1]-grainBound[0]);
+		switch (type) {
+		case 2:
+			xDistrFun2(0.0,0.0,0.0);
+			break;
+		case 1:
+			xDistrFun1(0.0,0.0);
+			break;
+		}
 	} // g=0..nGrains ..
 	/*******************************************************************
 	 * Now we must produce distribution plots of the different atom kinds
@@ -1105,7 +1052,7 @@ void makeDistrPlot(atom *atoms,int natoms,double ax) {
 	//	list = int2D(muls->atomKinds,count,"list");
 	//	memset(list[0],0,count*muls->atomKinds*sizeof(int));
 	//	for (j=0;j<natoms;j++) {
-	//		ind = (int)(atoms[j].x/DR);
+	//		ind = (int)(atoms[j].r[0]/DR);
 	//		if (ind < 0) ind = 0;
 	//		if (ind >= count) ind = count;
 	//		for (i=0;i<muls->atomKinds;i++) if (muls->Znums[i] == atoms[j].Znum) break;

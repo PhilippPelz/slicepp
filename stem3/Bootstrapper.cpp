@@ -72,10 +72,11 @@ void Bootstrapper::Initialize(){
 	RegisterStructureReaders();
 	RegisterStructureBuilders();
 	boost::filesystem::path p(_c->Structure.structureFilename);
+	auto sreader = StructureReaderPtr(_structureReaderFactory[".cif"](p));
 	auto structureBuilder = StructureBuilderPtr(
-			_structureBuilderFactory[p.extension().string()](_structureReaderFactory,_c));
-	structureBuilder->SetSliceThickness(_c->Model);
-	structureBuilder->SetResolution(_c->Model,_c->Potential);
+			_structureBuilderFactory[p.extension().string()](sreader,_c));
+//	structureBuilder->SetSliceThickness(_c->Model);
+//	structureBuilder->SetResolution(_c->Model,_c->Potential);
 	auto persist = PersistenceManagerPtr(new PersistenceManager(_c));
 
 	std::stringstream str;

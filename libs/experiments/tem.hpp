@@ -51,7 +51,7 @@ protected:
 					   beam indicies */
   bool m_lbeams;				/* flag indicating whether to record beams */	
   char m_filebeam[512];		 	/* file, that beams get recorded in */
-  unsigned m_nbout;				/* number of recorded beams */
+  unsigned m_nbout=1;				/* number of recorded beams */
 
   bool m_tiltBack;                 /* tilt the beam back to the origin before outputting images */
 

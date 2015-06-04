@@ -11,7 +11,7 @@ import numpy as np
 import pyqtgraph.parametertree.parameterTypes as pTypes
 from pyqtgraph.parametertree import Parameter, ParameterTree, ParameterItem, registerParameterType
 from PyQt4.Qt import QTreeWidgetItem
-from pyE17 import io
+# from pyE17 import io
 from pyE17.io.h5rw import h5read, h5write
 import os
 import json
@@ -81,7 +81,7 @@ class SliceGUI(QtGui.QMainWindow):
         self.consolelayout.addWidget(self.consoleOutput)
         self.consoleOutput.setFontPointSize(9.0)
         font = QtGui.QFont("Monospace")
-        font.setPointSize(9)
+        font.setPointSize(6)
         self.consoleOutput.setFont(font)
 #         sys.stdout = OutLog( self.consoleOutput, sys.stdout)
 #         sys.stderr = OutLog( self.consoleOutput, sys.stderr, QtGui.QColor(255,0,0) )

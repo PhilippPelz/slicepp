@@ -43,7 +43,7 @@ typedef PotPtr (*CreatePotentialFn)(ConfigPtr);
 class IPotential
 {
 public:
-	IPotential(const ConfigPtr& c,const PersistenceManagerPtr& persist);
+	IPotential(const ConfigPtr& c,const PersistenceManagerPtr& persist) : _c(c), _persist(persist){} ;
 	virtual void DisplayParams(){};
 	virtual void MakeSlices(superCellBoxPtr info){};
 	virtual void ReadPotential(std::string &fileName, unsigned subSlabIdx){};
@@ -58,6 +58,8 @@ public:
 	virtual ~IPotential(){};
 protected:
 	IPotential(){};
+	ConfigPtr _c;
+	PersistenceManagerPtr _persist;
 };
 
 }

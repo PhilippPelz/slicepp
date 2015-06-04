@@ -23,7 +23,6 @@
 #include <cmath>
 
 #include "detectors.hpp"
-#include "memory_fftw3.hpp"
 
 namespace QSTEM
 {

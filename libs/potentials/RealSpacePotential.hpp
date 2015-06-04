@@ -20,10 +20,13 @@ class RealSpacePotential : public CPotential
 public :
 	inline RealSpacePotential(const ConfigPtr& c,const PersistenceManagerPtr& p): CPotential(c,p){};
 	virtual ~RealSpacePotential();
+	void AtomBoxLookUp(complex_tt &val, int Znum, float_tt x, float_tt y, float_tt z, float_tt B);
 protected:
 	void AddAtomRealSpace(atom& atom, float_tt atomX, float_tt atomY, float_tt atomZ);
 	virtual void _AddAtomRealSpace(atom& atom,float_tt atomX, unsigned int ix,
 			float_tt atomY, unsigned int iy,float_tt atomZ, unsigned int iatomZ)=0;
+	virtual void SaveAtomicPotential(int znum)=0;
+	std::map<int, atomBoxPtr> m_atomBoxes;
 };
 
 }

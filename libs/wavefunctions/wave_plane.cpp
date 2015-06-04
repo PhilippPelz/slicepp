@@ -54,6 +54,7 @@ void CPlaneWave::DisplayParams()
 
 void CPlaneWave::FormProbe()
 {
+	CBaseWave::FormProbe();
 	float_tt scale = 1/sqrt((float_tt)_nx*_ny);
 	if ((_config->Wave.tiltX == 0) && (_config->Wave.tiltY == 0)) {
 		for (unsigned i=0; i<_nx; i++)

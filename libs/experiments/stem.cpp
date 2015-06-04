@@ -18,7 +18,6 @@
  */
 
 #include "stem.hpp"
-#include "wavefunctions/wave_factory.hpp"
 
 #include <omp.h>
 #include <boost/format.hpp>

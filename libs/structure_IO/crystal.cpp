@@ -20,7 +20,6 @@
 
 #include <stdlib.h>
 #include "crystal.hpp"
-#include "memory_fftw3.hpp"
 #include "stemtypes_fftw3.hpp"
 #include "random.hpp"
 #include "structure_factories.hpp"
@@ -47,32 +46,25 @@ static const float_tt k_sq3 = 1.0 / sqrt(3.0); /* sq3 is an additional needed fa
  * introduced in order to match the wobble factor with <u^2>
  */
 
-CrystalBuilder::CrystalBuilder() :
-												m_minX(0),
-												m_maxX(0),
-												m_minY(0),
-												m_maxY(0),
-												m_minZ(0),
-												m_maxZ(0),
-												m_phononFile(boost::filesystem::path()),
-												m_ax(0),
-												_superCellBox(new superCellBox()),
-												m_Mm(FloatArray2D(boost::extents[3][3])),
-												m_MmInv(FloatArray2D(boost::extents[3][3]))
-{}
-CrystalBuilder::CrystalBuilder(boost::filesystem::path p): CrystalBuilder(){
-
-}
-CrystalBuilder::CrystalBuilder(StructureReaderFactory& sfac,const ConfigPtr& c) : CrystalBuilder()  {
-	_config = c;
-	m_wobble_temp_scale = sqrt(_config->Structure.temperatureK / 300.0);
-	boost::filesystem::path p(c->Structure.structureFilename);
-	BOOST_LOG_TRIVIAL(info) << p.extension().string();
-	structureReaderCreator& ctor = sfac[p.extension().string()];
-	auto tmp = ctor(p);
-	_structureReader = StructureReaderPtr(tmp);
-	sfac[p.extension().string()] = ctor;
-	_structureWriter = CStructureWriterFactory::Get()->GetWriter(c->Structure.structureFilename,m_ax, m_by, m_cz);
+CrystalBuilder::CrystalBuilder(StructureReaderPtr& r,const ConfigPtr& c) :
+														m_minX(0),
+														m_maxX(0),
+														m_minY(0),
+														m_maxY(0),
+														m_minZ(0),
+														m_maxZ(0),
+														m_adjustCubeSize(false),
+														m_phononFile(boost::filesystem::path()),
+														m_ax(0),
+														_superCellBox(new superCellBox()),
+														_baseAtoms(std::vector<atom>()),
+														_atoms(std::vector<atom>()),
+														_Mm(FloatArray2D(boost::extents[3][3])),
+														m_MmInv(FloatArray2D(boost::extents[3][3])),
+														IStructureBuilder(r,c)
+{
+	m_wobble_temp_scale = sqrt(_c->Structure.temperatureK / 300.0);
+	_structureWriter = CStructureWriterFactory::Get()->GetWriter(c->Structure.structureFilename.string(),m_ax, m_by, m_cz);
 }
 //(const std::vector<double> &x, std::vector<double> &grad, void* f_data)
 double rotationCostFunc(const std::vector<double>& rotAngles,  std::vector<double> &grad, void* f_data){
@@ -80,7 +72,7 @@ double rotationCostFunc(const std::vector<double>& rotAngles,  std::vector<doubl
 	std::vector<int> zone = p->zone;
 	std::vector<int> refZone = p->refZone;
 	arma::mat M = p->M;
-//	std::vector<float_tt> zone,std::vector<float_tt> refZone
+	//	std::vector<float_tt> zone,std::vector<float_tt> refZone
 	float_tt	phi_x = rotAngles[0]*PI/180;
 	float_tt	phi_y = rotAngles[1]*PI/180;
 	float_tt	phi_z = rotAngles[2]*PI/180;
@@ -95,34 +87,34 @@ double rotationCostFunc(const std::vector<double>& rotAngles,  std::vector<doubl
 	Mx.reshape(3,3);
 	My.reshape(3,3);
 	Mz.reshape(3,3);
-//	std::cout << "Mx: "<< endl<< Mx << std::endl;
-//	std::cout << "My: "<< endl<< My << std::endl;
-//	std::cout << "Mz: "<< endl<< Mz << std::endl;
-//	std::cout << "M: "<< endl<< M << std::endl;
+	//	std::cout << "Mx: "<< endl<< Mx << std::endl;
+	//	std::cout << "My: "<< endl<< My << std::endl;
+	//	std::cout << "Mz: "<< endl<< Mz << std::endl;
+	//	std::cout << "M: "<< endl<< M << std::endl;
 
 	arma::mat Mrot = Mx*My*Mz;
-//	std::cout << "Mrot: "<< endl<< Mrot << std::endl;
+	//	std::cout << "Mrot: "<< endl<< Mrot << std::endl;
 	arma::vec zone1 = {(double)zone[0],(double)zone[1],(double)zone[2]};
 	arma::vec refZone1 = {(double)refZone[0],(double)refZone[1],(double)refZone[2]};
 	arma::vec v = Mrot*M*zone1;
 
 	v = v/sqrt(arma::sum(v%v));
-//	std::cout << "refZone1: "<< endl<< refZone1 << std::endl;
-//	std::cout << "v: "<< endl<< v << std::endl;
+	//	std::cout << "refZone1: "<< endl<< refZone1 << std::endl;
+	//	std::cout << "v: "<< endl<< v << std::endl;
 	auto tmp = v-refZone1;
-//	std::cout << "tmp: "<< endl<< tmp << endl;
+	//	std::cout << "tmp: "<< endl<< tmp << endl;
 	auto tmp2 = tmp%tmp;
-//	std::cout << "tmp2: "<< endl<< tmp2 << endl;
+	//	std::cout << "tmp2: "<< endl<< tmp2 << endl;
 	double chi2 = arma::sum(tmp2);
-//	std::cout << "chi2: "<< chi2 << endl;
+	//	std::cout << "chi2: "<< chi2 << endl;
 	if(refZone[1]==0){
 		arma::vec vtmp = {1,0,0};
 		arma::vec vx = Mrot*M*vtmp;
 		chi2 += vx[2]*vx[2];
 	}
-//	std::cout << "chi2: "<< chi2 << endl;
+	//	std::cout << "chi2: "<< chi2 << endl;
 	return chi2;
-//	Mx[0] ={1,0,0};
+	//	Mx[0] ={1,0,0};
 	//	    cx = cos(phi_x);    sx = sin(phi_x);
 	//	    cy = cos(phi_y);    sy = sin(phi_y);
 	//	    cz = cos(phi_z);    sz = sin(phi_z);
@@ -144,7 +136,7 @@ double rotationCostFunc(const std::vector<double>& rotAngles,  std::vector<doubl
 }
 
 void CrystalBuilder::CalculateTiltAnglesFromZoneAxis(){
-	auto refZone = _config->Structure.zoneAxis;
+	auto refZone = _c->Structure.zoneAxis;
 	std::vector<int> refZone2(3),zone2(3) ;
 	zone2[0]=0;
 	zone2[1]=0;
@@ -155,9 +147,9 @@ void CrystalBuilder::CalculateTiltAnglesFromZoneAxis(){
 		refZone2[i] = refZone[i]/len;
 	}
 
-	arma::mat M = {m_Mm[0][0],m_Mm[1][0],m_Mm[2][0],
-			m_Mm[0][1],m_Mm[1][1],m_Mm[2][1],
-			m_Mm[0][2],m_Mm[1][2],m_Mm[2][2]};
+	arma::mat M = {_Mm[0][0],_Mm[1][0],_Mm[2][0],
+			_Mm[0][1],_Mm[1][1],_Mm[2][1],
+			_Mm[0][2],_Mm[1][2],_Mm[2][2]};
 	M.reshape(3,3);
 
 	zoneAxisOptParams data(M,zone2,refZone2);
@@ -174,11 +166,11 @@ void CrystalBuilder::CalculateTiltAnglesFromZoneAxis(){
 	o.optimize(x,f_final);
 
 	BOOST_LOG_TRIVIAL(info) << format("Rotating (%g,%g,%g) degrees from zone axis [0,0,1] to [%d,%d,%d]")
-		% x[0]%x[1]%x[2]%refZone[0]%refZone[1]%refZone[2];
+				% x[0]%x[1]%x[2]%refZone[0]%refZone[1]%refZone[2];
 
-	_config->Structure.crystalTiltX = x[0];
-	_config->Structure.crystalTiltY = x[1];
-	_config->Structure.crystalTiltZ = x[2];
+	_c->Structure.crystalTiltX = x[0];
+	_c->Structure.crystalTiltY = x[1];
+	_c->Structure.crystalTiltZ = x[2];
 
 
 	//	if nargin < 3
@@ -258,6 +250,19 @@ void CrystalBuilder::CalculateTiltAnglesFromZoneAxis(){
 	//	end
 }
 // Calculates only cell parameters
+superCellBoxPtr CrystalBuilder::DisplaceAtoms(){
+//	std::vector<atom>::iterator at = _atoms.begin(), end = _atoms.end();
+//	FloatArray2D u(boost::extents[1][3]);
+//
+//	for (at; at != end; ++at) {
+//		EinsteinDisplacement(u, (*at));
+//		// Add obtained u to atomic position
+//		(*at).r[0] += u[0][0];
+//		(*at).r[1] += u[0][1];
+//		(*at).r[2] += u[0][2];
+//	}
+	return _superCellBox;
+}
 superCellBoxPtr CrystalBuilder::Build(){
 	bool handleVacancies = true;
 	int ncoord = _baseAtoms.size(), ncx, ncy, ncz, icx, icy, icz, jz;
@@ -266,12 +271,12 @@ superCellBoxPtr CrystalBuilder::Build(){
 	float_tt boxCenterX, boxCenterY, boxCenterZ, boxCenterXrot, boxCenterYrot, boxCenterZrot, bcX, bcY, bcZ;
 	float_tt totOcc, choice, lastOcc;
 	float_tt *u = NULL;
-	FloatArray2D Mm = m_Mm;
+	FloatArray2D Mm = _Mm;
 	static int ncoord_old = 0;
 	u = (float_tt *) malloc(3 * sizeof(float_tt));
-	ncx = _config->Structure.nCellX;
-	ncy = _config->Structure.nCellY;
-	ncz = _config->Structure.nCellZ;
+	ncx = _c->Structure.nCellX;
+	ncy = _c->Structure.nCellY;
+	ncz = _c->Structure.nCellZ;
 
 	ReadFromFile();
 
@@ -285,43 +290,43 @@ superCellBoxPtr CrystalBuilder::Build(){
 	 * Read actual Data
 	 ***********************************************************/
 	for (int i = _baseAtoms.size() - 1; i >= 0; i--) {
-		if (_config->Model.UseTDS) {
+		if (_c->Model.UseTDS) {
 			m_u2[_baseAtoms[i].Znum] = 0;
 		}
 	}
 
-	if(_config->Structure.rotateToZoneAxis){
+	if(_c->Structure.rotateToZoneAxis){
 		CalculateTiltAnglesFromZoneAxis();
 	}
 
-	if (_config->Structure.isBoxed) {
+	if (_c->Structure.isBoxed) {
 		/* at this point the atoms should have fractional coordinates */
 		TiltBoxed(ncoord, handleVacancies);
-		boxCenterX = _config->Structure.boxX;
-		boxCenterY = _config->Structure.boxY;
-		boxCenterZ = _config->Structure.boxZ;
+		boxCenterX = _c->Structure.boxX;
+		boxCenterY = _c->Structure.boxY;
+		boxCenterZ = _c->Structure.boxZ;
 	} else {  // work in NCell mode
 		// atoms are in fractional coordinates so far, we need to convert them to
 		// add the phonon displacement in this condition, because there we can
 		// actually do the correct Eigenmode treatment.
 		// but we will probably just do Einstein vibrations anyway:
 		ReplicateUnitCell(handleVacancies);
-		natom = ncoord * ncx * ncy * ncz;
 
 		BOOST_LOG_TRIVIAL(trace) << "Atoms after replication of unit cells";
 
+#pragma omp parallel for
 		for (int j = 0; j < natom; j++) {
-			//			LOG(INFO) << format("atom %d: (%3.3f, %3.3f, %3.3f)\n") % j % m_atoms[j].x % m_atoms[j].y % m_atoms[j].z;
+			//			LOG(INFO) << format("atom %d: (%3.3f, %3.3f, %3.3f)\n") % j % m_atoms[j].r[0] % m_atoms[j].r[1] % m_atoms[j].z;
 			// This converts also to cartesian coordinates
-			float_tt x = Mm[0][0] * _atoms[j].x + Mm[1][0] * _atoms[j].y + Mm[2][0] * _atoms[j].z;
-			float_tt y = Mm[0][1] * _atoms[j].x + Mm[1][1] * _atoms[j].y + Mm[2][1] * _atoms[j].z;
-			float_tt z = Mm[0][2] * _atoms[j].x + Mm[1][2] * _atoms[j].y + Mm[2][2] * _atoms[j].z;
+			float_tt x = _Mm[0][0] * _atoms[j].r[0] + _Mm[1][0] * _atoms[j].r[1] + _Mm[2][0] * _atoms[j].r[2];
+			float_tt y = _Mm[0][1] * _atoms[j].r[0] + _Mm[1][1] * _atoms[j].r[1] + _Mm[2][1] * _atoms[j].r[2];
+			float_tt z = _Mm[0][2] * _atoms[j].r[0] + _Mm[1][2] * _atoms[j].r[1] + _Mm[2][2] * _atoms[j].r[2];
 
-			_atoms[j].x = x;
-			_atoms[j].y = y;
-			_atoms[j].z = z;
+			_atoms[j].r[0] = x;
+			_atoms[j].r[1] = y;
+			_atoms[j].r[2] = z;
 
-			BOOST_LOG_TRIVIAL(trace) << format("atom %d: (%3.3f, %3.3f, %3.3f)") % j % _atoms[j].x % _atoms[j].y % _atoms[j].z;
+			BOOST_LOG_TRIVIAL(trace) << format("atom %d: (%3.3f, %3.3f, %3.3f)") % j % _atoms[j].r[0] % _atoms[j].r[1] % _atoms[j].r[2];
 		}
 
 		/***************************************************************
@@ -331,9 +336,9 @@ superCellBoxPtr CrystalBuilder::Build(){
 		bcX = ncx / 2.0;
 		bcY = ncy / 2.0;
 		bcZ = ncz / 2.0;
-		u[0] = Mm[0][0] * bcX + Mm[1][0] * bcY + Mm[2][0] * bcZ;
-		u[1] = Mm[0][1] * bcX + Mm[1][1] * bcY + Mm[2][1] * bcZ;
-		u[2] = Mm[0][2] * bcX + Mm[1][2] * bcY + Mm[2][2] * bcZ;
+		u[0] = _Mm[0][0] * bcX + _Mm[1][0] * bcY + _Mm[2][0] * bcZ;
+		u[1] = _Mm[0][1] * bcX + _Mm[1][1] * bcY + _Mm[2][1] * bcZ;
+		u[2] = _Mm[0][2] * bcX + _Mm[1][2] * bcY + _Mm[2][2] * bcZ;
 		boxCenterX = u[0];
 		boxCenterY = u[1];
 		boxCenterZ = u[2];
@@ -341,11 +346,11 @@ superCellBoxPtr CrystalBuilder::Build(){
 		for (icx = 0; icx <= ncx; icx += ncx)
 			for (icy = 0; icy <= ncy; icy += ncy)
 				for (icz = 0; icz <= ncz; icz += ncz) {
-					u[0] = Mm[0][0] * (icx - bcX) + Mm[1][0] * (icy - bcY)+ Mm[2][0] * (icz - bcZ);
-					u[1] = Mm[0][1] * (icx - bcX) + Mm[1][1] * (icy - bcY)+ Mm[2][1] * (icz - bcZ);
-					u[2] = Mm[0][2] * (icx - bcX) + Mm[1][2] * (icy - bcY)+ Mm[2][2] * (icz - bcZ);
-					if ((_config->Structure.crystalTiltX != 0) || (_config->Structure.crystalTiltY != 0) || (_config->Structure.crystalTiltZ != 0))
-						RotateVect(u, u, _config->Structure.crystalTiltX, _config->Structure.crystalTiltY, _config->Structure.crystalTiltZ); // simply applies rotation matrix
+					u[0] = _Mm[0][0] * (icx - bcX) + _Mm[1][0] * (icy - bcY)+ _Mm[2][0] * (icz - bcZ);
+					u[1] = _Mm[0][1] * (icx - bcX) + _Mm[1][1] * (icy - bcY)+ _Mm[2][1] * (icz - bcZ);
+					u[2] = _Mm[0][2] * (icx - bcX) + _Mm[1][2] * (icy - bcY)+ _Mm[2][2] * (icz - bcZ);
+					if ((_c->Structure.crystalTiltX != 0) || (_c->Structure.crystalTiltY != 0) || (_c->Structure.crystalTiltZ != 0))
+						RotateVect(u, u, _c->Structure.crystalTiltX, _c->Structure.crystalTiltY, _c->Structure.crystalTiltZ); // simply applies rotation matrix
 					// x = u[0]+boxCenterXrot; y = u[1]+boxCenterYrot; z = u[2]+boxCenterZrot;
 					float_tt x = u[0] + boxCenterX;
 					float_tt y = u[1] + boxCenterY;
@@ -365,39 +370,39 @@ superCellBoxPtr CrystalBuilder::Build(){
 				}
 
 		//		printf("(%f, %f, %f): %f .. %f, %f .. %f, %f .. %f\n",m_ax,m_by,m_cz,boxXmin,boxXmax,boxYmin,boxYmax,boxZmin,boxZmax);
-		if ((_config->Structure.crystalTiltX != 0)
-				|| (_config->Structure.crystalTiltY != 0)
-				|| (_config->Structure.crystalTiltZ != 0)) {
+		if ((_c->Structure.crystalTiltX != 0)
+				|| (_c->Structure.crystalTiltY != 0)
+				|| (_c->Structure.crystalTiltZ != 0)) {
 			for (int j =  0; j < (natom); j++) {
-				u[0] = _atoms[j].x - boxCenterX;
-				u[1] = _atoms[j].y - boxCenterY;
-				u[2] = _atoms[j].z - boxCenterZ;
-				RotateVect(u, u, _config->Structure.crystalTiltX, _config->Structure.crystalTiltY, _config->Structure.crystalTiltZ); // simply applies rotation matrix
+				u[0] = _atoms[j].r[0] - boxCenterX;
+				u[1] = _atoms[j].r[1] - boxCenterY;
+				u[2] = _atoms[j].r[2] - boxCenterZ;
+				RotateVect(u, u, _c->Structure.crystalTiltX, _c->Structure.crystalTiltY, _c->Structure.crystalTiltZ); // simply applies rotation matrix
 				u[0] += boxCenterX;
 				u[1] += boxCenterY;
 				u[2] += boxCenterZ;
-				_atoms[j].x = u[0];
-				_atoms[j].y = u[1];
-				_atoms[j].z = u[2];
+				_atoms[j].r[0] = u[0];
+				_atoms[j].r[1] = u[1];
+				_atoms[j].r[2] = u[2];
 			}
 		} /* if tilts != 0 ... */
 
 		// rebase to some atom at (0,0,0)
 		BOOST_LOG_TRIVIAL(trace) << "Atoms after tilting and going to cartesian";
 		for (int j = 0; j < natom; j++) {
-			//			BOOST_LOG_TRIVIAL(trace) << format("atom %d: (%3.3f, %3.3f, %3.3f)\n") % j % m_atoms[j].x % m_atoms[j].y % m_atoms[j].z;
-			_atoms[j].x -= boxXmin;
-			_atoms[j].y -= boxYmin;
-			_atoms[j].z -= boxZmin;
-			BOOST_LOG_TRIVIAL(trace) << format("atom %d: (%3.3f, %3.3f, %3.3f)") % j % _atoms[j].x % _atoms[j].y % _atoms[j].z;
+			//			BOOST_LOG_TRIVIAL(trace) << format("atom %d: (%3.3f, %3.3f, %3.3f)\n") % j % m_atoms[j].r[0] % m_atoms[j].r[1] % m_atoms[j].r[2];
+			_atoms[j].r[0] -= boxXmin;
+			_atoms[j].r[1] -= boxYmin;
+			_atoms[j].r[2] -= boxZmin;
+			BOOST_LOG_TRIVIAL(trace) << format("atom %d: (%3.3f, %3.3f, %3.3f)") % j % _atoms[j].r[0] % _atoms[j].r[1] % _atoms[j].r[2];
 		}
 
 		// Offset the atoms in x- and y-directions:
 		// Do this after the rotation!
-		if ((_config->Structure.xOffset != 0) || (_config->Structure.yOffset != 0)) {
+		if ((_c->Structure.xOffset != 0) || (_c->Structure.yOffset != 0)) {
 			for (int j = 0 ; j < natom; j++) {
-				_atoms[j].x += _config->Structure.xOffset;
-				_atoms[j].y += _config->Structure.yOffset;
+				_atoms[j].r[0] += _c->Structure.xOffset;
+				_atoms[j].r[1] += _c->Structure.yOffset;
 			}
 		}
 	} // end of Ncell mode conversion to cartesian coords and tilting.
@@ -424,11 +429,11 @@ void CrystalBuilder::SetFillUnitCell(bool val){
 	_fillUnitCell = val;
 }
 void CrystalBuilder::ReadFromFile(){
-	_structureReader->ReadCellParams(m_Mm);
-	_structureReader->ReadAtoms(_baseAtoms,_uniqueAtoms,true);
+	_r->ReadCellParams(_Mm);
+	_r->ReadAtoms(_baseAtoms,_uniqueAtoms,true);
 	CalculateCellDimensions();
 	int s = _baseAtoms.size();
-//	BOOST_LOG_TRIVIAL(info)<< format("Read %d atoms, tds: %d") % s % (_config->Model.UseTDS);
+	//	BOOST_LOG_TRIVIAL(info)<< format("Read %d atoms, tds: %d") % s % (_c->Model.UseTDS);
 }
 void CrystalBuilder::CalculateCrystalBoundaries() {
 	int largestZindex = -1;
@@ -436,39 +441,39 @@ void CrystalBuilder::CalculateCrystalBoundaries() {
 	for (int i = 0; i < _atoms.size(); i++) {
 #pragma omp critical
 		{
-			if (_atoms[i].x < m_minX)
-				m_minX = _atoms[i].x;
+			if (_atoms[i].r[0] < m_minX)
+				m_minX = _atoms[i].r[0];
 		}
 #pragma omp critical
 		{
-			if (_atoms[i].x > m_maxX)
-				m_maxX = _atoms[i].x;
+			if (_atoms[i].r[0] > m_maxX)
+				m_maxX = _atoms[i].r[0];
 		}
 #pragma omp critical
 		{
-			if (_atoms[i].y < m_minY)
-				m_minY = _atoms[i].y;
+			if (_atoms[i].r[1] < m_minY)
+				m_minY = _atoms[i].r[1];
 		}
 #pragma omp critical
 		{
-			if (_atoms[i].y > m_maxY)
-				m_maxY = _atoms[i].y;
+			if (_atoms[i].r[1] > m_maxY)
+				m_maxY = _atoms[i].r[1];
 		}
 #pragma omp critical
 		{
-			if (_atoms[i].z < m_minZ)
-				m_minZ = _atoms[i].z;
+			if (_atoms[i].r[2] < m_minZ)
+				m_minZ = _atoms[i].r[2];
 		}
 #pragma omp critical
 		{
-			if (_atoms[i].z > m_maxZ){
-				m_maxZ = _atoms[i].z;
+			if (_atoms[i].r[2] > m_maxZ){
+				m_maxZ = _atoms[i].r[2];
 				largestZindex = i;
 			}
 		}
 	}
 	BOOST_LOG_TRIVIAL(trace)<<format("largest Z at index %d : (%f,%f,%f)")
-																						%largestZindex%_atoms[largestZindex].x%_atoms[largestZindex].y%_atoms[largestZindex].z;
+																								%largestZindex%_atoms[largestZindex].r[0]%_atoms[largestZindex].r[1]%_atoms[largestZindex].r[2];
 }
 
 void CrystalBuilder::Init(unsigned run_number) {
@@ -486,24 +491,24 @@ void CrystalBuilder::DisplayParams() {
 			"***************************** Structure Parameters ***********************************************";
 	BOOST_LOG_TRIVIAL(info) <<
 			"**************************************************************************************************";
-	BOOST_LOG_TRIVIAL(info)<<format("* Input file:           %s") %  _config->Structure.structureFilename.c_str();
+	BOOST_LOG_TRIVIAL(info)<<format("* Input file:           %s") %  _c->Structure.structureFilename.string().c_str();
 
-	if (_config->Structure.isBoxed == false)
+	if (_c->Structure.isBoxed == false)
 		BOOST_LOG_TRIVIAL(info)<<format(" Unit cell:            ax=%g by=%g cz=%g")% m_ax% m_by% m_cz;
 	else {
 		BOOST_LOG_TRIVIAL(info)<<format(" Size of Cube:         ax=%g by=%g cz=%g")
-						% _config->Structure.boxX% _config->Structure.boxY%	_config->Structure.boxZ;
+								% _c->Structure.boxX% _c->Structure.boxY%	_c->Structure.boxZ;
 		BOOST_LOG_TRIVIAL(info)<<format(" Cube size adjusted:   %s")%( m_adjustCubeSize ? "yes" : "no");
 	}
 	BOOST_LOG_TRIVIAL(info)<<format(" Super cell:           %d x %d x %d unit cells")
-													%_config->Structure.nCellX%		_config->Structure.nCellY% _config->Structure.nCellZ;
+															%_c->Structure.nCellX%		_c->Structure.nCellY% _c->Structure.nCellZ;
 	BOOST_LOG_TRIVIAL(info)<<format(" Number of atoms:      %d (super cell)")% _atoms.size();
 	BOOST_LOG_TRIVIAL(info)<<format(" Crystal tilt:         x=%g deg, y=%g deg, z=%g deg")
-													%(_config->Structure.crystalTiltX)% (_config->Structure.crystalTiltY )%( _config->Structure.crystalTiltZ );
+															%(_c->Structure.crystalTiltX)% (_c->Structure.crystalTiltY )%( _c->Structure.crystalTiltZ );
 	BOOST_LOG_TRIVIAL(info)<<format(" Model dimensions:     ax=%gA, by=%gA, cz=%gA (after tilt)")
-													%m_ax% m_by% m_cz;
-	BOOST_LOG_TRIVIAL(info)<<format(" Temperature:          %gK") %_config->Structure.temperatureK;
-	if (_config->Model.UseTDS)
+															%m_ax% m_by% m_cz;
+	BOOST_LOG_TRIVIAL(info)<<format(" Temperature:          %gK") %_c->Structure.temperatureK;
+	if (_c->Model.UseTDS)
 		BOOST_LOG_TRIVIAL(info)<<format(" TDS:                  yes");
 	else
 		BOOST_LOG_TRIVIAL(info)<<format(" TDS:                  no");
@@ -516,14 +521,14 @@ void CrystalBuilder::SetSliceThickness(ModelConfig& mc){
 
 	switch (mc.SliceThicknessCalculation) {
 	case SliceThicknessCalculation::Auto:
-		mc.sliceThicknessAngstrom = (zTotal/((int)zTotal))+0.01*(zTotal/((int)zTotal));
-		mc.nSlices = (int)zTotal;
+		mc.dz = (zTotal/((int)zTotal))+0.01*(zTotal/((int)zTotal));
+		mc.nSlices = (int)zTotal+1;
 		break;
 	case SliceThicknessCalculation::NumberOfSlices:
-		mc.sliceThicknessAngstrom = (zTotal/mc.nSlices)+0.01*(zTotal/mc.nSlices);
+		mc.dz = (zTotal/mc.nSlices)+0.01*(zTotal/mc.nSlices);
 		break;
 	case SliceThicknessCalculation::Thickness:
-		mc.nSlices = (int)(zTotal / mc.sliceThicknessAngstrom);
+		mc.nSlices = (int)(zTotal / mc.dz);
 		break;
 	default:
 		break;
@@ -537,37 +542,37 @@ void CrystalBuilder::SetResolution(ModelConfig& mc, const PotentialConfig pc){
 	case ResolutionCalculation::FILLN:
 		mc.dx = (max_x - min_x)/mc.nx;
 		mc.dy = (max_y - min_y)/mc.ny;
-		_config->Structure.xOffset = 0;
-		_config->Structure.yOffset = 0;
+		_c->Structure.xOffset = 0;
+		_c->Structure.yOffset = 0;
 		break;
 	case ResolutionCalculation::FILLRES:
 		mc.nx = ceil((max_x - min_x) / mc.dx) ;
 		mc.ny = ceil((max_y - min_y) / mc.dy) ;
 		mc.dx = (max_x - min_x)/mc.nx;
 		mc.dy = (max_y - min_y)/mc.ny;
-		_config->Structure.xOffset = 0;
-		_config->Structure.yOffset = 0;
+		_c->Structure.xOffset = 0;
+		_c->Structure.yOffset = 0;
 		break;
 	case ResolutionCalculation::BOXRES:
-		mc.nx =  _config->Structure.boxX / mc.dx ;
-		mc.ny =  _config->Structure.boxY / mc.dy ;
+		mc.nx =  _c->Structure.boxX / mc.dx ;
+		mc.ny =  _c->Structure.boxY / mc.dy ;
 		if(mc.CenterSample) {
-			_config->Structure.xOffset = _config->Structure.boxX/2 - (max_x-min_x)/2;
-			_config->Structure.yOffset = _config->Structure.boxY/2 - (max_y-min_y)/2;
+			_c->Structure.xOffset = _c->Structure.boxX/2 - (max_x-min_x)/2;
+			_c->Structure.yOffset = _c->Structure.boxY/2 - (max_y-min_y)/2;
 		} else {
-			_config->Structure.xOffset = 0;
-			_config->Structure.yOffset = 0;
+			_c->Structure.xOffset = 0;
+			_c->Structure.yOffset = 0;
 		}
 		break;
 	case ResolutionCalculation::BOXN:
-		mc.dx =  _config->Structure.boxX / mc.nx ;
-		mc.dy =  _config->Structure.boxY / mc.ny ;
+		mc.dx =  _c->Structure.boxX / mc.nx ;
+		mc.dy =  _c->Structure.boxY / mc.ny ;
 		if(mc.CenterSample) {
-			_config->Structure.xOffset = _config->Structure.boxX/2 - (max_x-min_x)/2;
-			_config->Structure.yOffset = _config->Structure.boxY/2 - (max_y-min_y)/2;
+			_c->Structure.xOffset = _c->Structure.boxX/2 - (max_x-min_x)/2;
+			_c->Structure.yOffset = _c->Structure.boxY/2 - (max_y-min_y)/2;
 		} else {
-			_config->Structure.xOffset = 0;
-			_config->Structure.yOffset = 0;
+			_c->Structure.xOffset = 0;
+			_c->Structure.yOffset = 0;
 		}
 		break;
 
@@ -580,9 +585,9 @@ void CrystalBuilder::SetCellParameters(float_tt ax, float_tt by, float_tt cz) {
 }
 
 void CrystalBuilder::SetNCells(unsigned nx, unsigned ny, unsigned nz) {
-	_config->Structure.nCellX = nx;
-	_config->Structure.nCellY = ny;
-	_config->Structure.nCellZ = nz;
+	_c->Structure.nCellX = nx;
+	_c->Structure.nCellY = ny;
+	_c->Structure.nCellZ = nz;
 	// TODO: should this ever be false?
 	bool handleVacancies = true;
 	ReplicateUnitCell(handleVacancies);
@@ -606,30 +611,30 @@ void CrystalBuilder::OffsetCenter(atom &center) {
 	 by "center" at position (0.5,0.5,0.0)
 	 */
 
-	float_tt dx = m_ax / 2.0f - center.x;
-	float_tt dy = m_by / 2.0f - center.y;
-	float_tt dz = -center.z;
+	float_tt dx = m_ax / 2.0f - center.r[0];
+	float_tt dy = m_by / 2.0f - center.r[1];
+	float_tt dz = -center.r[2];
 	for (size_t i = 0; i < _atoms.size(); i++) {
-		_atoms[i].x += dx;
-		if (_atoms[i].x < 0.0f)
-			_atoms[i].x += m_ax;
-		else if (_atoms[i].x > m_ax)
-			_atoms[i].x -= m_ax;
-		_atoms[i].y += dy;
-		if (_atoms[i].y < 0.0f)
-			_atoms[i].y += m_by;
-		else if (_atoms[i].y > m_by)
-			_atoms[i].y -= m_by;
-		_atoms[i].z += dz;
-		if (_atoms[i].z < 0.0f)
-			_atoms[i].z += m_cz;
-		else if (_atoms[i].z > m_cz)
-			_atoms[i].z -= m_cz;
+		_atoms[i].r[0] += dx;
+		if (_atoms[i].r[0] < 0.0f)
+			_atoms[i].r[0] += m_ax;
+		else if (_atoms[i].r[0] > m_ax)
+			_atoms[i].r[0] -= m_ax;
+		_atoms[i].r[1] += dy;
+		if (_atoms[i].r[1] < 0.0f)
+			_atoms[i].r[1] += m_by;
+		else if (_atoms[i].r[1] > m_by)
+			_atoms[i].r[1] -= m_by;
+		_atoms[i].r[2] += dz;
+		if (_atoms[i].r[2] < 0.0f)
+			_atoms[i].r[2] += m_cz;
+		else if (_atoms[i].r[2] > m_cz)
+			_atoms[i].r[2] -= m_cz;
 	}
 }
 
 // This function reads the atomic positions from fileName and also adds 
-// Thermal displacements to their positions, if _config->Model.UseTDS is turned on.
+// Thermal displacements to their positions, if _c->Model.UseTDS is turned on.
 void CrystalBuilder::MakeCrystal(bool handleVacancies) {
 	int ncoord = _baseAtoms.size(), ncx, ncy, ncz, icx, icy, icz, jz;
 	int i2, j, ix, iy, iz = 0;
@@ -637,12 +642,11 @@ void CrystalBuilder::MakeCrystal(bool handleVacancies) {
 	float_tt boxCenterX, boxCenterY, boxCenterZ, boxCenterXrot, boxCenterYrot, boxCenterZrot, bcX, bcY, bcZ;
 	float_tt totOcc, choice, lastOcc;
 	float_tt *u = NULL;
-	FloatArray2D Mm = m_Mm;
 	static int ncoord_old = 0;
 	u = (float_tt *) malloc(3 * sizeof(float_tt));
-	ncx = _config->Structure.nCellX;
-	ncy = _config->Structure.nCellY;
-	ncz = _config->Structure.nCellZ;
+	ncx = _c->Structure.nCellX;
+	ncy = _c->Structure.nCellY;
+	ncz = _c->Structure.nCellZ;
 
 	unsigned natom = _baseAtoms.size() * ncx * ncy * ncz;
 	_atoms.resize(natom);
@@ -654,11 +658,11 @@ void CrystalBuilder::MakeCrystal(bool handleVacancies) {
 	 * Read actual Data
 	 ***********************************************************/
 	for (int i = _baseAtoms.size() - 1; i >= 0; i--) {
-		if (_config->Model.UseTDS) {
+		if (_c->Model.UseTDS) {
 			m_u2[_baseAtoms[i].Znum] = 0;
 		}
 	}
-	if (_config->Structure.isBoxed) {
+	if (_c->Structure.isBoxed) {
 		/* at this point the atoms should have fractional coordinates */
 		TiltBoxed(ncoord, handleVacancies);
 	} else {  // work in NCell mode
@@ -672,17 +676,17 @@ void CrystalBuilder::MakeCrystal(bool handleVacancies) {
 		BOOST_LOG_TRIVIAL(trace) << "Atoms after replication of unit cells";
 
 		for (int j = 0; j < natom; j++) {
-			//			LOG(INFO) << format("atom %d: (%3.3f, %3.3f, %3.3f)\n") % j % m_atoms[j].x % m_atoms[j].y % m_atoms[j].z;
+			//			LOG(INFO) << format("atom %d: (%3.3f, %3.3f, %3.3f)\n") % j % m_atoms[j].r[0] % m_atoms[j].r[1] % m_atoms[j].r[2];
 			// This converts also to cartesian coordinates
-			float_tt x = Mm[0][0] * _atoms[j].x + Mm[1][0] * _atoms[j].y + Mm[2][0] * _atoms[j].z;
-			float_tt y = Mm[0][1] * _atoms[j].x + Mm[1][1] * _atoms[j].y + Mm[2][1] * _atoms[j].z;
-			float_tt z = Mm[0][2] * _atoms[j].x + Mm[1][2] * _atoms[j].y + Mm[2][2] * _atoms[j].z;
+			float_tt x = _Mm[0][0] * _atoms[j].r[0] + _Mm[1][0] * _atoms[j].r[1] + _Mm[2][0] * _atoms[j].r[2];
+			float_tt y = _Mm[0][1] * _atoms[j].r[0] + _Mm[1][1] * _atoms[j].r[1] + _Mm[2][1] * _atoms[j].r[2];
+			float_tt z = _Mm[0][2] * _atoms[j].r[0] + _Mm[1][2] * _atoms[j].r[1] + _Mm[2][2] * _atoms[j].r[2];
 
-			_atoms[j].x = x;
-			_atoms[j].y = y;
-			_atoms[j].z = z;
+			_atoms[j].r[0] = x;
+			_atoms[j].r[1] = y;
+			_atoms[j].r[2] = z;
 
-			BOOST_LOG_TRIVIAL(trace) << format("atom %d: (%3.3f, %3.3f, %3.3f)") % j % _atoms[j].x % _atoms[j].y % _atoms[j].z;
+			BOOST_LOG_TRIVIAL(trace) << format("atom %d: (%3.3f, %3.3f, %3.3f)") % j % _atoms[j].r[0] % _atoms[j].r[1] % _atoms[j].r[2];
 		}
 
 		/***************************************************************
@@ -692,9 +696,9 @@ void CrystalBuilder::MakeCrystal(bool handleVacancies) {
 		bcX = ncx / 2.0;
 		bcY = ncy / 2.0;
 		bcZ = ncz / 2.0;
-		u[0] = Mm[0][0] * bcX + Mm[1][0] * bcY + Mm[2][0] * bcZ;
-		u[1] = Mm[0][1] * bcX + Mm[1][1] * bcY + Mm[2][1] * bcZ;
-		u[2] = Mm[0][2] * bcX + Mm[1][2] * bcY + Mm[2][2] * bcZ;
+		u[0] = _Mm[0][0] * bcX + _Mm[1][0] * bcY + _Mm[2][0] * bcZ;
+		u[1] = _Mm[0][1] * bcX + _Mm[1][1] * bcY + _Mm[2][1] * bcZ;
+		u[2] = _Mm[0][2] * bcX + _Mm[1][2] * bcY + _Mm[2][2] * bcZ;
 		boxCenterX = u[0];
 		boxCenterY = u[1];
 		boxCenterZ = u[2];
@@ -702,11 +706,11 @@ void CrystalBuilder::MakeCrystal(bool handleVacancies) {
 		for (icx = 0; icx <= ncx; icx += ncx)
 			for (icy = 0; icy <= ncy; icy += ncy)
 				for (icz = 0; icz <= ncz; icz += ncz) {
-					u[0] = Mm[0][0] * (icx - bcX) + Mm[1][0] * (icy - bcY)+ Mm[2][0] * (icz - bcZ);
-					u[1] = Mm[0][1] * (icx - bcX) + Mm[1][1] * (icy - bcY)+ Mm[2][1] * (icz - bcZ);
-					u[2] = Mm[0][2] * (icx - bcX) + Mm[1][2] * (icy - bcY)+ Mm[2][2] * (icz - bcZ);
-					if ((_config->Structure.crystalTiltX != 0) || (_config->Structure.crystalTiltY != 0) || (_config->Structure.crystalTiltZ != 0))
-						RotateVect(u, u, _config->Structure.crystalTiltX, _config->Structure.crystalTiltY, _config->Structure.crystalTiltZ); // simply applies rotation matrix
+					u[0] = _Mm[0][0] * (icx - bcX) + _Mm[1][0] * (icy - bcY)+ _Mm[2][0] * (icz - bcZ);
+					u[1] = _Mm[0][1] * (icx - bcX) + _Mm[1][1] * (icy - bcY)+ _Mm[2][1] * (icz - bcZ);
+					u[2] = _Mm[0][2] * (icx - bcX) + _Mm[1][2] * (icy - bcY)+ _Mm[2][2] * (icz - bcZ);
+					if ((_c->Structure.crystalTiltX != 0) || (_c->Structure.crystalTiltY != 0) || (_c->Structure.crystalTiltZ != 0))
+						RotateVect(u, u, _c->Structure.crystalTiltX, _c->Structure.crystalTiltY, _c->Structure.crystalTiltZ); // simply applies rotation matrix
 					// x = u[0]+boxCenterXrot; y = u[1]+boxCenterYrot; z = u[2]+boxCenterZrot;
 					float_tt x = u[0] + boxCenterX;
 					float_tt y = u[1] + boxCenterY;
@@ -726,37 +730,37 @@ void CrystalBuilder::MakeCrystal(bool handleVacancies) {
 				}
 
 		//		printf("(%f, %f, %f): %f .. %f, %f .. %f, %f .. %f\n",m_ax,m_by,m_cz,boxXmin,boxXmax,boxYmin,boxYmax,boxZmin,boxZmax);
-		if ((_config->Structure.crystalTiltX != 0) || (_config->Structure.crystalTiltY != 0) || (_config->Structure.crystalTiltZ != 0)) {
+		if ((_c->Structure.crystalTiltX != 0) || (_c->Structure.crystalTiltY != 0) || (_c->Structure.crystalTiltZ != 0)) {
 			for (int j =  0; j < (natom); j++) {
-				u[0] = _atoms[j].x - boxCenterX;
-				u[1] = _atoms[j].y - boxCenterY;
-				u[2] = _atoms[j].z - boxCenterZ;
-				RotateVect(u, u, _config->Structure.crystalTiltX, _config->Structure.crystalTiltY, _config->Structure.crystalTiltZ); // simply applies rotation matrix
+				u[0] = _atoms[j].r[0] - boxCenterX;
+				u[1] = _atoms[j].r[1] - boxCenterY;
+				u[2] = _atoms[j].r[2] - boxCenterZ;
+				RotateVect(u, u, _c->Structure.crystalTiltX, _c->Structure.crystalTiltY, _c->Structure.crystalTiltZ); // simply applies rotation matrix
 				u[0] += boxCenterX;
 				u[1] += boxCenterY;
 				u[2] += boxCenterZ;
-				_atoms[j].x = u[0];
-				_atoms[j].y = u[1];
-				_atoms[j].z = u[2];
+				_atoms[j].r[0] = u[0];
+				_atoms[j].r[1] = u[1];
+				_atoms[j].r[2] = u[2];
 			}
 		} /* if tilts != 0 ... */
 
 		// rebase to some atom at (0,0,0)
 		BOOST_LOG_TRIVIAL(trace) << "Atoms after tilting and going to cartesian";
 		for (int j = 0; j < natom; j++) {
-			//			BOOST_LOG_TRIVIAL(trace) << format("atom %d: (%3.3f, %3.3f, %3.3f)\n") % j % m_atoms[j].x % m_atoms[j].y % m_atoms[j].z;
-			_atoms[j].x -= boxXmin;
-			_atoms[j].y -= boxYmin;
-			_atoms[j].z -= boxZmin;
-			BOOST_LOG_TRIVIAL(trace) << format("atom %d: (%3.3f, %3.3f, %3.3f)") % j % _atoms[j].x % _atoms[j].y % _atoms[j].z;
+			//			BOOST_LOG_TRIVIAL(trace) << format("atom %d: (%3.3f, %3.3f, %3.3f)\n") % j % m_atoms[j].r[0] % m_atoms[j].r[1] % m_atoms[j].r[2];
+			_atoms[j].r[0] -= boxXmin;
+			_atoms[j].r[1] -= boxYmin;
+			_atoms[j].r[2] -= boxZmin;
+			BOOST_LOG_TRIVIAL(trace) << format("atom %d: (%3.3f, %3.3f, %3.3f)") % j % _atoms[j].r[0] % _atoms[j].r[1] % _atoms[j].r[2];
 		}
 
 		// Offset the atoms in x- and y-directions:
 		// Do this after the rotation!
-		if ((_config->Structure.xOffset != 0) || (_config->Structure.yOffset != 0)) {
+		if ((_c->Structure.xOffset != 0) || (_c->Structure.yOffset != 0)) {
 			for (int j = 0 ; j < natom; j++) {
-				_atoms[j].x += _config->Structure.xOffset;
-				_atoms[j].y += _config->Structure.yOffset;
+				_atoms[j].r[0] += _c->Structure.xOffset;
+				_atoms[j].r[1] += _c->Structure.yOffset;
 			}
 		}
 	} // end of Ncell mode conversion to cartesian coords and tilting.
@@ -771,12 +775,12 @@ void CrystalBuilder::MakeCrystal(bool handleVacancies) {
 
 // Uses m_Mm to calculate ax, by, cz, and alpha, beta, gamma
 void CrystalBuilder::CalculateCellDimensions() {
-	m_ax = sqrt(m_Mm[0][0] * m_Mm[0][0] + m_Mm[0][1] * m_Mm[0][1]+ m_Mm[0][2] * m_Mm[0][2]);
-	m_by = sqrt(m_Mm[1][0] * m_Mm[1][0] + m_Mm[1][1] * m_Mm[1][1]+ m_Mm[1][2] * m_Mm[1][2]);
-	m_cz = sqrt(m_Mm[2][0] * m_Mm[2][0] + m_Mm[2][1] * m_Mm[2][1]+ m_Mm[2][2] * m_Mm[2][2]);
-	m_cGamma = atan2(m_Mm[1][1], m_Mm[1][0]);
-	m_cBeta = acos(m_Mm[2][0] / m_cz);
-	m_cAlpha = acos(m_Mm[2][1] * sin(m_cGamma) / m_cz + cos(m_cBeta) * cos(m_cGamma));
+	m_ax = sqrt(_Mm[0][0] * _Mm[0][0] + _Mm[0][1] * _Mm[0][1]+ _Mm[0][2] * _Mm[0][2]);
+	m_by = sqrt(_Mm[1][0] * _Mm[1][0] + _Mm[1][1] * _Mm[1][1]+ _Mm[1][2] * _Mm[1][2]);
+	m_cz = sqrt(_Mm[2][0] * _Mm[2][0] + _Mm[2][1] * _Mm[2][1]+ _Mm[2][2] * _Mm[2][2]);
+	m_cGamma = atan2(_Mm[1][1], _Mm[1][0]);
+	m_cBeta = acos(_Mm[2][0] / m_cz);
+	m_cAlpha = acos(_Mm[2][1] * sin(m_cGamma) / m_cz + cos(m_cBeta) * cos(m_cGamma));
 	m_cGamma /= (float) PI180;
 	m_cBeta /= (float) PI180;
 	m_cAlpha /= (float) PI180;
@@ -816,7 +820,7 @@ void CrystalBuilder::TiltBoxed(int ncoord, bool handleVacancies) {
 
 	//unsigned jz;
 
-	Ncells = _config->Structure.nCellX * _config->Structure.nCellY * _config->Structure.nCellZ;
+	Ncells = _c->Structure.nCellX * _c->Structure.nCellY * _c->Structure.nCellZ;
 
 
 	dx = 0;
@@ -829,12 +833,12 @@ void CrystalBuilder::TiltBoxed(int ncoord, bool handleVacancies) {
 	// memcpy(Mm[0],m_Mm[0],3*3*sizeof(double));
 	for (ix = 0; ix < 3; ix++)
 		for (iy = 0; iy < 3; iy++)
-			Mm[ix][iy] = m_Mm[iy][ix];
+			Mm[ix][iy] = _Mm[iy][ix];
 
 	memcpy(MmOrig.data(), Mm.data(), 3 * 3 * sizeof(double));
 	Inverse_3x3(MmOrigInv, MmOrig);
 	/* remember that the angles are in rad: */
-	RotateMatrix(Mm, Mm, _config->Structure.crystalTiltX/PI180, _config->Structure.crystalTiltY/PI180, _config->Structure.crystalTiltZ/PI180);
+	RotateMatrix(Mm, Mm, _c->Structure.crystalTiltX/PI180, _c->Structure.crystalTiltY/PI180, _c->Structure.crystalTiltZ/PI180);
 	Inverse_3x3(Mminv, Mm);  // computes Mminv from Mm!
 	/* find out how far we will have to go in unit of unit cell vectors.  when creating the supercell by
 	 * checking the number of unit cell vectors necessary to reach every corner of the supercell box.
@@ -850,9 +854,9 @@ void CrystalBuilder::TiltBoxed(int ncoord, bool handleVacancies) {
 	for (ix = 0; ix <= 1; ix++)
 		for (iy = 0; iy <= 1; iy++)
 			for (iz = 0; iz <= 1; iz++) {
-				a[0][0] = ix * _config->Structure.boxX - dx;
-				a[1][0] = iy * _config->Structure.boxY - dy;
-				a[2][0] = iz * _config->Structure.boxZ - dz;
+				a[0][0] = ix * _c->Structure.boxX - dx;
+				a[1][0] = iy * _c->Structure.boxY - dy;
+				a[2][0] = iz * _c->Structure.boxZ - dz;
 
 				// matrixProduct(a,1,3,Mminv,3,3,b);
 				MatrixProduct(Mminv, 3, 3, a, 3, 1, b);
@@ -884,8 +888,8 @@ void CrystalBuilder::TiltBoxed(int ncoord, bool handleVacancies) {
 	atomCount = 0;
 	jVac = 0;
 	for (iatom = 0; iatom < ncoord;) {
-		// printf("%d: (%g %g %g) %d\n",iatom,unitAtoms[iatom].x,unitAtoms[iatom].y,
-		//   unitAtoms[iatom].z,unitAtoms[iatom].Znum);
+		// printf("%d: (%g %g %g) %d\n",iatom,unitAtoms[iatom].r[0],unitAtoms[iatom].r[1],
+		//   unitAtoms[iatom].r[2],unitAtoms[iatom].Znum);
 		memcpy(&newAtom, &_baseAtoms[iatom], sizeof(atom));
 		//for (jz=0;jz<m_Znums.size();jz++)	if (m_Znums[jz] == newAtom.Znum) break;
 		// allocate more memory, if there is a new element
@@ -907,9 +911,9 @@ void CrystalBuilder::TiltBoxed(int ncoord, bool handleVacancies) {
 			for (jequal = iatom + 1; jequal < ncoord; jequal++) {
 				// if there is anothe ratom that comes close to within 0.1*sqrt(3) A we will increase
 				// the total occupany and the counter jequal.
-				if ((fabs(newAtom.x - _baseAtoms[jequal].x) < 1e-6)
-						&& (fabs(newAtom.y - _baseAtoms[jequal].y) < 1e-6)
-						&& (fabs(newAtom.z - _baseAtoms[jequal].z) < 1e-6)) {
+				if ((fabs(newAtom.r[0] - _baseAtoms[jequal].r[0]) < 1e-6)
+						&& (fabs(newAtom.r[1] - _baseAtoms[jequal].r[1]) < 1e-6)
+						&& (fabs(newAtom.r[2] - _baseAtoms[jequal].r[2]) < 1e-6)) {
 					totOcc += _baseAtoms[jequal].occ;
 				} else
 					break;
@@ -926,9 +930,9 @@ void CrystalBuilder::TiltBoxed(int ncoord, bool handleVacancies) {
 			for (iy = nymin; iy <= nymax; iy++) {
 				for (iz = nzmin; iz <= nzmax; iz++) {
 					// atom position in cubic reduced coordinates:
-					aOrig[0][0] = ix + newAtom.x;
-					aOrig[1][0] = iy + newAtom.y;
-					aOrig[2][0] = iz + newAtom.z;
+					aOrig[0][0] = ix + newAtom.r[0];
+					aOrig[1][0] = iy + newAtom.r[1];
+					aOrig[2][0] = iz + newAtom.r[2];
 
 					// Now is the time to remove atoms that are on the same position or could be vacancies:
 					// if we encountered atoms in the same position, or the occupancy of the current atom is not 1, then
@@ -972,8 +976,8 @@ void CrystalBuilder::TiltBoxed(int ncoord, bool handleVacancies) {
 
 					// here we need to call phononDisplacement:
 					// phononDisplacement(u,muls,iatom,ix,iy,iz,atomCount,atoms[i].dw,*natom,atoms[i].Znum);
-					if (_config->Model.displacementType == DisplacementType::Einstein) {
-						if (_config->Model.UseTDS) {
+					if (_c->Model.displacementType == DisplacementType::Einstein) {
+						if (_c->Model.UseTDS) {
 							EinsteinDisplacement(u,newAtom);
 							a[0][0] = aOrig[0][0] + u[0][0];
 							a[1][0] = aOrig[1][0] + u[0][1];
@@ -998,14 +1002,14 @@ void CrystalBuilder::TiltBoxed(int ncoord, bool handleVacancies) {
 
 					// include atoms that are within the box
 					if ((x >= 0) &&
-							(x <= _config->Structure.boxX) && (y >= 0) &&
-							(y <= _config->Structure.boxY) && (z >= 0) &&
-							(z <= _config->Structure.boxZ)) {
+							(x <= _c->Structure.boxX) && (y >= 0) &&
+							(y <= _c->Structure.boxY) && (z >= 0) &&
+							(z <= _c->Structure.boxZ)) {
 						// matrixProduct(a,1,3,Mm,3,3,b);
 						MatrixProduct(Mm, 3, 3, a, 3, 1, b);
-						_atoms[atomCount].x = b[0][0] + dx;
-						_atoms[atomCount].y = b[1][0] + dy;
-						_atoms[atomCount].z = b[2][0] + dz;
+						_atoms[atomCount].r[0] = b[0][0] + dx;
+						_atoms[atomCount].r[1] = b[1][0] + dy;
+						_atoms[atomCount].r[2] = b[2][0] + dz;
 						_atoms[atomCount].dw = _baseAtoms[jChoice].dw;
 						_atoms[atomCount].occ = _baseAtoms[jChoice].occ;
 						_atoms[atomCount].q = _baseAtoms[jChoice].q;
@@ -1024,9 +1028,9 @@ void CrystalBuilder::TiltBoxed(int ncoord, bool handleVacancies) {
 		iatom = jequal;
 	} /* iatom ... */
 	BOOST_LOG_TRIVIAL(trace)<<format("Removed %d atoms because of multiple occupancy or occupancy < 1") % jVac;
-	m_ax = _config->Structure.boxX;
-	m_by = _config->Structure.boxY;
-	m_cz = _config->Structure.boxZ;
+	m_ax = _c->Structure.boxX;
+	m_by = _c->Structure.boxY;
+	m_cz = _c->Structure.boxZ;
 	// call phononDisplacement again to update displacement data:
 	// Not supported yet
 	//	PhononDisplacement(u, iatom, ix, iy, iz, newAtom, false);
@@ -1050,9 +1054,9 @@ void CrystalBuilder::ReplicateUnitCell(int handleVacancies) {
 	double totalOccupancy;
 	double choice, lastOcc;
 
-	ncx = _config->Structure.nCellX;
-	ncy = _config->Structure.nCellY;
-	ncz = _config->Structure.nCellZ;
+	ncx = _c->Structure.nCellX;
+	ncy = _c->Structure.nCellY;
+	ncz = _c->Structure.nCellZ;
 	FloatArray2D u(boost::extents[1][3]);
 
 	_atoms.resize(ncx * ncy * ncz * _baseAtoms.size());
@@ -1068,9 +1072,9 @@ void CrystalBuilder::ReplicateUnitCell(int handleVacancies) {
 			for (jequal = i - 1; jequal >= 0; jequal--) {
 				// if there is anothe ratom that comes close to within 0.1*sqrt(3) A we will increase
 				// the total occupany and the counter jequal.
-				if ((fabs(_atoms[i].x - _atoms[jequal].x) < 1e-6)
-						&& (fabs(_atoms[i].y - _atoms[jequal].y) < 1e-6)
-						&& (fabs(_atoms[i].z - _atoms[jequal].z) < 1e-6)) {
+				if ((fabs(_atoms[i].r[0] - _atoms[jequal].r[0]) < 1e-6)
+						&& (fabs(_atoms[i].r[1] - _atoms[jequal].r[1]) < 1e-6)
+						&& (fabs(_atoms[i].r[2] - _atoms[jequal].r[2]) < 1e-6)) {
 					totalOccupancy += _atoms[jequal].occ;
 
 				} else break;
@@ -1132,8 +1136,8 @@ void CrystalBuilder::ReplicateUnitCell(int handleVacancies) {
 						}
 					}
 
-					if (_config->Model.UseTDS)
-						switch(_config->Model.displacementType){
+					if (_c->Model.UseTDS)
+						switch(_c->Model.displacementType){
 						case DisplacementType::Einstein:
 							EinsteinDisplacement(u,_baseAtoms[i]);
 							break;
@@ -1145,12 +1149,12 @@ void CrystalBuilder::ReplicateUnitCell(int handleVacancies) {
 							break;
 						}
 					for (i2 = i; i2 > jequal; i2--) {
-						_atoms[jCell + i2].x = _baseAtoms[i2].x + icx + u[0][0];
-						_atoms[jCell + i2].y = _baseAtoms[i2].y + icy + u[0][1];
-						_atoms[jCell + i2].z = _baseAtoms[i2].z + icz + u[0][2];
-						BOOST_LOG_TRIVIAL(trace) << format("atom %d: (%3.3f, %3.3f, %3.3f) Z=%d")
-												% (jCell + i2) % _atoms[jCell + i2].x % _atoms[jCell + i2].y
-												% _atoms[jCell + i2].z %  _atoms[jCell + i2].Znum ;
+						_atoms[jCell + i2].r = arma::vec({_baseAtoms[i2].r[0] + icx + u[0][0],
+							_atoms[jCell + i2].r[1] + icy + u[0][1],
+							_atoms[jCell + i2].r[2] + icz + u[0][2]});
+//						BOOST_LOG_TRIVIAL(trace) << format("atom %d: (%3.3f, %3.3f, %3.3f) Z=%d")
+//														% (jCell + i2) % _atoms[jCell + i2].r[0] % _atoms[jCell + i2].r[1]
+//														% _atoms[jCell + i2].r[2] %  _atoms[jCell + i2].Znum ;
 					}
 				}  // for (icz=ncz-1;icz>=0;icz--)
 			} // for (icy=ncy-1;icy>=0;icy--)
@@ -1161,18 +1165,6 @@ void CrystalBuilder::ReplicateUnitCell(int handleVacancies) {
 		BOOST_LOG_TRIVIAL(trace)<<format("Removed %d atoms because of occupancies < 1 or multiple atoms in the same place") %jVac;
 }
 
-void CrystalBuilder::DisplaceAtoms() {
-	std::vector<atom>::iterator at = _atoms.begin(), end = _atoms.end();
-	FloatArray2D u(boost::extents[1][3]);
-
-	for (at; at != end; ++at) {
-		EinsteinDisplacement(u, (*at));
-		// Add obtained u to atomic position
-		(*at).x += u[0][0];
-		(*at).y += u[0][1];
-		(*at).z += u[0][2];
-	}
-}
 
 void CrystalBuilder::EinsteinDisplacement(FloatArray2D& u, atom &_atom) {
 	/* convert the Debye-Waller factor to sqrt(<u^2>) */
@@ -1222,10 +1214,10 @@ void CrystalBuilder::PhononDisplacement(FloatArray2D &u, int id, int icx,
 	static FILE *fpPhonon = NULL;
 	static int Nk, Ns;  // number of k-vectors and atoms per primitive unit cell
 	static float_tt *massPrim;   // masses for every atom in primitive basis
-	static float_tt **omega;     // array of eigenvalues for every k-vector
+	static FloatArray2D omega;     // array of eigenvalues for every k-vector
 	static complex_tt ***eigVecs;  // array of eigenvectors for every k-vector
-	static float_tt **kVecs;     // array for Nk 3-dim k-vectors
-	static float_tt **q1 = NULL, **q2 = NULL;
+	static FloatArray2D kVecs(boost::extents[Nk][ 3]);     // array for Nk 3-dim k-vectors
+	static FloatArray2D q1(boost::extents[3 * Ns][ Nk]), q2(boost::extents[3 * Ns][ Nk]);
 	int ik, lambda, icoord; // Ncells, nkomega;
 	double kR, kRi, kRr, wobble;
 	static float_tt *u2T, ux = 0, uy = 0, uz = 0; // u2Collect=0; // Ttotal=0;
@@ -1243,14 +1235,14 @@ void CrystalBuilder::PhononDisplacement(FloatArray2D &u, int id, int icx,
 
 	float_tt dw = atom.dw;
 
-	if (_config->Model.UseTDS == 0)
+	if (_c->Model.UseTDS == 0)
 		return;
 
 	// We need to copy the transpose of m_Mm to Mm.
 	// we therefore cannot use the following command:
 	for (ix = 0; ix < 3; ix++)
 		for (iy = 0; iy < 3; iy++)
-			Mm[ix][iy] = m_Mm[iy][ix];
+			Mm[ix][iy] = _Mm[iy][ix];
 
 	Inverse_3x3(MmInv, Mm);
 
@@ -1283,78 +1275,76 @@ void CrystalBuilder::PhononDisplacement(FloatArray2D &u, int id, int icx,
 		 * int_-infty^infty exp(-x^2/2) x^2 dx = sqrt(pi)
 		 * introduced in order to match the wobble factor with <u^2>
 		 */
-		scale = (float) sqrt(_config->Structure.temperatureK / 300.0);
+		scale = (float) sqrt(_c->Structure.temperatureK / 300.0);
 	}
 
 	if (fpPhonon == NULL) {
-		if ((fpPhonon = fopen(m_phononFile.string().c_str(), "r")) != NULL) {
-			if (2 * sizeof(float) != sizeof(fftwf_complex)) {
-				printf(
-						"phononDisplacement: data type mismatch: fftw_complex != 2*float!\n");
-				exit(0);
-			}
-			fread(&Nk, sizeof(int), 1, fpPhonon);
-			fread(&Ns, sizeof(int), 1, fpPhonon);
-			massPrim = (float_tt *) malloc(Ns * sizeof(float)); // masses for every atom in primitive basis
-			fread(massPrim, sizeof(float), Ns, fpPhonon);
-			kVecs = float2D(Nk, 3, "kVecs");
-			omega = float2D(Nk, 3 * Ns, "omega"); /* array of eigenvalues for every k-vector
-			 * omega is given in THz, but the 2pi-factor
-			 * is still there, i.e. f=omega/2pi
-			 */
-			eigVecs = complex3D(Nk, 3 * Ns, 3 * Ns, "eigVecs"); // array of eigenvectors for every k-vector
-			for (ix = 0; ix < Nk; ix++) {
-				fread(kVecs[ix], sizeof(float), 3, fpPhonon);  // k-vector
-				for (iy = 0; iy < 3 * Ns; iy++) {
-					fread(omega[ix] + iy, sizeof(float), 1, fpPhonon);
-					fread(eigVecs[ix][iy], 2 * sizeof(float), 3 * Ns, fpPhonon);
-				}
-			}
-
-			/* convert omega into q scaling factors, since we need those, instead of true omega:    */
-			/* The 1/sqrt(2) term is from the dimensionality ((q1,q2) -> d=2)of the random numbers */
-			for (ix = 0; ix < Nk; ix++) {
-				for (idd = 0; idd < Ns; idd++)
-					for (iy = 0; iy < 3; iy++) {
-						// quantize the energy distribution:
-						// tanh and exp give different results will therefore use exp
-						// nkomega = (int)(1.0/tanh(THZ_HBAR_2KB*omega[ix][iy+3*id]/_config->Structure.temperatureK));
-						// wobble  =      (1.0/tanh(THZ_HBAR_2KB*omega[ix][iy+3*id]/_config->Structure.temperatureK)-0.5);
-						// nkomega = (int)(1.0/(exp(THZ_HBAR_KB*omega[ix][iy+3*id]/_config->Structure.temperatureK)-1)+0.5);
-						if (omega[ix][iy + 3 * idd] > 1e-4) {
-							wobble =
-									_config->Structure.temperatureK > 0 ?
-											(1.0
-													/ (exp(
-															THZ_HBAR_KB
-															* omega[ix][iy
-																		+ 3
-																		* idd]
-																		/ _config->Structure.temperatureK)
-															- 1)) :
-															0;
-							// if (ix == 0) printf("%g: %d %g\n",omega[ix][iy+3*id],nkomega,wobble);
-							wobble = sqrt(
-									(wobble + 0.5)
-									/ (2 * M_PI * Nk * 2 * massPrim[idd]
-																	* omega[ix][iy + 3 * idd]
-																				* THZ_AMU_HBAR));
-						} else
-							wobble = 0;
-						/* Ttotal += 0.25*massPrim[id]*((wobble*wobble)/(2*Ns))*
-						 omega[ix][iy+3*id]*omega[ix][iy+3*id]*AMU_THZ2_A2_KB;
-						 */
-						omega[ix][iy + 3 * idd] = wobble;
-					}  // idd
-				// if (ix == 0) printf("\n");
-			}
-			// printf("Temperature: %g K\n",Ttotal);
-			// printf("%d %d %d\n",(int)(0.4*(double)Nk/11.0),(int)(0.6*(double)Nk),Nk);
-			q1 = float2D(3 * Ns, Nk, "q1");
-			q2 = float2D(3 * Ns, Nk, "q2");
-
-		}
-		fclose(fpPhonon);
+//		if ((fpPhonon = fopen(m_phononFile.string().c_str(), "r")) != NULL) {
+//			if (2 * sizeof(float) != sizeof(fftwf_complex)) {
+//				printf(
+//						"phononDisplacement: data type mismatch: fftw_complex != 2*float!\n");
+//				exit(0);
+//			}
+//			fread(&Nk, sizeof(int), 1, fpPhonon);
+//			fread(&Ns, sizeof(int), 1, fpPhonon);
+//			massPrim = (float_tt *) malloc(Ns * sizeof(float)); // masses for every atom in primitive basis
+//			fread(massPrim, sizeof(float), Ns, fpPhonon);
+//			kVecs.resize(boost::extents[Nk][3]);
+//			omega.resize(boost::extents[Nk][3*Ns]);
+//			 * omega is given in THz, but the 2pi-factor
+//			 * is still there, i.e. f=omega/2pi
+//			 */
+//			eigVecs = complex3D(Nk, 3 * Ns, 3 * Ns, "eigVecs"); // array of eigenvectors for every k-vector
+//			for (ix = 0; ix < Nk; ix++) {
+//				fread(kVecs[ix], sizeof(float), 3, fpPhonon);  // k-vector
+//				for (iy = 0; iy < 3 * Ns; iy++) {
+//					fread(omega[ix] + iy, sizeof(float), 1, fpPhonon);
+//					fread(eigVecs[ix][iy], 2 * sizeof(float), 3 * Ns, fpPhonon);
+//				}
+//			}
+//
+//			/* convert omega into q scaling factors, since we need those, instead of true omega:    */
+//			/* The 1/sqrt(2) term is from the dimensionality ((q1,q2) -> d=2)of the random numbers */
+//			for (ix = 0; ix < Nk; ix++) {
+//				for (idd = 0; idd < Ns; idd++)
+//					for (iy = 0; iy < 3; iy++) {
+//						// quantize the energy distribution:
+//						// tanh and exp give different results will therefore use exp
+//						// nkomega = (int)(1.0/tanh(THZ_HBAR_2KB*omega[ix][iy+3*id]/_c->Structure.temperatureK));
+//						// wobble  =      (1.0/tanh(THZ_HBAR_2KB*omega[ix][iy+3*id]/_c->Structure.temperatureK)-0.5);
+//						// nkomega = (int)(1.0/(exp(THZ_HBAR_KB*omega[ix][iy+3*id]/_c->Structure.temperatureK)-1)+0.5);
+//						if (omega[ix][iy + 3 * idd] > 1e-4) {
+//							wobble =
+//									_c->Structure.temperatureK > 0 ?
+//											(1.0
+//													/ (exp(
+//															THZ_HBAR_KB
+//															* omega[ix][iy
+//																		+ 3
+//																		* idd]
+//																		/ _c->Structure.temperatureK)
+//															- 1)) :
+//															0;
+//							// if (ix == 0) printf("%g: %d %g\n",omega[ix][iy+3*id],nkomega,wobble);
+//							wobble = sqrt(
+//									(wobble + 0.5)
+//									/ (2 * M_PI * Nk * 2 * massPrim[idd]
+//																	* omega[ix][iy + 3 * idd]
+//																				* THZ_AMU_HBAR));
+//						} else
+//							wobble = 0;
+//						/* Ttotal += 0.25*massPrim[id]*((wobble*wobble)/(2*Ns))*
+//						 omega[ix][iy+3*id]*omega[ix][iy+3*id]*AMU_THZ2_A2_KB;
+//						 */
+//						omega[ix][iy + 3 * idd] = wobble;
+//					}  // idd
+//				// if (ix == 0) printf("\n");
+//			}
+//			// printf("Temperature: %g K\n",Ttotal);
+//			// printf("%d %d %d\n",(int)(0.4*(double)Nk/11.0),(int)(0.6*(double)Nk),Nk);
+//
+//		}
+//		fclose(fpPhonon);
 	}  // end of if phononfile
 
 	//
@@ -1431,12 +1421,12 @@ int CrystalBuilder::AtomCompareZYX(const void *atPtr1, const void *atPtr2) {
 	atom1 = (atom *) atPtr1;
 	atom2 = (atom *) atPtr2;
 	/* Use the fact that z is the first element in the atom struct */
-	comp = (atom1->z == atom2->z) ? 0 : ((atom1->z > atom2->z) ? 1 : -1);
+	comp = (atom1->r[2] == atom2->r[2]) ? 0 : ((atom1->r[2] > atom2->r[2]) ? 1 : -1);
 	if (comp == 0) {
-		comp = (atom1->y == atom2->y) ? 0 : ((atom1->y > atom2->y) ? 1 : -1);
+		comp = (atom1->r[1] == atom2->r[1]) ? 0 : ((atom1->r[1] > atom2->r[1]) ? 1 : -1);
 		if (comp == 0) {
-			comp = (atom1->x == atom2->x) ?
-					0 : ((atom1->x > atom2->x) ? 1 : -1);
+			comp = (atom1->r[0] == atom2->r[0]) ?
+					0 : ((atom1->r[0] > atom2->r[0]) ? 1 : -1);
 		}
 	}
 	return comp;
@@ -1450,21 +1440,21 @@ void CrystalBuilder::WriteStructure(unsigned run_number) {
 	 sprintf(buf,"%s/%s",m_folder,m_cfgFile);
 	 // append the TDS run number
 	 if (strcmp(buf+strlen(buf)-4,".cfg") == 0) *(buf+strlen(buf)-4) = '\0';
-	 if (_config->Model.UseTDS) sprintf(buf+strlen(buf),"_%d.cfg",m_avgCount);
+	 if (_c->Model.UseTDS) sprintf(buf+strlen(buf),"_%d.cfg",m_avgCount);
 	 else sprintf(buf+strlen(buf),".cfg");
 
-	 // printf("Will write CFG file <%s> (%d)\n",buf,_config->Model.UseTDS)
+	 // printf("Will write CFG file <%s> (%d)\n",buf,_c->Model.UseTDS)
 	 writeCFG(atoms,natom,buf,muls);
 	 }
 	 */
 }
 
 void CrystalBuilder::GetCrystalBoundaries(float_tt &min_x, float_tt &max_x, float_tt &min_y, float_tt &max_y, float_tt &min_z, float_tt &max_z) {
-	if(_config->Potential.periodicXY){
+	if(_c->Potential.periodicXY){
 		min_x = 0;
-		max_x = _config->Structure.nCellX * m_ax;
+		max_x = _c->Structure.nCellX * m_ax;
 		min_y = 0;
-		max_y = _config->Structure.nCellX * m_by;
+		max_y = _c->Structure.nCellX * m_by;
 		min_z = m_minZ;
 		max_z = m_maxZ;
 	} else {

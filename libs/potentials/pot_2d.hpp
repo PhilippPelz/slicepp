@@ -19,6 +19,7 @@ protected:
 	virtual void ComputeAtomPotential(int znum);
 	virtual void SliceSetup();
 	friend class CPotFactory;
+	virtual void SaveAtomicPotential(int znum);
 	// Create an instance of this class, wrapped in a shared ptr
 	//     This should not be inherited - any subclass needs its own implementation.
 //	static PotPtr Create(const ConfigPtr configReader) {

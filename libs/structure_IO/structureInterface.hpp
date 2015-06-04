@@ -39,11 +39,12 @@ typedef boost::shared_ptr<StructureReaderFactory> StructureReaderFactoryPtr;
 
 class IStructureReader
 {
-private:
-
+protected:
+	boost::filesystem::path _path;
 public:
 	inline IStructureReader(){};
-	IStructureReader(const boost::filesystem::path &file){};
+	IStructureReader(const boost::filesystem::path &p) : _path(p){};
+	virtual inline void SetFilePath(const boost::filesystem::path& p){_path = p;};
 	virtual int ReadCellParams(FloatArray2D& Mm)=0;
 	virtual int ReadAtoms(std::vector<atom> &atoms, std::vector<int> &uniqueAtoms,bool fillUnitCell)=0;
 };

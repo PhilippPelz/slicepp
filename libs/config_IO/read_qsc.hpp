@@ -105,7 +105,7 @@ private:
 
 class QSTEM_HELPER_DLL_EXPORT StructureConfig : IPropertyTreeReader{
 public:
-	string structureFilename;
+	boost::filesystem::path structureFilename;
 	std::vector<int> zoneAxis;
 	int nCellX;
 	int nCellY;
@@ -128,18 +128,16 @@ public:
 	int TDSRuns, nx, ny, nSlices;
 	QSTEM::SliceThicknessCalculation SliceThicknessCalculation;
 	QSTEM::ResolutionCalculation ResolutionCalculation;
-	float_tt sliceThicknessAngstrom, dx, dy,  beamTiltX, beamTiltY ;
+	float_tt dz, dx, dy,  beamTiltX, beamTiltY ;
 	std::vector<int> zoneAxis;
 	DisplacementType displacementType;
 	virtual void Read(ptree& t);
 };
 class QSTEM_HELPER_DLL_EXPORT PotentialConfig : IPropertyTreeReader{
 public:
-	bool Use3D, UseFFT, BandlimitTransmissionFunction,  OneTimeIntegration, PlotVrr,periodicXY,periodicZ;
+	bool Use3D, UseFFT,    PlotVrr,periodicXY,periodicZ;
 	QSTEM::StructureFactorType StructureFactorType;
 	float_tt AtomRadiusAngstrom;
-	int NSubSlabs;
-
 	virtual void Read(ptree& t);
 };
 class QSTEM_HELPER_DLL_EXPORT WaveConfig : IPropertyTreeReader{
@@ -154,11 +152,12 @@ public:
 };
 class QSTEM_HELPER_DLL_EXPORT OutputConfig : IPropertyTreeReader{
 public:
-	int LogLevel, SaveSliceAfterIterations;
+	int LogLevel, SaveWaveIterations;
 	bool SavePotential,	SaveProjectedPotential,WriteLogFile,saveProbe,SaveWaveAfterTransmit,
-		SaveWaveAfterTransform,	SaveWaveAfterPropagation,SaveWaveAfterSlice;
+		SaveWaveAfterTransform,	SaveWaveAfterPropagation,SaveWaveAfterSlice,SaveAtomicPotential;
 	boost::filesystem::path savePath, LogFileName;
-	QSTEM::SaveLevel SaveLevel;
+	// TODO: deprecated
+	QSTEM::SaveLevel SaveLevel = QSTEM::SaveLevel::Results;
 	bool ShowProbe, PendelloesungPlot, readPotential;
 
 	virtual void Read(ptree& t);

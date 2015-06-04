@@ -22,7 +22,6 @@
 
 #include <map>
 #include "pot_interface.hpp"
-#include "config_IO/config_reader_factory.hpp"
 
 namespace QSTEM
 {

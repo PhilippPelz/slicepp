@@ -22,7 +22,7 @@ QSTEM - image simulation for TEM/STEM/CBED
 namespace QSTEM
 {
 
-class C3DFFTPotential : public C3DPotential
+class C3DFFTPotential : public CPotential
 {
 public:
   C3DFFTPotential(const ConfigPtr& c,const PersistenceManagerPtr& persist) ;
@@ -42,6 +42,7 @@ protected:
                                 ComplexVector &output);
   virtual void ComputeAtomPotential(int Znum);
   virtual void SliceSetup();
+  virtual void SaveAtomicPotential(int znum);
 
   // collection of atom potentials
   std::map<unsigned, ComplexArray2D> m_atPot;

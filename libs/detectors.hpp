@@ -21,8 +21,9 @@
 #define DETECTORS_H
 
 //#include "imagelib_fftw3.hpp"
-#include "wavefunctions/wave_factory.hpp"
 #include "data_IO/PersistenceManager.hpp"
+#include "wavefunctions/wave_interface.hpp"
+
 namespace QSTEM
 {
 

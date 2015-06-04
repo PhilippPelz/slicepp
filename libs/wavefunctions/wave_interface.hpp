@@ -61,12 +61,11 @@ public:
 	virtual float_tt GetKX2(int ix) const =0;
 	virtual float_tt GetKY2(int iy) const =0;
 	virtual float_tt GetK2Max() const =0;
-	virtual void Resize(int x, int y) = 0;
 	virtual float_tt GetVoltage()  const =0;
 	virtual float_tt GetWavelength()  const =0;
 	virtual float_tt GetPixelIntensity(int i) const =0;
 	virtual float_tt GetPixelIntensity(int x, int y) const =0;
-	virtual void ApplyTransferFunction(boost::shared_array<complex_tt> &wave)=0;
+//	virtual void ApplyTransferFunction(boost::shared_array<complex_tt> &wave)=0;
 	virtual float_tt GetIntegratedIntensity() const =0;
 	virtual void Transmit(ComplexArray2DView t)=0;
 	virtual void PropagateToNextSlice()=0;

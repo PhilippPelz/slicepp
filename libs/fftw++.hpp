@@ -314,7 +314,7 @@ public:
 		}
 	}
 
-	virtual ~fftw() {if(plan) fftw_destroy_plan(plan);}
+	virtual ~fftw() {/*if(plan) fftw_destroy_plan(plan);*/}
 
 	virtual fftw_plan Plan(Complex *in, Complex *out)=0;
 
