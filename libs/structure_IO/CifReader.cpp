@@ -28,7 +28,7 @@ int CifReader::ReadCellParams(FloatArray2D& Mm) {
 
 	stringstream out;
 	OBConversion _conversion(&in, &out);
-	//	OBOp* pOp = OBOp::FindType("fillUC");
+	OBOp* pOp = OBOp::FindType("fillUC");
 
 	if (_conversion.SetInFormat("CIF")) {
 		OBMol _mol;
@@ -38,7 +38,10 @@ int CifReader::ReadCellParams(FloatArray2D& Mm) {
 			OBUnitCell* _unitCell = (OBUnitCell*)_mol.GetData(OBGenericDataType::UnitCell);
 			_atomsBeforeFillUC = _mol.NumAtoms();
 			int i = 1;
-			_unitCell->FillUnitCell(&_mol);
+			//			_unitCell->FillUnitCell(&_mol);
+			if (!pOp)
+				BOOST_LOG_TRIVIAL(error)<< format("Could not fill the unit cell, because the operation is missing from OpenBabel");
+			pOp->Do((OBBase*) &_mol, "strict", NULL, NULL);
 			_atomsAfterFillUC = _mol.NumAtoms();
 			matrix3x3 m = _unitCell->GetCellMatrix();
 			for(int i=0;i<3;i++)
@@ -70,7 +73,10 @@ int CifReader::ReadAtoms(std::vector<atom> &atoms,
 			_atomsBeforeFillUC = _mol.NumAtoms();
 			int i = 0;
 			if(fillUnitCell){
-				_unitCell->FillUnitCell(&_mol);
+				//				_unitCell->FillUnitCell(&_mol);
+				if (!pOp)
+					BOOST_LOG_TRIVIAL(error)<< format("Could not fill the unit cell, because the operation is missing from OpenBabel");
+				pOp->Do((OBBase*) &_mol, "strict", NULL, NULL);
 			}
 			_atomsAfterFillUC = _mol.NumAtoms();
 			std::list<int> uniqueZ;

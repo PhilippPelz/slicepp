@@ -43,7 +43,7 @@ void CExperimentTEM::Run()
 	char buf[256];//,avgName[256],systStr[512];
 	std::string comment;
 	float_tt t;
-	FloatArray2D avgPendelloesung(boost::extents[m_nbout][_config->Model.nSlices]);
+	FloatArray2D avgPendelloesung(boost::extents[m_nbout][_c->Model.nSlices]);
 	int oldMulsRepeat1 = 1;
 	int oldMulsRepeat2 = 1;
 	long iseed=0;
@@ -102,7 +102,7 @@ void CExperimentTEM::Run()
 			}
 
 			RunMultislice(m_wave);
-			m_totalSliceCount += _config->Model.nSlices;
+			m_totalSliceCount += _c->Model.nSlices;
 
 			if (m_printLevel > 0) {
 				printf("t=%gA, int.=%g (avgCount=%d)\n",
@@ -156,7 +156,7 @@ void CExperimentTEM::Run()
 			 * Save the Pendelloesung Plot
 			 **********************************************************/
 			if (m_lbeams) {
-				for (iy=0;iy<_config->Model.nSlices*m_cellDiv;iy++) {
+				for (iy=0;iy<_c->Model.nSlices*m_cellDiv;iy++) {
 					for (ix=0;ix<m_nbout;ix++) {
 						avgPendelloesung[ix][iy] = m_pendelloesung[ix][iy];
 					}
@@ -187,7 +187,7 @@ void CExperimentTEM::Run()
 			 * Average over the pendelloesung plot as well
 			 */
 			if (m_lbeams) {
-				for (iy=0;iy<_config->Model.nSlices*m_cellDiv;iy++) {
+				for (iy=0;iy<_c->Model.nSlices*m_cellDiv;iy++) {
 					for (ix=0;ix<m_nbout;ix++) {
 						avgPendelloesung[ix][iy] =
 								((float_tt)_runCount*avgPendelloesung[ix][iy]+
@@ -235,9 +235,9 @@ void CExperimentTEM::Run()
 			sprintf(avgName,"%s/pendelloesung.dat",m_outputLocation.c_str());
 			if ((fp=fopen(avgName,"w")) !=NULL) {
 				printf("Writing Pendelloesung data\n");
-				for (iy=0;iy<_config->Model.nSlices*m_cellDiv;iy++) {
+				for (iy=0;iy<_c->Model.nSlices*m_cellDiv;iy++) {
 					/* write the thicknes in the first column of the file */
-					fprintf(fp,"%g",iy*_config->Model.dz/((float)(_config->Model.nSlices*m_cellDiv)));
+					fprintf(fp,"%g",iy*_c->Model.dz/((float)(_c->Model.nSlices*m_cellDiv)));
 					/* write the beam intensities in the following columns */
 					for (ix=0;ix<m_nbout;ix++) {
 						// store the AMPLITUDE:

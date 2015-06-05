@@ -32,7 +32,7 @@ QSTEM - image simulation for TEM/STEM/CBED
 #endif
 #endif
 
-#define TINY 0.0 // 1.0e-20; //A small number. 
+#define TINY 0//1.0e-20; //A small number.
 
 static float sqrarg = 0.0f; 
 #define IMIN(a,b) ((a) < (b) ? (a) : (b))    // minimum of 2 int values
@@ -196,10 +196,10 @@ void inverse() {
 float_tt det_3x3 ( const FloatArray2D& mat)
 {
 	float_tt det;
-	const float_tt* mat1;
+	const float_tt* mat1 = mat.data();
 	det = mat1[0] * (mat1[4] * mat1[8] - mat1[7] * mat1[5])
-        														- mat1[1] * (mat1[3] * mat1[8] - mat1[6] * mat1[5])
-																+ mat1[2] * (mat1[3] * mat1[7] - mat1[6] * mat1[4]);
+				- mat1[1] * (mat1[3] * mat1[8] - mat1[6] * mat1[5])
+				+ mat1[2] * (mat1[3] * mat1[7] - mat1[6] * mat1[4]);
 
 	return det;
 }
@@ -528,10 +528,48 @@ void vectDiff_f(const float_tt *a,const float_tt *b, float_tt *c,int revFlag) {
 	}
 }
 
+#define PI         (3.1415926535f)
+#define HALF_PI    (0.5f * PI)
+#define TWO_PI     (2.0f * PI)
+#define TWO_PI_INV (1.0f / TWO_PI)
+
+inline float_tt Hill(float_tt x)
+{
+	const float_tt a0 = 1.0f;
+	const float_tt a2 = 2.0f / PI - 12.0f / (PI * PI);
+	const float_tt a3 = 16.0f / (PI * PI * PI) - 4.0f / (PI * PI);
+	const float_tt xx = x * x;
+	const float_tt xxx = xx * x;
+
+	return a0 + a2 * xx + a3 * xxx;
+}
+
+float_tt fsin(float_tt x)
+{
+	// wrap x within [0, TWO_PI)
+	const float_tt a = x * TWO_PI_INV;
+	x -= static_cast<int>(a) * TWO_PI;
+	if (x < 0.0f)
+		x += TWO_PI;
+
+	// 4 pieces of hills
+	if (x < HALF_PI)
+		return Hill(HALF_PI - x);
+	else if (x < PI)
+		return Hill(x - HALF_PI);
+	else if (x < 3.0f * HALF_PI)
+		return -Hill(3.0f * HALF_PI - x);
+	else
+		return -Hill(x - 3.0f * HALF_PI);
+}
+float_tt fcos(float_tt x)
+{
+  return fsin(x + HALF_PI);
+}
 
 
 
-void showMatrix(float_tt **M,int Nx, int Ny,char *name) {
+void showMatrix(FloatArray2D M,int Nx, int Ny,char *name) {
 	int i,j;
 
 	printf("%s:\n",name);
@@ -579,13 +617,17 @@ float_tt findLambda(plane *p,const float_tt *point, int revFlag) {
 	M[0][2] = p->v2[0];
 	M[1][2] = p->v2[1];
 	M[2][2] = p->v2[2];
+
+	//	BOOST_LOG_TRIVIAL(info)<< format("(%3.3f,%3.3f,%3.3f) - (%3.3f,%3.3f,%3.3f)") % point[0]% point[1]% point[2]% p->p[0]% p->p[1]% p->p[2];
+
 	vectDiff_f(point,p->p.mem,&diff[0],revFlag);
 
+	//	BOOST_LOG_TRIVIAL(info)<< format("diff=(%3.3f,%3.3f,%3.3f)") % diff[0]% diff[1]% diff[2];
 
 	inverse_3x3 (Minv,M);
-	// showMatrix(M,3,3,"M");
-	// showMatrix(Minv,3,3,"Minv");
-	// showMatrix(&diff,1,3,"diff");
+	//	showMatrix(M,3,3,"M");
+	//	showMatrix(Minv,3,3,"Minv");
+	//	showMatrix(&diff[0],1,3,"diff");
 	// ludcmp(M,3,index,&d);
 	// lubksb(M,3,index,point);
 

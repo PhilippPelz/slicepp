@@ -22,6 +22,7 @@
 
 #include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
+#include "math.h"
 using boost::format;
 
 namespace QSTEM
@@ -31,8 +32,6 @@ CExperimentCBED::CExperimentCBED(const ConfigPtr& c,const StructureBuilderPtr& s
 {
 	m_mode=ExperimentType::CBED;
 	_lbeams = false;
-	_config = c;
-
 }
 
 void CExperimentCBED::DisplayParams()
@@ -40,14 +39,14 @@ void CExperimentCBED::DisplayParams()
 }
 void CExperimentCBED::SetResolution(superCellBoxPtr b){
 	float_tt max_x = b->ax, max_y=b->by, max_z=b->cz, zTotal;
-	ModelConfig& mc = _config->Model;
+	ModelConfig& mc = _c->Model;
 
 	//TODO: nx,ny = integer multiple of # unit cells
 	//TODO: super cell size = N * unit cell size
 
 	switch(mc.ResolutionCalculation) {
 	case ResolutionCalculation::FILLN:
-		if(_config->Structure.isBoxed){
+		if(_c->Structure.isBoxed){
 
 		} else {
 
@@ -56,8 +55,8 @@ void CExperimentCBED::SetResolution(superCellBoxPtr b){
 		mc.ny = (mc.ny % 2 != 0) ? mc.ny+1 : mc.ny;
 		mc.dx = (max_x - 0)/mc.nx;
 		mc.dy = (max_y - 0)/mc.ny;
-		_config->Structure.xOffset = 0;
-		_config->Structure.yOffset = 0;
+		_c->Structure.xOffset = 0;
+		_c->Structure.yOffset = 0;
 		break;
 	case ResolutionCalculation::FILLRES:
 		mc.nx = ceil((max_x - 0) / mc.dx) ;
@@ -66,33 +65,33 @@ void CExperimentCBED::SetResolution(superCellBoxPtr b){
 		mc.ny = (mc.ny % 2 != 0) ? mc.ny+1 : mc.ny;
 		mc.dx = (max_x - 0)/mc.nx;
 		mc.dy = (max_y - 0)/mc.ny;
-		_config->Structure.xOffset = 0;
-		_config->Structure.yOffset = 0;
+		_c->Structure.xOffset = 0;
+		_c->Structure.yOffset = 0;
 		break;
 	case ResolutionCalculation::BOXRES:
-		mc.nx =  _config->Structure.boxX / mc.dx ;
-		mc.ny =  _config->Structure.boxY / mc.dy ;
+		mc.nx =  _c->Structure.boxX / mc.dx ;
+		mc.ny =  _c->Structure.boxY / mc.dy ;
 		mc.nx = (mc.nx % 2 != 0) ? mc.nx+1 : mc.nx;
 		mc.ny = (mc.ny % 2 != 0) ? mc.ny+1 : mc.ny;
 		if(mc.CenterSample) {
-			_config->Structure.xOffset = _config->Structure.boxX/2 - (max_x-0)/2;
-			_config->Structure.yOffset = _config->Structure.boxY/2 - (max_y-0)/2;
+			_c->Structure.xOffset = _c->Structure.boxX/2 - (max_x-0)/2;
+			_c->Structure.yOffset = _c->Structure.boxY/2 - (max_y-0)/2;
 		} else {
-			_config->Structure.xOffset = 0;
-			_config->Structure.yOffset = 0;
+			_c->Structure.xOffset = 0;
+			_c->Structure.yOffset = 0;
 		}
 		break;
 	case ResolutionCalculation::BOXN:
 		mc.nx = (mc.nx % 2 != 0) ? mc.nx+1 : mc.nx;
 		mc.ny = (mc.ny % 2 != 0) ? mc.ny+1 : mc.ny;
-		mc.dx =  _config->Structure.boxX / mc.nx ;
-		mc.dy =  _config->Structure.boxY / mc.ny ;
+		mc.dx =  _c->Structure.boxX / mc.nx ;
+		mc.dy =  _c->Structure.boxY / mc.ny ;
 		if(mc.CenterSample) {
-			_config->Structure.xOffset = _config->Structure.boxX/2 - (max_x-0)/2;
-			_config->Structure.yOffset = _config->Structure.boxY/2 - (max_y-0)/2;
+			_c->Structure.xOffset = _c->Structure.boxX/2 - (max_x-0)/2;
+			_c->Structure.yOffset = _c->Structure.boxY/2 - (max_y-0)/2;
 		} else {
-			_config->Structure.xOffset = 0;
-			_config->Structure.yOffset = 0;
+			_c->Structure.xOffset = 0;
+			_c->Structure.yOffset = 0;
 		}
 		break;
 
@@ -100,7 +99,7 @@ void CExperimentCBED::SetResolution(superCellBoxPtr b){
 }
 void CExperimentCBED::SetSliceThickness(superCellBoxPtr b){
 	float_tt max_x = b->ax, max_y=b->by, max_z=b->cz, zTotal=b->cz;
-	ModelConfig& mc = _config->Model;
+	ModelConfig& mc = _c->Model;
 
 	switch (mc.SliceThicknessCalculation) {
 	case SliceThicknessCalculation::Auto:
@@ -110,12 +109,15 @@ void CExperimentCBED::SetSliceThickness(superCellBoxPtr b){
 	case SliceThicknessCalculation::NumberOfSlices:
 		mc.dz = (zTotal/mc.nSlices)+0.01*(zTotal/mc.nSlices);
 		break;
-	case SliceThicknessCalculation::Thickness:
-		mc.dz = (int)(zTotal / mc.dz);
+	case SliceThicknessCalculation::SliceThickness:
+		mc.nSlices = (int)(zTotal / mc.dz);
 		break;
 	default:
 		break;
 	}
+	int atomRadiusSlices = ceil(_c->Potential.AtomRadiusAngstrom / _c->Model.dz);
+	if(_c->Potential.Use3D)
+		_c->Model.nSlices += 2 * atomRadiusSlices;
 }
 
 void CExperimentCBED::Run()
@@ -125,13 +127,13 @@ void CExperimentCBED::Run()
 	double timer,timerTot;
 	double probeCenterX,probeCenterY,probeOffsetX,probeOffsetY;
 	float_tt t=0;
-	FloatArray2D avgPendelloesung(boost::extents[_nbout][_config->Model.nSlices]);
+	FloatArray2D avgPendelloesung(boost::extents[_nbout][_c->Model.nSlices]);
 	int nx, ny;
 	_wave->GetSizePixels(nx, ny);
 	std::map<std::string, double> params;
 	std::vector<unsigned> position(1);         // Used to indicate the number of averages
 
-	m_chisq.resize(_config->Model.TDSRuns);
+	m_chisq.resize(_c->Model.TDSRuns);
 
 	probeCenterX = _scanXStart;
 	probeCenterY = _scanYStart;
@@ -149,7 +151,7 @@ void CExperimentCBED::Run()
 	_wave->DisplayParams();
 	_pot->DisplayParams();
 
-	for (_runCount = 0;_runCount < _config->Model.TDSRuns;_runCount++) {
+	for (_runCount = 0;_runCount < _c->Model.TDSRuns;_runCount++) {
 
 		auto box = _structureBuilder->DisplaceAtoms();
 
@@ -158,7 +160,7 @@ void CExperimentCBED::Run()
 		m_totalSliceCount = 0;
 		pCount = 0;
 
-		if (_config->Output.saveProbe) _persist->SaveProbe(_wave->GetWave());
+		if (_c->Output.saveProbe) _persist->SaveProbe(_wave->GetWave());
 
 		RunMultislice(_wave);
 
@@ -169,7 +171,7 @@ void CExperimentCBED::Run()
 			//sprintf(systStr,"mv %s/diff.img %s",m_folder.c_str(),avgName);
 			//system(systStr);
 			if (_lbeams) {
-				for (iy=0;iy<_config->Model.nSlices ;iy++) {
+				for (iy=0;iy<_c->Model.nSlices ;iy++) {
 					for (ix=0;ix<_nbout;ix++) {
 						avgPendelloesung[ix][iy] = _pendelloesung[ix][iy];
 					}
@@ -194,7 +196,7 @@ void CExperimentCBED::Run()
 			 * Average over the pendelloesung plot as well
 			 */
 			if (_lbeams) {
-				for (iy=0;iy<_config->Model.nSlices ;iy++) {
+				for (iy=0;iy<_c->Model.nSlices ;iy++) {
 					for (ix=0;ix<_nbout;ix++) {
 						avgPendelloesung[ix][iy] =((float_tt)_runCount*avgPendelloesung[ix][iy]+_pendelloesung[ix][iy])/(float_tt)(_runCount+1);
 					}
@@ -214,9 +216,9 @@ void CExperimentCBED::Run()
 			sprintf(systStr,"%s/pendelloesung.dat",m_outputLocation.c_str());
 			if ((fp=fopen(systStr,"w")) !=NULL) {
 				BOOST_LOG_TRIVIAL(info) << "Writing Pendelloesung data";
-				for (iy=0;iy<_config->Model.nSlices ;iy++) {
+				for (iy=0;iy<_c->Model.nSlices ;iy++) {
 					/* write the thicknes in the first column of the file */
-					fprintf(fp,"%g",iy*_config->Model.dz);//((float)(m_potential->GetNSlices()*_config->Potential.NSubSlabs)));
+					fprintf(fp,"%g",iy*_c->Model.dz);//((float)(m_potential->GetNSlices()*_c->Potential.NSubSlabs)));
 					/* write the beam intensities in the following columns */
 					for (ix=0;ix<_nbout;ix++) {
 						fprintf(fp,"\t%g",avgPendelloesung[ix][iy]);
@@ -335,13 +337,13 @@ void CExperimentCBED::WriteBeams(unsigned int absoluteSlice)
 void CExperimentCBED::PostSliceProcess(unsigned absoluteSlice)
 {
 	//	InterimWave(absoluteSlice);
-	//	if (_config->Output.LogLevel < 2) {
+	//	if (_c->Output.LogLevel < 2) {
 	//		ComplexArray2D w = m_wave->GetWave();
 	//		float_tt potVal = w[0][0].real();
 	//		float_tt ddx = potVal;
 	//		float_tt ddy = potVal;
-	//		for (unsigned ix = 0; ix <  _config->Model.nx; ix++)
-	//			for (unsigned iy = 0; iy < _config->Model.ny ; iy++){
+	//		for (unsigned ix = 0; ix <  _c->Model.nx; ix++)
+	//			for (unsigned iy = 0; iy < _c->Model.ny ; iy++){
 	//				potVal = w[ix][iy].real();
 	//				if (ddy < potVal)
 	//					ddy = potVal;

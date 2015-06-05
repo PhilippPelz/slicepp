@@ -50,7 +50,6 @@ protected:
     float_tt _scanXStart, _scanYStart;     /* The beam position on the sample */
     bool _showProbe;            /* if true, saves a plot of the probe */
     bool m_storeSeries;
-    ConfigPtr _config;
 };
 
 }

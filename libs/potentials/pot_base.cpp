@@ -21,6 +21,7 @@
 #include <omp.h>
 #include <algorithm>
 #include <boost/format.hpp>
+#include "matrixlib.hpp"
 using boost::format;
 
 const int BUF_LEN = 256;
@@ -166,19 +167,13 @@ void CPotential::CenterAtomZ(atom& atom, float_tt &z) {
 			* (1 - (int) _c->Model.CenterSlices));
 }
 
-/*****************************************************
- * This function will create a 3D potential from whole
- * unit cell, slice it, and make transr/i and propr/i
- * Call this function with center = NULL, if you don't
- * want the array to be shifted.
- ****************************************************/
 void CPotential::MakeSlices(superCellBoxPtr info) {
 	time_t time0, time1;
 	SliceSetup();
 
 	std::fill(_t.origin(), _t.origin() + _t.size(), complex_tt(0, 0));
 
-#pragma omp parallel for
+
 	for (std::vector<int>::iterator a = info->uniqueatoms.begin(); a < info->uniqueatoms.end(); a = a + 1) {
 		ComputeAtomPotential(*a);
 		if(_c->Output.SaveAtomicPotential) SaveAtomicPotential(*a);
@@ -189,27 +184,22 @@ void CPotential::MakeSlices(superCellBoxPtr info) {
 
 	BOOST_LOG_TRIVIAL(info)<< "Adding atoms to slices ...";
 
-#pragma omp parallel for shared(atomsAdded)
+#pragma omp parallel for shared(atomsAdded,info)
 	for (std::vector<atom>::iterator a = info->atoms.begin(); a < info->atoms.end(); a = a + 1) {
 		atom atom(a);
 		if(atom.Znum == 0) continue;
-		size_t iatom = a - info->atoms.begin();
-		float_tt atomX = atom.r[0];
-		float_tt atomY = atom.r[1];
-		float_tt atomZ = atom.r[2];
 
 		//		CenterAtomZ(atom, atomZ);
-		AddAtomToSlices(atom, atomX, atomY, atomZ);
-		BOOST_LOG_TRIVIAL(trace)<< format("Adding atom %d: (%3.3f, %3.3f, %3.3f) Z=%d") % iatom % atom.r[0] % atom.r[1] % atom.r[2] % atom.Znum;
+		AddAtomToSlices(atom, atom.r[0], atom.r[1], atom.r[2]);
+		BOOST_LOG_TRIVIAL(trace)<< format("Adding atom : (%3.3f, %3.3f, %3.3f) Z=%d") % atom.r[0] % atom.r[1] % atom.r[2] % atom.Znum;
 
-#pragma omp critical
 		atomsAdded++;
 
 		int interval = (info->atoms.size() / 20) == 0 ? 1 : (info->atoms.size() / 20);
-		if ((atomsAdded % interval) == 0)
+		if ((atomsAdded % interval) == 0 && _c->nThreads == 1)
 			loadbar(atomsAdded+1, info->atoms.size());
 
-	} // for iatom =0 ...
+	}
 	MakePhaseGratings();
 	BandlimitTransmissionFunction();
 
@@ -217,31 +207,9 @@ void CPotential::MakeSlices(superCellBoxPtr info) {
 	BOOST_LOG_TRIVIAL(info)<< format( "%g sec used for real space potential calculation (%g sec per atom)")
 					% difftime(time1, time0)%( difftime(time1, time0) / info->atoms.size());
 
-	if (_c->Output.SavePotential) {
-		//		for (unsigned iz = 0; iz < nlayer; iz++) {
-		//			float_tt potVal = m_trans1[iz][0][0].real();
-		//			if (_config->Output.LogLevel < 2) {
-		//				float_tt ddx = potVal;
-		//				float_tt ddy = potVal;
-		//				for (unsigned ix = 0; ix <  _config->Model.nx; ix++)
-		//					for (unsigned iy = 0; iy < _config->Model.ny ; iy++){
-		//						potVal = m_trans1[iz][iy][ix].real();
-		//						if (ddy < potVal)
-		//							ddy = potVal;
-		//						if (ddx > potVal)
-		//							ddx = potVal;
-		//						BOOST_LOG_TRIVIAL(trace)<<format("m_trans1[%d][%d][%d] = %g")%iz%iy%ix%potVal;
-		//					}
-		//				BOOST_LOG_TRIVIAL(info)<<format("Saving (complex) potential layer %d to file (r: %g..%g)")%iz% ddx% ddy;
-		//			}
-		//			WriteSlice(iz,"pot_slice_");
-		//		} // loop through all slices
-		_persist->SavePotential(_t);
-	} /* end of if savePotential ... */
-	if (_c->Output.SaveProjectedPotential) {
-		WriteProjectedPotential();
-	}
-} // end of make3DSlices
+	if (_c->Output.SavePotential)  _persist->SavePotential(_t);
+	if (_c->Output.SaveProjectedPotential)  WriteProjectedPotential();
+}
 void CPotential::BandlimitTransmissionFunction() {
 
 }
@@ -260,14 +228,13 @@ void CPotential::MakePhaseGratings() {
 		int x = (int)(v-_t.data());
 		int tot = _t.num_elements();
 //		BOOST_LOG_TRIVIAL(info)<<x;
-		if(x % (_t.num_elements()/20) == 0){
+		if(x % (_t.num_elements()/20) == 0 && _c->nThreads == 1){
 			loadbar(x+1,tot);
 		}
-		*v = complex_tt(cos(scale * v->real()), sin(scale * v->real()));
-		if (arg(*v)>maxph) maxph = arg(*v);
-		if (abs(*v)>maxabs) maxabs = abs(*v);
-		if (arg(*v)<minph) minph = arg(*v);
-		if (abs(*v)<minabs) minabs = abs(*v);
+		float_tt ph = scale * v->real();
+		*v = complex_tt(fcos(ph), fsin(ph));
+		if (ph>maxph) maxph = ph;
+		if (ph<minph) minph = ph;
 	}
 //		for (int iz = 0; iz < _t.shape()[0]; iz++) {
 //			loadbar(iz,_t.shape()[0],80);
@@ -286,7 +253,6 @@ void CPotential::MakePhaseGratings() {
 //			}
 //		}
 	BOOST_LOG_TRIVIAL(info)<<format("Phase values %g ... %g")%minph%maxph;
-	BOOST_LOG_TRIVIAL(info)<<format("abs   values %g ... %g")%minabs%maxabs;
 }
 
 void CPotential::WriteSlice(unsigned idx, std::string prefix) {
@@ -405,8 +371,7 @@ void CPotential::splinh(float_tt x[], float_tt y[], std::vector<float_tt>& b,
 	if (n < 4)
 		return;
 
-	/* Do the first end point (special case),
-	 and get starting values */
+	/* Do the first end point (special case), and get starting values */
 
 	m5 = (y[3] - y[2]) / (x[3] - x[2]); /* mx = slope at pt x */
 	m4 = (y[2] - y[1]) / (x[2] - x[1]);

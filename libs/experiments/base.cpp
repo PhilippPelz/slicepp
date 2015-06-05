@@ -29,20 +29,16 @@ namespace QSTEM
 CExperimentBase::CExperimentBase(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers)
 : IExperiment()
 {
-	_config = c;
+	_c = c;
 	_persist = pers;
 	_structureBuilder = s;
 	_wave = w;
 	_pot = p;
 	m_equalDivs = true;
+	m_avgArray = RealVector();
 	m_saveLevel = static_cast<unsigned>(c->Output.SaveLevel);
-	int atomRadiusSlices = ceil(_config->Potential.AtomRadiusAngstrom / c->Model.dz);
-	if(_config->Potential.Use3D)
-		c->Model.nSlices += 2 * atomRadiusSlices;
 
 	DisplayParams();
-	_structureBuilder->DisplayParams();
-	m_avgArray = RealVector();
 }
 
 void CExperimentBase::DisplayParams()
@@ -54,22 +50,6 @@ void CExperimentBase::DisplayParams()
 	static char Date[16], Time[16];
 	time_t caltime;
 	struct tm* mytime;
-	const double pi = 3.1415926535897;
-
-	/*
-    if (wave->printLevel < 1) {
-    if ((fpDir = fopen(muls.folder.c_str(),"r"))) {
-      fclose(fpDir);
-      // printf(" (already exists)\n");
-    }
-    else {
-      sprintf(systStr,"mkdir %s",muls.folder.c_str());
-      system(systStr);
-      // printf(" (created)\n");
-    }
-    return;
-    }
-	 */
 	caltime = time(NULL);
 	mytime = localtime(&caltime);
 	strftime(Date, 12, "%Y:%m:%d", mytime);
@@ -78,12 +58,14 @@ void CExperimentBase::DisplayParams()
 	BOOST_LOG_TRIVIAL(info) <<
 	"**************************************************************************************************";
 	BOOST_LOG_TRIVIAL(info) << format("* Running program slice++ (version %s) in %d mode") % VERSION %
-			static_cast<int>(_config->ExperimentType);
+			static_cast<int>(_c->ExperimentType);
 	BOOST_LOG_TRIVIAL(info) << format("* Date: %s, Time: %s") % Date % Time;
-	BOOST_LOG_TRIVIAL(info) << format("* Output file/folder:          ./%s/ ") %
-			_config->Output.savePath.string().c_str();
+	BOOST_LOG_TRIVIAL(info) << format("* Output file/folder:          %s") %
+			_c->Output.savePath.string().c_str();
 			(m_equalDivs ? "equal" : "non-equal");
-	BOOST_LOG_TRIVIAL(info) << format("* TDS:                  %d runs)") % _config->Model.TDSRuns;
+	BOOST_LOG_TRIVIAL(info) << format("* TDS:                         %d runs") % _c->Model.TDSRuns;
+	BOOST_LOG_TRIVIAL(info) <<
+	"**************************************************************************************************\n";
 }
 
 void CExperimentBase::DisplayProgress(int flag)
@@ -107,8 +89,8 @@ void CExperimentBase::DisplayProgress(int flag)
        printf("timer: %g, curr. time: %g, diff: %g\n",timer,cputim(),curTime);
        }
 	 */
-	if(_config->Output.LogLevel > 0) {
-		if(_config->Model.UseTDS) {
+	if(_c->Output.LogLevel > 0) {
+		if(_c->Model.UseTDS) {
 			timeAvg = ((_runCount)*timeAvg + curTime) / (_runCount + 1);
 			intensityAvg = ((_runCount)*intensityAvg + m_intIntensity) / (_runCount + 1);
 			BOOST_LOG_TRIVIAL(info) << format("********************** run %3d ************************") %
@@ -173,7 +155,7 @@ void CExperimentBase::InitializePropagators(WavePtr wave)
 	m_propyr.resize(ny);
 	m_propyi.resize(ny);
 
-	float_tt scale = _config->Model.dz * PI;
+	float_tt scale = _c->Model.dz * PI;
 
 	//		BOOST_LOG_TRIVIAL(debug) << format("* InitializePropagators") ;
 
@@ -208,7 +190,7 @@ int CExperimentBase::RunMultislice(WavePtr wave)
 
 	wave->GetSizePixels(nx, ny);
 
-	printFlag = (_config->Output.LogLevel > 3);
+	printFlag = (_c->Output.LogLevel > 3);
 	fftScale = 1.0 / (nx * ny);
 
 	wavlen = wave->GetWavelength();
@@ -221,8 +203,8 @@ int CExperimentBase::RunMultislice(WavePtr wave)
 	cztot = 0.0;
 
 	if(printFlag) {
-		for(islice = 0; islice < _config->Model.nSlices; islice++) {
-			cztot += _config->Model.dz;
+		for(islice = 0; islice < _c->Model.nSlices; islice++) {
+			cztot += _c->Model.dz;
 		}
 		BOOST_LOG_TRIVIAL(info) << format("Specimen thickness: %g Angstroms\n") % cztot;
 	}
@@ -230,32 +212,32 @@ int CExperimentBase::RunMultislice(WavePtr wave)
 	_wave->InitializePropagators();
 //	InitializePropagators(wave);
 	BOOST_LOG_TRIVIAL(info) << "Propagating through slices ...";
-	for(islice = 0; islice < _config->Model.nSlices; islice++) {
+	for(islice = 0; islice < _c->Model.nSlices; islice++) {
 		absolute_slice = (m_totalSliceCount + islice);
 
 		_wave->Transmit(_pot->GetSlice(islice));
 //		Transmit(wave, islice);
 
-		if(_config->Output.SaveWaveAfterTransmit) _persist->SaveWaveAfterTransmit(wave->GetWave(), islice);
+		if(_c->Output.SaveWaveAfterTransmit) _persist->SaveWaveAfterTransmit(wave->GetWave(), islice);
 
 		_wave->ToFourierSpace();
 
-		if(_config->Output.SaveWaveAfterTransform) _persist->SaveWaveAfterTransform(wave->GetWave(), islice);
+		if(_c->Output.SaveWaveAfterTransform) _persist->SaveWaveAfterTransform(wave->GetWave(), islice);
 
 		_wave->PropagateToNextSlice();
 //		Propagate(wave, islice);
 
-		if(_config->Output.SaveWaveAfterPropagation) _persist->SaveWaveAfterPropagation(wave->GetWave(), islice);
+		if(_c->Output.SaveWaveAfterPropagation) _persist->SaveWaveAfterPropagation(wave->GetWave(), islice);
 
 		CollectIntensity(absolute_slice);
 
 		wave->ToRealSpace();
 
-		if(_config->Output.SaveWaveAfterSlice && islice % _config->Output.SaveWaveIterations == 0) _persist->SaveWaveAfterSlice(_wave->GetWave(),islice);
+		if(_c->Output.SaveWaveAfterSlice && islice % _c->Output.SaveWaveIterations == 0) _persist->SaveWaveAfterSlice(_wave->GetWave(),islice);
 		PostSliceProcess(absolute_slice);
 
-		if(islice % (int)ceil(_config->Model.nSlices / 10.0) == 0)
-			loadbar(islice + 1, _config->Model.nSlices);
+		if(islice % (int)ceil(_c->Model.nSlices / 10.0) == 0)
+			loadbar(islice + 1, _c->Model.nSlices);
 	} /* end for(islice...) */
 	return 0;
 } // end of runMulsSTEM

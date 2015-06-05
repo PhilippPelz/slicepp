@@ -187,7 +187,7 @@ default(none)
 			} /* end of looping through STEM image pixels */
 			/* save STEM images in img files */
 			SaveImages();
-			m_totalSliceCount += _config->Model.nSlices;
+			m_totalSliceCount += _c->Model.nSlices;
 		} /* end of loop through thickness (pCount) */
 		// printf("Total CPU time = %f sec.\n", cputim()-timerTot );
 

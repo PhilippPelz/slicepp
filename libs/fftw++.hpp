@@ -313,7 +313,7 @@ public:
 			initialize=false;
 		}
 	}
-
+	//TODO: fix this leak
 	virtual ~fftw() {/*if(plan) fftw_destroy_plan(plan);*/}
 
 	virtual fftw_plan Plan(Complex *in, Complex *out)=0;

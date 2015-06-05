@@ -23,8 +23,11 @@ using boost::format;
 namespace QSTEM {
 
 
-C2DFFTPotential::C2DFFTPotential(const ConfigPtr& c,const PersistenceManagerPtr& p) : CPotential(c,p ) {
-	_atomPot = std::map<unsigned, ComplexArray2D>();
+C2DFFTPotential::C2DFFTPotential(const ConfigPtr& c,const PersistenceManagerPtr& p) : CPotential(c,p ),
+		_forward(fftwpp::fft2d(c->Model.nx,c->Model.ny,FFTW_FORWARD)),
+		_backward(fftwpp::fft2d(c->Model.nx,c->Model.ny,FFTW_BACKWARD))
+{
+	_atomPot = std::map<int, ComplexArray2D>();
 }
 
 
@@ -43,7 +46,6 @@ void C2DFFTPotential::MakeSlices(superCellBoxPtr info) {
 			break;
 		}
 	}
-
 }
 
 void C2DFFTPotential::AddAtomToSlices(atom& atom,
@@ -94,10 +96,7 @@ void C2DFFTPotential::AddAtomNonPeriodic(atom& atom,float_tt atomBoxX, int iAtom
 	BOOST_LOG_TRIVIAL(trace)<< format("atom xyz (%-02.3f,%-02.3f,%-02.3f) Ixyz (%-3d,%-3d,%-3d) iax (%-3d .. %-3d) iay (%-3d .. %-3d)")
 			% atom.r[0] % atom.r[1] % atom.r[2] % iAtomX % iAtomY % iAtomZ % iax0 %iax1%iay0%iay1;
 
-
-
 	for (int iax = iax0; iax < iax1; iax++) {
-		int idx = iax * _ny + iay0;
 		for (int iay = iay0; iay < iay1; iay++) {
 			int xindex = iOffsX + OVERSAMPLING * (iax - iax0) + potentialOffsetX;
 			int yindex = iOffsY + OVERSAMPLING * (iay-iay0) + potentialOffsetY;
@@ -110,9 +109,6 @@ void C2DFFTPotential::AddAtomNonPeriodic(atom& atom,float_tt atomBoxX, int iAtom
 			added += vz;
 		}
 	}
-//	BOOST_LOG_TRIVIAL(trace)<< format("added (%g,%g) to potential") % added.real() % added.imag();
-	if(added.real()==0 && added.imag()==0)
-		added = complex_tt(1,1);
 }
 
 void C2DFFTPotential::AddAtomPeriodic(atom& atom, float_tt atomBoxX, int iAtomX, float_tt atomBoxY, int iAtomY, float_tt atomZ) {
@@ -158,6 +154,9 @@ void C2DFFTPotential::SliceSetup() {
 		_dky = 0.5 * OVERSAMPLING / ((_ny) * _c->Model.dy);
 		_kmax2 = 0.5 * _nx * _dkx / (double) OVERSAMPLING; // largest k that we'll admit
 
+		_forward = fftwpp::fft2d(_nx,_ny,FFTW_FORWARD);
+		_backward = fftwpp::fft2d(_nx,_ny,FFTW_BACKWARD);
+
 		BOOST_LOG_TRIVIAL(info)<< format("Cutoff scattering angle: kmax = %g (1/Å)") % _kmax2;
 		scatPar[0][N_SF - 1] = 1.2 * _kmax2;
 		scatPar[0][N_SF - 2] = 1.1 * _kmax2;
@@ -185,12 +184,10 @@ void  C2DFFTPotential::ComputeAtomPotential(int Znum){
 
 	std::vector<float_tt> splinb(N_SF, 0), splinc(N_SF, 0), splind(N_SF, 0);
 	float_tt B = 0;// TODO what does this do   _config->Model.UseTDS ? 0 : atom->dw;
-//	int Znum = atom->Znum;
 	if (_atomPot.count(Znum) == 0) {
 		// setup cubic spline interpolation:
 		splinh(scatPar[0], scatPar[Znum], splinb, splinc, splind,N_SF);
-		_atomPot[Znum] = ComplexArray2D();
-		_atomPot[Znum].resize(boost::extents[_nx][_ny]);
+		_atomPot.insert(std::pair<int,ComplexArray2D>(Znum,ComplexArray2D(boost::extents[_nx][_ny])));
 		for (unsigned ix = 0; ix < _nx; ix++) {
 			float_tt kx = _dkx * (ix < _nx / 2 ? ix : _nx - ix);
 			for (unsigned iy = 0; iy < _ny; iy++) {
@@ -198,7 +195,6 @@ void  C2DFFTPotential::ComputeAtomPotential(int Znum){
 				float_tt s2 = (kx * kx + ky * ky);
 				// if this is within the allowed circle:
 				if (s2 < _kmax2) {
-					// f = fe3D(Znum,k2,m_tds,1.0,m_scatFactor);
 					// multiply scattering factor with Debye-Waller factor:
 					// printf("k2=%g,B=%g, exp(-k2B)=%g\n",k2,B,exp(-k2*B));
 					float_tt f = seval(scatPar[0], scatPar[Znum], splinb, splinc, splind, N_SF, sqrt(s2))* exp(-s2 * B * 0.25);
@@ -207,38 +203,15 @@ void  C2DFFTPotential::ComputeAtomPotential(int Znum){
 				}
 			}
 		}
-#if SHOW_SINGLE_POTENTIAL == 1
-		imageio = ImageIOPtr(new CImageIO(ny, nx, 0, dkx, dky, std::vector<double>(),
-				"potential"));
-		// This scattering factor agrees with Kirkland's scattering factor fe(q)
-		m_imageIO->SetThickness(m_sliceThickness);
-		m_imageIO->WriteImage((void**)_atomPot[Znum], fileName);
-#endif
-#if FLOAT_PRECISION == 1
-		fftwf_complex *ptr = (fftwf_complex *) (_atomPot[Znum].data());
-		fftwf_plan plan = fftwf_plan_dft_2d(_nx, _ny, ptr, ptr, FFTW_BACKWARD,FFTW_ESTIMATE);
-		fftwf_execute(plan);
-		fftwf_destroy_plan(plan);
-#else
-		fftw_complex *ptr=(fftw_complex *)(_atomPot[Znum].data());
-		fftw_plan plan = fftw_plan_dft_2d(_nx,_ny,ptr,ptr,FFTW_BACKWARD,FFTW_ESTIMATE);
-		fftw_execute(plan);
-		fftw_destroy_plan(plan);
-#endif
+
+		_backward.fft(_atomPot[Znum].data());
+
 		for (unsigned ix = 0; ix < _nx; ix++)
 			for (unsigned iy = 0; iy < _ny; iy++) {
 				_atomPot[Znum][ix][iy] *= _dkx * _dky	* (OVERSAMPLING * OVERSAMPLING);
 			}
 		// make sure we don't produce negative potential:
 		// if (min < 0) for (ix=0;ix<nx;ix++) for (iy=0;iy<ny;iy++) atPot[Znum][iy+ix*ny][0] -= min;
-#if SHOW_SINGLE_POTENTIAL == 1
-		imageio = ImageIOPtr(new CImageIO(nx, ny, 0, m_dx/OVERSAMPLING,
-				m_dy/OVERSAMPLING, std::vector<double>(), "potential"));
-		// This scattering factor agrees with Kirkland's scattering factor fe(q)
-		//imageio->SetThickness(nz*m_sliceThickness/nzPerSlice);
-		sprintf(fileName,"potential_%d.img",Znum);
-		imageio->WriteImage((void**)_atomPot[Znum], fileName);
-#endif
 		BOOST_LOG_TRIVIAL(info)<< format("Created 2D %d x %d potential array for Z=%d (B=%g A^2)") % _nx % _ny% Znum% B;
 	}
 

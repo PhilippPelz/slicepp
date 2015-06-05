@@ -33,8 +33,8 @@ void CreateWaveFunctionDataSets(int x, int y, std::vector<int> positions, std::s
 	//	imageIO.CreateComplexDataSet(mulswavDataSetLabel, positions);
 }
 CBaseWave::CBaseWave(const ConfigPtr& c,const PersistenceManagerPtr& p) :
-		_forward(fftwpp::fft2d(c->Model.nx,c->Model.ny,FFTW_FORWARD)),
-		_backward(fftwpp::fft2d(c->Model.nx,c->Model.ny,FFTW_BACKWARD)),
+				_forward(fftwpp::fft2d(c->Model.nx,c->Model.ny,FFTW_FORWARD)),
+				_backward(fftwpp::fft2d(c->Model.nx,c->Model.ny,FFTW_BACKWARD)),
 				IWave(c,p)
 {
 	_nx = c->Model.nx;
@@ -51,12 +51,8 @@ void CBaseWave::InitializePropagators()
 {
 	_prop.resize(boost::extents[_nx][_ny]);
 	std::fill(_prop.origin(), _prop.origin() + _prop.size(), complex_tt(0, 0));
-//	m_propxr.resize(_nx);
-//	m_propxi.resize(_nx);
-//	m_propyr.resize(_ny);
-//	m_propyi.resize(_ny);
 	float_tt scale = _config->Model.dz * PI * GetWavelength();
-//t = exp(-i pi lam k^2 dz)
+	//t = exp(-i pi lam k^2 dz)
 	for(int ixa = 0; ixa < _nx; ixa++)
 		for(int iya = 0; iya < _ny; iya++){
 			float_tt kx = m_kx2[ixa];
@@ -66,21 +62,7 @@ void CBaseWave::InitializePropagators()
 			_prop[ixa][iya] = tmp;
 			BOOST_LOG_TRIVIAL(trace) << boost::format("p[%d][%d]= %g * exp(i %g) s=%g") % ixa % iya % abs(tmp) % arg(tmp) %s;
 		}
-//	_prop = fftwpp::fft2d::fftshift(_prop);
 	_persist->Save2DDataSet(_prop,"Propagator");
-//#pragma omp parallel for
-//	for(int ixa = 0; ixa < _nx; ixa++) {
-//		float_tt t = scale * (GetKX2(ixa) * GetWavelength());
-//		m_propxr[ixa] = (float_tt)cos(t);
-//		m_propxi[ixa] = (float_tt)-sin(t);
-//
-//	}
-//#pragma omp parallel for
-//	for(int iya = 0; iya < _ny; iya++) {
-//		float_tt t = scale * (GetKY2(iya) * GetWavelength());
-//		m_propyr[iya] = (float_tt)cos(t);
-//		m_propyi[iya] = (float_tt)-sin(t);
-//	}
 }
 
 void CBaseWave::ShiftTo(float_tt x, float_tt y){
@@ -121,8 +103,8 @@ void CBaseWave::Transmit(ComplexArray2DView t)
 			tr = t1.real();
 			ti = t1.imag();
 			_wave[ix][iy] *= t1;
-//			BOOST_LOG_TRIVIAL(trace) << boost::format("w=(%g,%g) t=(%2.3f,%2.3f) w*t=(%g,%g)") % wr % wi % tr % ti %
-//					_wave[ix][iy].real() % _wave[ix][iy].imag();
+			//			BOOST_LOG_TRIVIAL(trace) << boost::format("w=(%g,%g) t=(%2.3f,%2.3f) w*t=(%g,%g)") % wr % wi % tr % ti %
+			//					_wave[ix][iy].real() % _wave[ix][iy].imag();
 		} /* end for(iy.. ix .) */
 	}
 } /* end transmit() */
@@ -160,10 +142,10 @@ void CBaseWave::InitializeKVectors()
 #pragma omp parallel for
 	for(int ixa=0; ixa<_nx; ixa++)
 	{
-//#pragma omp critical
+		//#pragma omp critical
 		{
 			float_tt t = (float_tt)(ixa-_nx/2)/ax;
-//			m_kx[ixa] = (ixa>_nx/2) ? (float_tt)(ixa-_nx)/ax : (float_tt)ixa/ax;
+			//			m_kx[ixa] = (ixa>_nx/2) ? (float_tt)(ixa-_nx)/ax : (float_tt)ixa/ax;
 			m_kx[ixa] = t;
 			m_kx2[ixa] = t*t;
 			BOOST_LOG_TRIVIAL(trace) << boost::format("kx[%d]= %g;  kx2[%d]= %g") % ixa % t % ixa % m_kx2[ixa];
@@ -171,9 +153,9 @@ void CBaseWave::InitializeKVectors()
 	}
 #pragma omp parallel for
 	for(int iya=0; iya<_ny; iya++) {
-//#pragma omp critical
+		//#pragma omp critical
 		{
-//			m_ky[iya] = (iya>_ny/2) ?	(float_tt)(iya-_ny)/by :(float_tt)iya/by;
+			//			m_ky[iya] = (iya>_ny/2) ?	(float_tt)(iya-_ny)/by :(float_tt)iya/by;
 			m_ky[iya] = (float_tt)(iya-_ny/2)/ax;
 			m_ky2[iya] = m_ky[iya]*m_ky[iya];
 		}
@@ -343,7 +325,7 @@ void CBaseWave::ToRealSpace()
 	if (!IsRealSpace())
 	{
 		m_realSpace = true;
-//		_wave = fftwpp::fft2d::ifftshift(_wave);
+		//		_wave = fftwpp::fft2d::ifftshift(_wave);
 		_backward.fftNormalized(_wave.data());
 	}
 }

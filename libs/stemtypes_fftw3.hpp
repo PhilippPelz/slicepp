@@ -62,14 +62,6 @@ typedef boost::multi_array_ref<complex_tt,2> ComplexArray2DPtr;
 
 #define BW (2.0F/3.0F)	/* bandwidth limit */
 
-// Mode definitions
-//#define STEM    1
-//#define CBED    2
-//#define TEM     3
-#define REFINE  4
-#define MSCBED  5
-#define TOMO    6
-
 // Helpful mathematical constants
 #define RAD2DEG 57.2958
 #define SQRT_2 1.4142135
@@ -77,18 +69,12 @@ typedef boost::multi_array_ref<complex_tt,2> ComplexArray2DPtr;
 #define M_PI 3.14159265358979323846264338327
 #endif
 
-// Scattering factor types
-#define DOYLE_TURNER 0
-#define WEICK_KOHL 1
-#define CUSTOM 2
-
 ////////////////////////////////////////////////////////////////////////
 // Define physical constants
 ////////////////////////////////////////////////////////////////////////
 #define ELECTRON_CHARGE (1.6021773e-19)
 #define PICO_AMPERE (1e-12/ELECTRON_CHARGE)
 #define MILLISEC_PICOAMP (1e-3*PICO_AMPERE)
-
 
 ////////////////////////////////////////////////////////////////
 
@@ -151,8 +137,6 @@ inline atom::atom(float_tt _mass, std::string _symbol,
 	Znum = getZNumber(_symbol.c_str());
 }
 
-typedef boost::shared_ptr<atom> atomPtr;
-
 /* Planes will be defined by the standard equation for a plane, i.e.
  * a point (point) and 2 vectors (vect1, vect2)
  */
@@ -163,9 +147,7 @@ struct plane {
 	arma::vec p = arma::vec(3);
 };
 
-typedef boost::shared_ptr<plane> planePtr;
-
-typedef struct grainBoxStruct {
+struct grainBox {
 	int amorphFlag;
 	float_tt density;
 	float_tt rmin;
@@ -184,38 +166,37 @@ typedef struct grainBoxStruct {
 	std::vector<plane> planes;   /* pointer to array of bounding planes */
 	float_tt sphereRadius, sphereX,sphereY,sphereZ; /* defines a sphere instead of a grain with straight edges */
 	arma::mat M;
-} grainBox;
+} ;
 
-typedef boost::shared_ptr<grainBox> grainBoxPtr;
-
-typedef struct superCellBoxStruct {
+struct superCellBox {
 	float_tt cmx,cmy,cmz;  /* fractional center of mass coordinates */
 	float_tt ax,by,cz;
 	std::vector<atom> atoms; /* contains all the atoms within the super cell */
 	std::vector<int> uniqueatoms;
-} superCellBox;
+};
 
-typedef boost::shared_ptr<superCellBox> superCellBoxPtr;
 
-typedef struct atomBoxStruct {
+
+struct atomBox {
 	bool used;   /* indicate here whether this atom is used in the
 		 particular problem */
 	unsigned nx,ny,nz;
 	float_tt dx,dy,dz;
 	float_tt B;
-//	complex_tt ***potential;   /* 3D array containg 1st quadrant of real space potential */
-//	float_tt ***rpotential;   /* 3D array containg 1st quadrant of real space potential */
 	FloatArray3D rpotential;
 	ComplexArray3D potential;
-} atomBox;
+} ;
 
+typedef boost::shared_ptr<plane> planePtr;
+typedef boost::shared_ptr<grainBox> grainBoxPtr;
+typedef boost::shared_ptr<superCellBox> superCellBoxPtr;
 typedef boost::shared_ptr<atomBox> atomBoxPtr;
-
+typedef boost::shared_ptr<atom> atomPtr;
 
 
 static inline void loadbar(unsigned int x, unsigned int n, unsigned int w = 80)
 {
-//	if ( (x != n) && (x % (n/100+1) != 0) ) return;
+	//	if ( (x != n) && (x % (n/100+1) != 0) ) return;
 
 	float ratio  =  x/(float)n;
 	int   c      =  ratio * w;

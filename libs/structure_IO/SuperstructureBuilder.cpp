@@ -19,6 +19,10 @@ SuperstructureBuilder::SuperstructureBuilder(StructureReaderPtr& r,const ConfigP
 	_covRadf = {0.32,0.93, 1.23,0.90,0.82,0.77,0.75,0.73,0.72,0.71, 1.54,1.36,0.00,1.90,0.00,0.00,0.99,0.98, 2.03,1.74,1.44,1.32,1.63,1.18,1.17,1.17,1.16,1.15,1.17,1.25,1.26,1.22,1.20,1.16,1.14,1.12};
 	_atRad = {0.79,0.49, 2.05,1.40,1.17,0.91,0.75,0.65,0.57,0.51, 2.23,1.72,0.00,1.46,0.00,0.00,0.97,0.88, 2.77,2.23,2.09,2.00,1.92,1.85,1.79,1.72,1.67,1.62,1.57,1.53,1.81,1.52,1.33,1.22,1.12,1.03};
 	_covRad = {0.32,0.93, 1.23,0.90,0.82,0.77,0.75,0.73,0.72,0.71, 1.54,1.36,0.00,1.90,0.00,0.00,0.99,0.98, 2.03,1.74,1.44,1.32,1.63,1.18,1.17,1.17,1.16,1.15,1.17,1.25,1.26,1.22,1.20,1.16,1.14,1.12};
+	_atRadf.resize(100);
+	_covRadf.resize(100);
+	_atRad.resize(100);
+	_covRad.resize(100);
 	_nGrains = 0;
 	_filePath = c->Structure.structureFilename;
 	_superCell = superCellBoxPtr(new superCellBox());
@@ -125,14 +129,14 @@ superCellBoxPtr SuperstructureBuilder::Build(){
 		// superCell2Moldy(fp,superCell);
 		fclose(mainfp);
 	} // end of: if moldyFlag ...
-	strcpy(outFileName,datFileName);
+//	strcpy(outFileName,datFileName);
 
 	// atomPtr = readUnitCell(&natoms,fileName,&muls);
 	// writePDB(atomPtr,nat  /* reset the input file and advance to the next crystal row */
 
-	str = strchr(outFileName,'.');
-	if (str == NULL) str=outFileName+strlen(outFileName);
-	sprintf(str,".cfg");
+//	str = strchr(outFileName,'.');
+//	if (str == NULL) str=outFileName+strlen(outFileName);
+//	sprintf(str,".cfg");
 	//		muls->ax = (float)superCell.ax;
 	//		muls->by = (float)superCell.by;
 	//		muls->c	= (float)superCell.cz;
@@ -273,7 +277,6 @@ int SuperstructureBuilder::parOpen( const char *fileName )
 }
 
 int SuperstructureBuilder::readParams(const char *datFileName){
-	int printFlag = 1;
 	char title[128], parStr1[128],*str;
 	std::string parStr;
 	int gCount,i,Nkind;
@@ -332,9 +335,6 @@ int SuperstructureBuilder::readParams(const char *datFileName){
 			grains[gCount].name = string(parStr1);
 			str = strnext(parStr1,(char*)" \t");
 			if (str != NULL) {
-				// printf("%s, name: %s\n",parStr,grains[gCount].name);
-				//str = strnext(str," \t");
-				//if (str != NULL) {
 				strcpy(unitCellFile,str);
 				if ((str = strchr(unitCellFile,' ')) != NULL)
 					*str = '\0';
@@ -503,7 +503,7 @@ int SuperstructureBuilder::readParams(const char *datFileName){
 		} /* end of if gCount >=0 */
 	}
 	parClose();
-	if (printFlag) DisplayParams();
+	DisplayParams();
 	return 1;
 }
 void SuperstructureBuilder::parClose()
@@ -597,29 +597,30 @@ void SuperstructureBuilder::makeSuperCell(){
 				for (int ix=nxmin;ix<=nxmax;ix++) {
 					for (int iy=nymin;iy<=nymax;iy++) {
 						for (int iz=nzmin;iz<=nzmax;iz++) {
+
 							/* atom position in reduced coordinates: */
 							atom at(grains[i].unitCell[j]);
 							// We need to convert the cartesian coordinates of this atom to fractional ones:
-							b[0] = at.r[0];
-							b[1] = at.r[1];
-							b[2] = at.r[2];
-							a = b*Minv;
-							at.r[0] = a[0];
-							at.r[1] = a[1];
-							at.r[2] = a[2];
+//							b[0] = at.r[0];
+//							b[1] = at.r[1];
+//							b[2] = at.r[2];
+//							a = b*Minv;
+//							at.r[0] = a[0];
+//							at.r[1] = a[1];
+//							at.r[2] = a[2];
 							a[0] = at.r[0]+ix;
 							a[1] = at.r[1]+iy;
 							a[2] = at.r[2]+iz;
-							//							matrixProduct(a,1,3,Mm,3,3,b);
 							b = a*M;
 							at.r[0]  = b[0]+dx;
 							at.r[1]  = b[1]+dy;
 							at.r[2]  = b[2]+dz;
 
-							if ((at.r[0] >= 0) && (at.r[0] < _superCell->ax) &&
+							bool atomIsWithinGrainBoundary = (at.r[0] >= 0) && (at.r[0] < _superCell->ax) &&
 									(at.r[1] >= 0) && (at.r[1] < _superCell->by) &&
-									(at.r[2] >= 0) && (at.r[2] < _superCell->cz)) {
-								// If this is a sphere:
+									(at.r[2] >= 0) && (at.r[2] < _superCell->cz);
+
+							if (atomIsWithinGrainBoundary) {
 								if (grains[i].sphereRadius > 0) {
 									dxs = at.r[0] - grains[i].sphereX;
 									dys = at.r[1] - grains[i].sphereY;
@@ -627,23 +628,24 @@ void SuperstructureBuilder::makeSuperCell(){
 
 									if (dxs*dxs+dys*dys+dzs*dzs < grains[i].sphereRadius*grains[i].sphereRadius) {
 										_superCell->atoms.push_back(at);
-										BOOST_LOG_TRIVIAL(info)<< format("atom %d in sphere: (%3.3f,%3.3f,%3.3f)") % _superCell->atoms.size() % at.r[0]%at.r[1]%at.r[2];
+//										BOOST_LOG_TRIVIAL(info)<< format("atom %d in sphere: (%3.3f,%3.3f,%3.3f)") % _superCell->atoms.size() % at.r[0]%at.r[1]%at.r[2];
 									}
 								}
 								// If this is a straight-edged grain
 								else {
+									bool isIn = true;
 									for(auto& p : grains[i].planes){
 										d = findLambda(&p,at.r.mem,1);
-										if (d < 0) break;
+										if (d < 0) {
+											isIn = false;
+											break;
+										}
 									}
-									/* if all the previous test have been successful, this atom is IN,
-									 * which means that we also need to copy the other data elements
-									 * for this atom. */
-									if (p == grains[i].planes.size()) {
+									if (isIn) {
 										_superCell->atoms.push_back(at);
-										BOOST_LOG_TRIVIAL(info)<< format("atom %d in grain: (%3.3f,%3.3f,%3.3f)") % _superCell->atoms.size() % at.r[0]%at.r[1]%at.r[2];
+//										BOOST_LOG_TRIVIAL(info)<< format("atom %d in grain: (%3.3f,%3.3f,%3.3f)") % _superCell->atoms.size() % at.r[0]%at.r[1]%at.r[2];
 									}
-								} // if this is a sphere or not ...
+								}
 							}
 						} /* iz ... */
 					} /* iy ... */
@@ -685,8 +687,10 @@ void SuperstructureBuilder::DisplayParams(){
 	} // for g=0 ...
 }
 void SuperstructureBuilder::SetSliceThickness(ModelConfig& mc){
+	//TODO: SuperstructureBuilder::SetSliceThickness
 }
 void SuperstructureBuilder::SetResolution(ModelConfig& mc, const PotentialConfig pc){
+	//TODO: SuperstructureBuilder::SetResolution
 }
 void SuperstructureBuilder::makeAmorphous(){
 	int g,p,iatom,ix,iy,iz,ic ,amorphSites,amorphAtoms,randCount;
@@ -796,9 +800,7 @@ void SuperstructureBuilder::makeAmorphous(){
 				else
 					randArray[iy] = randArray[--randCount];
 
-
 				iatom = ix % grains[g].unitCell.size();
-
 				atom a;
 
 				a.q = grains[g].unitCell[iatom].q;

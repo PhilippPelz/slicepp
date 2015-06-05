@@ -527,7 +527,7 @@ void CrystalBuilder::SetSliceThickness(ModelConfig& mc){
 	case SliceThicknessCalculation::NumberOfSlices:
 		mc.dz = (zTotal/mc.nSlices)+0.01*(zTotal/mc.nSlices);
 		break;
-	case SliceThicknessCalculation::Thickness:
+	case SliceThicknessCalculation::SliceThickness:
 		mc.nSlices = (int)(zTotal / mc.dz);
 		break;
 	default:
