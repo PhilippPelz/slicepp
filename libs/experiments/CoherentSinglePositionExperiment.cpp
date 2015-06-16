@@ -17,9 +17,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "cbed.hpp"
+#include "CoherentSinglePositionExperiment.hpp"
 #include "random.hpp"
-
 #include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
 #include "math.h"
@@ -28,104 +27,20 @@ using boost::format;
 namespace QSTEM
 {
 
-CExperimentCBED::CExperimentCBED(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers) : CExperimentBase(c,s,w,p,pers)
+CoherentSinglePositionExperiment::CoherentSinglePositionExperiment(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers) : BaseExperiment(c,s,w,p,pers)
 {
 	m_mode=ExperimentType::CBED;
 	_lbeams = false;
 }
 
-void CExperimentCBED::DisplayParams()
+void CoherentSinglePositionExperiment::DisplayParams()
 {
 }
-void CExperimentCBED::SetResolution(superCellBoxPtr b){
-	float_tt max_x = b->ax, max_y=b->by, max_z=b->cz, zTotal;
-	ModelConfig& mc = _c->Model;
 
-	//TODO: nx,ny = integer multiple of # unit cells
-	//TODO: super cell size = N * unit cell size
-
-	switch(mc.ResolutionCalculation) {
-	case ResolutionCalculation::FILLN:
-		if(_c->Structure.isBoxed){
-
-		} else {
-
-		}
-		mc.nx = (mc.nx % 2 != 0) ? mc.nx+1 : mc.nx;
-		mc.ny = (mc.ny % 2 != 0) ? mc.ny+1 : mc.ny;
-		mc.dx = (max_x - 0)/mc.nx;
-		mc.dy = (max_y - 0)/mc.ny;
-		_c->Structure.xOffset = 0;
-		_c->Structure.yOffset = 0;
-		break;
-	case ResolutionCalculation::FILLRES:
-		mc.nx = ceil((max_x - 0) / mc.dx) ;
-		mc.ny = ceil((max_y - 0) / mc.dy) ;
-		mc.nx = (mc.nx % 2 != 0) ? mc.nx+1 : mc.nx;
-		mc.ny = (mc.ny % 2 != 0) ? mc.ny+1 : mc.ny;
-		mc.dx = (max_x - 0)/mc.nx;
-		mc.dy = (max_y - 0)/mc.ny;
-		_c->Structure.xOffset = 0;
-		_c->Structure.yOffset = 0;
-		break;
-	case ResolutionCalculation::BOXRES:
-		mc.nx =  _c->Structure.boxX / mc.dx ;
-		mc.ny =  _c->Structure.boxY / mc.dy ;
-		mc.nx = (mc.nx % 2 != 0) ? mc.nx+1 : mc.nx;
-		mc.ny = (mc.ny % 2 != 0) ? mc.ny+1 : mc.ny;
-		if(mc.CenterSample) {
-			_c->Structure.xOffset = _c->Structure.boxX/2 - (max_x-0)/2;
-			_c->Structure.yOffset = _c->Structure.boxY/2 - (max_y-0)/2;
-		} else {
-			_c->Structure.xOffset = 0;
-			_c->Structure.yOffset = 0;
-		}
-		break;
-	case ResolutionCalculation::BOXN:
-		mc.nx = (mc.nx % 2 != 0) ? mc.nx+1 : mc.nx;
-		mc.ny = (mc.ny % 2 != 0) ? mc.ny+1 : mc.ny;
-		mc.dx =  _c->Structure.boxX / mc.nx ;
-		mc.dy =  _c->Structure.boxY / mc.ny ;
-		if(mc.CenterSample) {
-			_c->Structure.xOffset = _c->Structure.boxX/2 - (max_x-0)/2;
-			_c->Structure.yOffset = _c->Structure.boxY/2 - (max_y-0)/2;
-		} else {
-			_c->Structure.xOffset = 0;
-			_c->Structure.yOffset = 0;
-		}
-		break;
-
-	}
-}
-void CExperimentCBED::SetSliceThickness(superCellBoxPtr b){
-	float_tt max_x = b->ax, max_y=b->by, max_z=b->cz, zTotal=b->cz;
-	ModelConfig& mc = _c->Model;
-
-	switch (mc.SliceThicknessCalculation) {
-	case SliceThicknessCalculation::Auto:
-		mc.dz = (zTotal/((int)zTotal))+0.01*(zTotal/((int)zTotal));
-		mc.nSlices = (int)zTotal+1;
-		break;
-	case SliceThicknessCalculation::NumberOfSlices:
-		mc.dz = (zTotal/mc.nSlices)+0.01*(zTotal/mc.nSlices);
-		break;
-	case SliceThicknessCalculation::SliceThickness:
-		mc.nSlices = (int)(zTotal / mc.dz);
-		break;
-	default:
-		break;
-	}
-	int atomRadiusSlices = ceil(_c->Potential.AtomRadiusAngstrom / _c->Model.dz);
-	if(_c->Potential.Use3D)
-		_c->Model.nSlices += 2 * atomRadiusSlices;
-}
-
-void CExperimentCBED::Run()
+void CoherentSinglePositionExperiment::Run()
 {
 	int ix,iy,i,pCount,result;
-	FILE *avgFp,*fp,*fpPos=0;
-	double timer,timerTot;
-	double probeCenterX,probeCenterY,probeOffsetX,probeOffsetY;
+	double timer,timerTot ;
 	float_tt t=0;
 	FloatArray2D avgPendelloesung(boost::extents[_nbout][_c->Model.nSlices]);
 	int nx, ny;
@@ -134,9 +49,6 @@ void CExperimentCBED::Run()
 	std::vector<unsigned> position(1);         // Used to indicate the number of averages
 
 	m_chisq.resize(_c->Model.TDSRuns);
-
-	probeCenterX = _scanXStart;
-	probeCenterY = _scanYStart;
 	timerTot = 0; /* cputim();*/
 	DisplayProgress(-1);
 
@@ -147,29 +59,16 @@ void CExperimentCBED::Run()
 
 	_persist->InitStorage();
 	_wave->FormProbe();
-
+	_wave->InitializePropagators();
 	_wave->DisplayParams();
 	_pot->DisplayParams();
 
 	for (_runCount = 0;_runCount < _c->Model.TDSRuns;_runCount++) {
-
 		auto box = _structureBuilder->DisplaceAtoms();
-
 		_pot->MakeSlices(box);
-
-		m_totalSliceCount = 0;
-		pCount = 0;
-
 		if (_c->Output.saveProbe) _persist->SaveProbe(_wave->GetWave());
-
-		RunMultislice(_wave);
-
+		RunMultislice();
 		if (_runCount == 0) {
-			/* move the averaged (raw data) file to the target directory as well */
-			// TODO: make sure that DP average gets created properly
-			//sprintf(avgName,"%s/diffAvg_%d.img",m_folder.c_str(),_runCount+1);
-			//sprintf(systStr,"mv %s/diff.img %s",m_folder.c_str(),avgName);
-			//system(systStr);
 			if (_lbeams) {
 				for (iy=0;iy<_c->Model.nSlices ;iy++) {
 					for (ix=0;ix<_nbout;ix++) {
@@ -177,24 +76,16 @@ void CExperimentCBED::Run()
 					}
 				}
 			}
-		} // of if m_avgCount == 0 ...
+		}
 		else {
-
 			m_storeSeries = 1;
 			if (m_saveLevel == 0)	m_storeSeries = 0;
 			else if (_runCount % m_saveLevel != 0) m_storeSeries = 0;
-
 			if (m_storeSeries)
 			{
 				params["1/Wavelength"] = 1.0/_wave->GetWavelength();
 				WriteAvgArray(_runCount+1, "Averaged Diffraction pattern, unit: 1/A", params);
 			}
-
-			/*************************************************************/
-
-			/***********************************************************
-			 * Average over the pendelloesung plot as well
-			 */
 			if (_lbeams) {
 				for (iy=0;iy<_c->Model.nSlices ;iy++) {
 					for (ix=0;ix<_nbout;ix++) {
@@ -202,7 +93,7 @@ void CExperimentCBED::Run()
 					}
 				}
 			}
-		} /* else ... if avgCount was greater than 0 */
+		}
 
 		if (_lbeams) {
 			/**************************************************************
@@ -213,43 +104,45 @@ void CExperimentCBED::Run()
 			 * demonstration purposes
 			 *************************************************************/
 			char systStr[255];
-			sprintf(systStr,"%s/pendelloesung.dat",m_outputLocation.c_str());
-			if ((fp=fopen(systStr,"w")) !=NULL) {
-				BOOST_LOG_TRIVIAL(info) << "Writing Pendelloesung data";
-				for (iy=0;iy<_c->Model.nSlices ;iy++) {
-					/* write the thicknes in the first column of the file */
-					fprintf(fp,"%g",iy*_c->Model.dz);//((float)(m_potential->GetNSlices()*_c->Potential.NSubSlabs)));
-					/* write the beam intensities in the following columns */
-					for (ix=0;ix<_nbout;ix++) {
-						fprintf(fp,"\t%g",avgPendelloesung[ix][iy]);
-					}
-					fprintf(fp,"\n");
-				}
-				fclose(fp);
-			}
-			else {
-				BOOST_LOG_TRIVIAL(error) << "Could not open file for pendelloesung plot";
-			}
-		} /* end of if lbeams ... */
+			//TODO rewrite saving of pendelloesung
+//			sprintf(systStr,"%s/pendelloesung.dat",m_outputLocation.c_str());
+//			if ((fp=fopen(systStr,"w")) !=NULL) {
+//				BOOST_LOG_TRIVIAL(info) << "Writing Pendelloesung data";
+//				for (iy=0;iy<_c->Model.nSlices ;iy++) {
+//					/* write the thicknes in the first column of the file */
+//					fprintf(fp,"%g",iy*_c->Model.dz);//((float)(m_potential->GetNSlices()*_c->Potential.NSubSlabs)));
+//					/* write the beam intensities in the following columns */
+//					for (ix=0;ix<_nbout;ix++) {
+//						fprintf(fp,"\t%g",avgPendelloesung[ix][iy]);
+//					}
+//					fprintf(fp,"\n");
+//				}
+//				fclose(fp);
+//			}
+//			else {
+//				BOOST_LOG_TRIVIAL(error) << "Could not open file for pendelloesung plot";
+//			}
+		}
 		DisplayProgress(1);
-	} /* end of for m_avgCount=0.. */
+	}
+	PostSpecimenProcess();
 	BOOST_LOG_TRIVIAL(info) << "Saving to disc...";
 	_persist->StoreToDisc();
 	BOOST_LOG_TRIVIAL(info) << "Finished saving...";
 }
 
-void CExperimentCBED::CollectIntensity(unsigned absoluteSlice)
+void CoherentSinglePositionExperiment::CollectIntensity(unsigned absoluteSlice)
 {
 	WriteBeams(absoluteSlice);
 }
 
-void CExperimentCBED::SaveImages()
+void CoherentSinglePositionExperiment::SaveImages()
 {
 	// This is called at the designated save interval, and one final time at the end of each run.
 	//   TODO: define the images that should be saved here.
 }
 
-void CExperimentCBED::WriteBeams(unsigned int absoluteSlice)
+void CoherentSinglePositionExperiment::WriteBeams(unsigned int absoluteSlice)
 {
 	// TODO: this needs to be reconsidered in terms of not using static variables
 
@@ -334,7 +227,7 @@ void CExperimentCBED::WriteBeams(unsigned int absoluteSlice)
 	 */
 }
 
-void CExperimentCBED::PostSliceProcess(unsigned absoluteSlice)
+void CoherentSinglePositionExperiment::PostSliceProcess( )
 {
 	//	InterimWave(absoluteSlice);
 	//	if (_c->Output.LogLevel < 2) {

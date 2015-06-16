@@ -528,7 +528,6 @@ void vectDiff_f(const float_tt *a,const float_tt *b, float_tt *c,int revFlag) {
 	}
 }
 
-#define PI         (3.1415926535f)
 #define HALF_PI    (0.5f * PI)
 #define TWO_PI     (2.0f * PI)
 #define TWO_PI_INV (1.0f / TWO_PI)
@@ -674,13 +673,14 @@ void rotateVect(float_tt *vectIn,float_tt *vectOut, float_tt phi_x, float_tt phi
 
 	return;
 }
-
+static float_tt sphi_x=0, sphi_y=0, sphi_z=0;
 void rotateMatrix(const FloatArray2D& matrixIn, FloatArray2D& matrixOut, float_tt phi_x, float_tt phi_y, float_tt phi_z) {
 	int i,j,k;
 	static FloatArray2D Mrot(boost::extents[3][3]);
+	std::fill(Mrot.origin(), Mrot.origin() + Mrot.size(), 0);
+	Mrot[0][0] = Mrot[1][1] = Mrot[2][2] = 1;
 	std::vector<float_tt>matrixOutTemp(9);
-	//static float_tt *matrixOutTemp = NULL;
-	static float_tt sphi_x=0, sphi_y=0, sphi_z=0;
+
 	if ((phi_x!=sphi_x) || (phi_y!=sphi_y) || (phi_z!=sphi_z)) {
 		Mrot[0][0] = cos(phi_z)*cos(phi_y);
 		Mrot[0][1] = cos(phi_z)*sin(phi_y)*sin(phi_x)-sin(phi_z)*cos(phi_x);

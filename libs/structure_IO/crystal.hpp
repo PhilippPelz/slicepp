@@ -53,7 +53,6 @@ public:
 
 	void ReadFromFile();
 	void Init(unsigned run_number);
-	void MakeCrystal(bool handleVacancies);
 	void TiltBoxed(int ncoord,bool handleVacancies);
 	void EinsteinDisplacement(FloatArray2D& u, atom &_atom);
 	void PhononDisplacement(FloatArray2D &u,int id,int icx,int icy, int icz,atom &atom,bool printReport);
@@ -109,12 +108,12 @@ protected:
                                           back to fractional coordinates. */
 	float_tt m_ax, m_by, m_cz;           /* lattice parameters */
 	float_tt m_cAlpha, m_cBeta, m_cGamma;
-	float_tt m_maxX, m_minX;
-	float_tt m_maxY, m_minY;
-	float_tt m_maxZ, m_minZ;
+	float_tt _maxX, _minX;
+	float_tt _maxY, _minY;
+	float_tt _maxZ, _minZ;
 
 	bool m_adjustCubeSize;
-	float_tt m_offsetX, m_offsetY;
+	float_tt _offsetX, _offsetY;
 	float_tt m_ctiltx, m_ctilty, m_ctiltz;  /* crystal tilt in mrad */
 	unsigned m_nCellX, m_nCellY, m_nCellZ;  /* number of unit cells in x-y-z dir*/
 	float_tt m_wobble_temp_scale;

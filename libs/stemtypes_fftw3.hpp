@@ -210,18 +210,18 @@ static inline void loadbar(unsigned int x, unsigned int n, unsigned int w = 80)
 
 // Generic helper definitions for shared library support
 #if defined _WIN32 || defined __CYGWIN__
-#define QSTEM_HELPER_DLL_IMPORT __declspec(dllimport)
-#define QSTEM_HELPER_DLL_EXPORT __declspec(dllexport)
-#define QSTEM_HELPER_DLL_LOCAL
+#define DLL_IMPORT __declspec(dllimport)
+#define DLL_EXPORT __declspec(dllexport)
+#define DLL_LOCAL
 #else
 #if __GNUC__ >= 4
-#define QSTEM_HELPER_DLL_IMPORT __attribute__ ((visibility ("default")))
-#define QSTEM_HELPER_DLL_EXPORT __attribute__ ((visibility ("default")))
-#define QSTEM_HELPER_DLL_LOCAL  __attribute__ ((visibility ("hidden")))
+#define DLL_IMPORT __attribute__ ((visibility ("default")))
+#define DLL_EXPORT __attribute__ ((visibility ("default")))
+#define DLL_LOCAL  __attribute__ ((visibility ("hidden")))
 #else
-#define QSTEM_HELPER_DLL_IMPORT
-#define QSTEM_HELPER_DLL_EXPORT
-#define QSTEM_HELPER_DLL_LOCAL
+#define DLL_IMPORT
+#define DLL_EXPORT
+#define DLL_LOCAL
 #endif
 #endif
 

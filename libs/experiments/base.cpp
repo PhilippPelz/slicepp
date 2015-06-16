@@ -26,7 +26,7 @@ using boost::format;
 namespace QSTEM
 {
 
-CExperimentBase::CExperimentBase(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers)
+BaseExperiment::BaseExperiment(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers)
 : IExperiment()
 {
 	_c = c;
@@ -41,7 +41,7 @@ CExperimentBase::CExperimentBase(const ConfigPtr& c,const StructureBuilderPtr& s
 	DisplayParams();
 }
 
-void CExperimentBase::DisplayParams()
+void BaseExperiment::DisplayParams()
 {
 	FILE* fpDir;
 	char systStr[64];
@@ -67,8 +67,89 @@ void CExperimentBase::DisplayParams()
 	BOOST_LOG_TRIVIAL(info) <<
 	"**************************************************************************************************\n";
 }
+void BaseExperiment::SetResolution(superCellBoxPtr b){
+	float_tt max_x = b->ax, max_y=b->by, max_z=b->cz, zTotal;
+	ModelConfig& mc = _c->Model;
 
-void CExperimentBase::DisplayProgress(int flag)
+	//TODO: nx,ny = integer multiple of # unit cells
+	//TODO: super cell size = N * unit cell size
+
+	switch(mc.ResolutionCalculation) {
+	case ResolutionCalculation::FILLN:
+		if(_c->Structure.isBoxed){
+
+		} else {
+
+		}
+		mc.nx = (mc.nx % 2 != 0) ? mc.nx+1 : mc.nx;
+		mc.ny = (mc.ny % 2 != 0) ? mc.ny+1 : mc.ny;
+		mc.dx = (max_x - 0)/mc.nx;
+		mc.dy = (max_y - 0)/mc.ny;
+		_c->Structure.xOffset = 0;
+		_c->Structure.yOffset = 0;
+		break;
+	case ResolutionCalculation::FILLRES:
+		mc.nx = ceil((max_x - 0) / mc.dx) ;
+		mc.ny = ceil((max_y - 0) / mc.dy) ;
+		mc.nx = (mc.nx % 2 != 0) ? mc.nx+1 : mc.nx;
+		mc.ny = (mc.ny % 2 != 0) ? mc.ny+1 : mc.ny;
+		mc.dx = (max_x - 0)/mc.nx;
+		mc.dy = (max_y - 0)/mc.ny;
+		_c->Structure.xOffset = 0;
+		_c->Structure.yOffset = 0;
+		break;
+	case ResolutionCalculation::BOXRES:
+		mc.nx =  _c->Structure.boxX / mc.dx ;
+		mc.ny =  _c->Structure.boxY / mc.dy ;
+		mc.nx = (mc.nx % 2 != 0) ? mc.nx+1 : mc.nx;
+		mc.ny = (mc.ny % 2 != 0) ? mc.ny+1 : mc.ny;
+		if(mc.CenterSample) {
+			_c->Structure.xOffset = _c->Structure.boxX/2 - (max_x-0)/2;
+			_c->Structure.yOffset = _c->Structure.boxY/2 - (max_y-0)/2;
+		} else {
+			_c->Structure.xOffset = 0;
+			_c->Structure.yOffset = 0;
+		}
+		break;
+	case ResolutionCalculation::BOXN:
+		mc.nx = (mc.nx % 2 != 0) ? mc.nx+1 : mc.nx;
+		mc.ny = (mc.ny % 2 != 0) ? mc.ny+1 : mc.ny;
+		mc.dx =  _c->Structure.boxX / mc.nx ;
+		mc.dy =  _c->Structure.boxY / mc.ny ;
+		if(mc.CenterSample) {
+			_c->Structure.xOffset = _c->Structure.boxX/2 - (max_x-0)/2;
+			_c->Structure.yOffset = _c->Structure.boxY/2 - (max_y-0)/2;
+		} else {
+			_c->Structure.xOffset = 0;
+			_c->Structure.yOffset = 0;
+		}
+		break;
+
+	}
+}
+void BaseExperiment::SetSliceThickness(superCellBoxPtr b){
+	float_tt max_x = b->ax, max_y=b->by, max_z=b->cz, zTotal=b->cz;
+	ModelConfig& mc = _c->Model;
+
+	switch (mc.SliceThicknessCalculation) {
+	case SliceThicknessCalculation::Auto:
+		mc.dz = (zTotal/((int)zTotal))+0.01*(zTotal/((int)zTotal));
+		mc.nSlices = (int)zTotal+1;
+		break;
+	case SliceThicknessCalculation::NumberOfSlices:
+		mc.dz = (zTotal/mc.nSlices)+0.01*(zTotal/mc.nSlices);
+		break;
+	case SliceThicknessCalculation::SliceThickness:
+		mc.nSlices = (int)(zTotal / mc.dz);
+		break;
+	default:
+		break;
+	}
+	int atomRadiusSlices = ceil(_c->Potential.AtomRadiusAngstrom / _c->Model.dz);
+	if(_c->Potential.Use3D)
+		_c->Model.nSlices += 2 * atomRadiusSlices;
+}
+void BaseExperiment::DisplayProgress(int flag)
 {
 	// static double timer;
 	static double timeAvg = 0;
@@ -145,7 +226,7 @@ void CExperimentBase::ComputeAverageU2()
  */
 
 
-void CExperimentBase::InitializePropagators(WavePtr wave)
+void BaseExperiment::InitializePropagators(WavePtr wave)
 {
 	int nx, ny;
 
@@ -175,7 +256,7 @@ void CExperimentBase::InitializePropagators(WavePtr wave)
 	}
 }
 
-int CExperimentBase::RunMultislice(WavePtr wave)
+int BaseExperiment::RunMultislice()
 {
 	int printFlag = 0;
 	int showEverySlice = 1;
@@ -188,15 +269,15 @@ int CExperimentBase::RunMultislice(WavePtr wave)
 	double fftScale;
 	int nx, ny;
 
-	wave->GetSizePixels(nx, ny);
+	_wave->GetSizePixels(nx, ny);
 
 	printFlag = (_c->Output.LogLevel > 3);
 	fftScale = 1.0 / (nx * ny);
 
-	wavlen = wave->GetWavelength();
+	wavlen = _wave->GetWavelength();
 
 	int nx1, ny1;
-	wave->GetExtents(nx1, ny1);
+	_wave->GetExtents(nx1, ny1);
 	m_avgArray.resize(nx1 * ny1);
 
 	/*  calculate the total specimen thickness and echo */
@@ -209,32 +290,30 @@ int CExperimentBase::RunMultislice(WavePtr wave)
 		BOOST_LOG_TRIVIAL(info) << format("Specimen thickness: %g Angstroms\n") % cztot;
 	}
 
-	_wave->InitializePropagators();
-//	InitializePropagators(wave);
+
 	BOOST_LOG_TRIVIAL(info) << "Propagating through slices ...";
 	for(islice = 0; islice < _c->Model.nSlices; islice++) {
-		absolute_slice = (m_totalSliceCount + islice);
 
 		_wave->Transmit(_pot->GetSlice(islice));
 //		Transmit(wave, islice);
 
-		if(_c->Output.SaveWaveAfterTransmit) _persist->SaveWaveAfterTransmit(wave->GetWave(), islice);
+		if(_c->Output.SaveWaveAfterTransmit) _persist->SaveWaveAfterTransmit(_wave->GetWave(), islice);
 
 		_wave->ToFourierSpace();
 
-		if(_c->Output.SaveWaveAfterTransform) _persist->SaveWaveAfterTransform(wave->GetWave(), islice);
+		if(_c->Output.SaveWaveAfterTransform) _persist->SaveWaveAfterTransform(_wave->GetWave(), islice);
 
 		_wave->PropagateToNextSlice();
 //		Propagate(wave, islice);
 
-		if(_c->Output.SaveWaveAfterPropagation) _persist->SaveWaveAfterPropagation(wave->GetWave(), islice);
+		if(_c->Output.SaveWaveAfterPropagation) _persist->SaveWaveAfterPropagation(_wave->GetWave(), islice);
 
-		CollectIntensity(absolute_slice);
+		CollectIntensity(islice);
 
-		wave->ToRealSpace();
+		_wave->ToRealSpace();
 
 		if(_c->Output.SaveWaveAfterSlice && islice % _c->Output.SaveWaveIterations == 0) _persist->SaveWaveAfterSlice(_wave->GetWave(),islice);
-		PostSliceProcess(absolute_slice);
+		PostSliceProcess(islice);
 
 		if(islice % (int)ceil(_c->Model.nSlices / 10.0) == 0)
 			loadbar(islice + 1, _c->Model.nSlices);
@@ -242,7 +321,7 @@ int CExperimentBase::RunMultislice(WavePtr wave)
 	return 0;
 } // end of runMulsSTEM
 
-void CExperimentBase::Propagate(WavePtr wave, float_tt dz)
+void BaseExperiment::Propagate(WavePtr wave, float_tt dz)
 {
 	float_tt wr, wi, tr, ti;
 	float_tt scale, t;
@@ -287,7 +366,7 @@ on entrance waver,i and transr,i are in real space
 
 only waver,i will be changed by this routine
  */
-void CExperimentBase::Transmit(WavePtr wave, unsigned sliceIdx)
+void BaseExperiment::Transmit(WavePtr wave, unsigned sliceIdx)
 {
 	double wr, wi, tr, ti;
 	int nx, ny;
@@ -309,7 +388,7 @@ void CExperimentBase::Transmit(WavePtr wave, unsigned sliceIdx)
 	}
 } /* end transmit() */
 
-void CExperimentBase::AddDPToAvgArray(const WavePtr& wave)
+void BaseExperiment::AddDPToAvgArray(const WavePtr& wave)
 {
 	int nx, ny;
 	wave->GetExtents(nx, ny);
@@ -329,7 +408,7 @@ void CExperimentBase::AddDPToAvgArray(const WavePtr& wave)
 	m_chisq[_runCount] += chisq / px;
 }
 
-void CExperimentBase::_WriteAvgArray(std::string& fileName,
+void BaseExperiment::_WriteAvgArray(std::string& fileName,
 		std::string& comment,
 		std::map<std::string, double>& params,
 		std::vector<unsigned>& position)
@@ -341,14 +420,14 @@ void CExperimentBase::_WriteAvgArray(std::string& fileName,
 	//		m_imageIO->WriteImage(m_avgArray, fileName, params, comment, position);
 }
 
-void CExperimentBase::ReadAvgArray()
+void BaseExperiment::ReadAvgArray()
 {
 	std::vector<unsigned> position;
 	// TODO use persist
 	//		m_imageIO->ReadImage(m_avgArray, avgFilePrefix, position);
 }
 
-void CExperimentBase::ReadAvgArray(unsigned navg)
+void BaseExperiment::ReadAvgArray(unsigned navg)
 {
 	std::vector<unsigned> position(1);
 	position[0] = navg;
@@ -356,7 +435,7 @@ void CExperimentBase::ReadAvgArray(unsigned navg)
 	//		m_imageIO->ReadImage(m_avgArray, avgFilePrefix, position);
 }
 
-void CExperimentBase::ReadAvgArray(unsigned positionx, unsigned positiony)
+void BaseExperiment::ReadAvgArray(unsigned positionx, unsigned positiony)
 {
 	std::vector<unsigned> position(2);
 	position[0] = positionx;
@@ -365,7 +444,7 @@ void CExperimentBase::ReadAvgArray(unsigned positionx, unsigned positiony)
 	//		m_imageIO->ReadImage(m_avgArray, avgFilePrefix, position);
 }
 
-void CExperimentBase::fft_normalize(WavePtr wave)
+void BaseExperiment::fft_normalize(WavePtr wave)
 {
 	ComplexArray2DPtr w = wave->GetWave();
 	int nx, ny;

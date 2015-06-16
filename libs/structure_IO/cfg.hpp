@@ -24,7 +24,7 @@
 #include <boost/filesystem.hpp>
 namespace QSTEM
 {
-class QSTEM_HELPER_DLL_EXPORT CCfgReader : public IStructureReader
+class DLL_EXPORT CCfgReader : public IStructureReader
 {
 public:
   CCfgReader(const boost::filesystem::path &structure_file);

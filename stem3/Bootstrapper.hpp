@@ -38,8 +38,8 @@ namespace bpt = boost::property_tree;
 #include <wavefunctions/wave_plane.hpp>
 #include "experiments/base.hpp"
 #include "experiments/stem.hpp"
-#include "experiments/cbed.hpp"
-#include "experiments/tem.hpp"
+#include "experiments/CoherentCBED.hpp"
+#include "experiments/CoherentTEM.hpp"
 #include "potentials/pot_interface.hpp"
 #include "potentials/pot_2d.hpp"
 #include "potentials/pot_2d_fft.hpp"

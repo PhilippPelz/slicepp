@@ -232,7 +232,7 @@ void CPotential::MakePhaseGratings() {
 			loadbar(x+1,tot);
 		}
 		float_tt ph = scale * v->real();
-		*v = complex_tt(fcos(ph), fsin(ph));
+		*v = complex_tt(cos(ph), sin(ph));
 		if (ph>maxph) maxph = ph;
 		if (ph<minph) minph = ph;
 	}

@@ -28,7 +28,7 @@ namespace QSTEM
 
 typedef std::map<std::string, CreatePotentialFn> FactoryMap;
 // Factory for creating instances of IPotential
-class QSTEM_HELPER_DLL_EXPORT CPotFactory
+class DLL_EXPORT CPotFactory
 {
 protected:
 	CPotFactory();

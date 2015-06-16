@@ -20,7 +20,6 @@ QSTEM - image simulation for TEM/STEM/CBED
 #include "stdio.h"
 #include <string.h>
 #include "data_containers.hpp"
-#include "memory_fftw3.hpp"
 
 MULS::MULS():
   cellDiv(1),

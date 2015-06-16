@@ -74,10 +74,7 @@ void Bootstrapper::Initialize(){
 	RegisterStructureBuilders();
 	boost::filesystem::path p(_c->Structure.structureFilename);
 	auto sreader = StructureReaderPtr(_structureReaderFactory[".cif"](p));
-	auto structureBuilder = StructureBuilderPtr(
-			_structureBuilderFactory[p.extension().string()](sreader,_c));
-//	structureBuilder->SetSliceThickness(_c->Model);
-//	structureBuilder->SetResolution(_c->Model,_c->Potential);
+	auto structureBuilder = StructureBuilderPtr(_structureBuilderFactory[p.extension().string()](sreader,_c));
 	auto persist = PersistenceManagerPtr(new PersistenceManager(_c));
 
 	std::stringstream str;
@@ -104,9 +101,9 @@ void Bootstrapper::RegisterWaveTypes(){
 	_waveFactory[2] = boost::factory<CConvergentWave*>();
 }
 void Bootstrapper::RegisterExperimentTypes(){
-	_experimentFactory[ExperimentType::CBED] = boost::factory<CExperimentCBED*>();
+	_experimentFactory[ExperimentType::CBED] = boost::factory<CoherentCBED*>();
 	_experimentFactory[ExperimentType::STEM] = boost::factory<CExperimentSTEM*>();
-	_experimentFactory[ExperimentType::TEM] = boost::factory<CExperimentTEM*>();
+	_experimentFactory[ExperimentType::TEM] = boost::factory<CoherentTEM*>();
 }
 void Bootstrapper::RegisterPotentialTypes(){
 	_potentialFactory["3DFFT"]= boost::factory<C3DFFTPotential*>();

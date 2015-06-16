@@ -51,6 +51,7 @@ public:
 	virtual void ToRealSpace()=0;
 	virtual void ToFourierSpace()=0;
 	virtual bool IsRealSpace()=0;
+	virtual void ApplyTransferFunction()=0;
 	virtual WavePtr Clone()=0;
 	virtual ComplexArray2D GetWave() const = 0;
 	virtual void GetSizePixels(int &x, int &y) const =0;
@@ -71,6 +72,7 @@ public:
 	virtual void PropagateToNextSlice()=0;
 	virtual void InitializePropagators()=0;
 	virtual void ShiftTo(float_tt x, float_tt y)=0;
+	virtual void fftShift()=0;
 protected:
 	PersistenceManagerPtr _persist;
 	ConfigPtr _config;

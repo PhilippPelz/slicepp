@@ -25,7 +25,7 @@
 namespace QSTEM
 {
 
-class QSTEM_HELPER_DLL_EXPORT CPlaneWave : public CBaseWave
+class DLL_EXPORT CPlaneWave : public CBaseWave
 {
 public:
   CPlaneWave(const ConfigPtr& c,const PersistenceManagerPtr& p);

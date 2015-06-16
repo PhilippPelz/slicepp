@@ -31,36 +31,33 @@
 namespace QSTEM
 {
 
-class QSTEM_HELPER_DLL_EXPORT CBaseWave : public IWave
+class DLL_EXPORT CBaseWave : public IWave
 {
 public:
 	CBaseWave(const ConfigPtr& c,const PersistenceManagerPtr& p);
 	CBaseWave( const CBaseWave& other );
 
+	bool IsRealSpace(){return m_realSpace;}
+	int GetTotalPixels() const {return _nx*_ny;}
 	void DisplayParams();
 	void ToRealSpace();
 	void ToFourierSpace();
-	bool IsRealSpace(){return m_realSpace;}
 	void GetSizePixels(int &x, int &y) const ;
-	int GetTotalPixels() const {return _nx*_ny;}
 	void GetResolution(float_tt &x, float_tt &y) const ;
 	void GetPositionOffset(int &x, int &y) const ;
-	float_tt GetK2(int ix, int iy) const ;
+	inline float_tt GetK2(int ix, int iy) const{ return m_kx2[ix]+m_ky2[iy]; };
 	inline float_tt GetKX2(int ix) const {return m_kx2[ix];}
 	inline float_tt GetKY2(int iy) const {return m_ky2[iy];}
 	inline float_tt GetK2Max() const {return m_k2max;}
 	inline float_tt GetVoltage()  const {return m_v0;}
 	inline float_tt GetWavelength()  const {return m_wavlen;}
-	inline ComplexArray2D GetWave() const {return  _wave;}
-	inline float_tt GetPixelIntensity(int i) const {
-		return abs2(_wave.data()[i]);
-	}
+	inline float_tt GetPixelIntensity(int i) const { return abs2(_wave.data()[i]); }
 	inline float_tt GetPixelIntensity(int x, int y) const  {return GetPixelIntensity(x+_nx*y);}
+	inline ComplexArray2D GetWave() const {return  _wave;}
 
 	void WriteBeams(int absoluteSlice);
 	float_tt GetIntegratedIntensity() const ;
 
-	virtual void ApplyTransferFunction(std::vector<complex_tt> &wave);
 	virtual ~CBaseWave();
 	virtual WavePtr Clone()=0;
 	virtual void FormProbe();
@@ -69,7 +66,8 @@ public:
 	virtual void PropagateToNextSlice();
 	virtual void InitializePropagators();
 	virtual void ShiftTo(float_tt x, float_tt y);
-
+	virtual void fftShift();
+	virtual void ApplyTransferFunction();
 protected:
 	ComplexArray2D _prop, _wave;
 	std::vector<float_tt> m_propxr, m_propxi, m_propyr, m_propyi;

@@ -27,7 +27,7 @@ using boost::format;
 namespace QSTEM
 {
 
-CExperimentSTEM::CExperimentSTEM(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers): CExperimentBase(c,s,w,p,pers)
+CExperimentSTEM::CExperimentSTEM(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers): BaseExperiment(c,s,w,p,pers)
 {
 	m_mode=ExperimentType::STEM;
 
@@ -144,7 +144,7 @@ default(none)
 
 				// MCS - update the probe wavefunction with its position
 
-				RunMultislice(wave);
+				RunMultislice();
 
 
 				/***************************************************************

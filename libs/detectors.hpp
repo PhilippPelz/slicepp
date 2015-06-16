@@ -27,7 +27,7 @@
 namespace QSTEM
 {
 
-class QSTEM_HELPER_DLL_EXPORT Detector {
+class DLL_EXPORT Detector {
 	PersistenceManagerPtr _persist;
 public:
 	unsigned m_nx, m_ny;

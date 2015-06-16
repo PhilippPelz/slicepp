@@ -60,15 +60,41 @@ void CBaseWave::InitializePropagators()
 			float_tt s = scale*(m_kx2[ixa]+m_ky2[iya]);
 			complex_tt tmp = complex_tt(cos(s),sin(s));
 			_prop[ixa][iya] = tmp;
-			BOOST_LOG_TRIVIAL(trace) << boost::format("p[%d][%d]= %g * exp(i %g) s=%g") % ixa % iya % abs(tmp) % arg(tmp) %s;
+//			BOOST_LOG_TRIVIAL(trace) << boost::format("p[%d][%d]= %g * exp(i %g) s=%g") % ixa % iya % abs(tmp) % arg(tmp) %s;
 		}
+//	_prop = fftwpp::fft2d::fftshift(_prop);
 	_persist->Save2DDataSet(_prop,"Propagator");
 }
 
 void CBaseWave::ShiftTo(float_tt x, float_tt y){
 
 }
+void CBaseWave::fftShift(){
+	_wave = fftwpp::fft2d::fftshift(_wave);
+}
+void CBaseWave::ApplyTransferFunction(){
+	// TODO: transfer function should be passed as a 1D vector that is half the size of the wavefunc.
+	//       It should be applied by a radial lookup table (with interpolation?)
+	//       Alternatively, is it easier to just use a 2D CTF?
+	//       Whatever you do, use m_transferFunction as the storage for it.
+	int px=GetTotalPixels();
 
+	// multiply wave (in rec. space) with transfer function and write result to imagewave
+	ToFourierSpace();
+	for (int i=0;i<_nx;i++)
+		for (int j=0;j<_ny;j++)
+		{
+			// here, we apply the CTF:
+			// 20140110 - MCS - I think this is where Christoph wanted to apply the CTF - nothing is done ATM.
+
+			// TODO: use these for calculating a radius (to get the CTF value from)
+			//ix=i%m_nx;
+			//iy=i/m_ny;
+
+			//		wave[i][j] = m_wave[i][j];
+		}
+	ToRealSpace();
+}
 void CBaseWave::PropagateToNextSlice()
 {
 	float_tt wr, wi, tr, ti;
@@ -136,8 +162,8 @@ void CBaseWave::InitializeKVectors()
 	m_ky.resize(_ny);
 	m_ky2.resize(_ny);
 
-	float_tt ax = m_dx*_nx;
-	float_tt by = m_dy*_ny;
+	float_tt ax = _config->Model.dx*_nx;
+	float_tt by = _config->Model.dy*_ny;
 
 #pragma omp parallel for
 	for(int ixa=0; ixa<_nx; ixa++)
@@ -184,7 +210,7 @@ void CBaseWave::DisplayParams()
 	BOOST_LOG_TRIVIAL(info) <<
 			"**************************************************************************************************";
 	BOOST_LOG_TRIVIAL(info)<<format("* Real space res.:      %gA (=%gmrad)")%	(1.0/m_k2max)%(GetWavelength()*m_k2max*1000.0);
-	BOOST_LOG_TRIVIAL(info)<<format("* Reciprocal space res: dkx=%g, dky=%g (1/A)")%	(1.0/(_nx*m_dx))%(1.0/(_ny*m_dy));
+	BOOST_LOG_TRIVIAL(info)<<format("* Reciprocal space res: dkx=%g, dky=%g (1/A)")%	(1.0/(_nx*_config->Model.dx))%(1.0/(_ny*_config->Model.dy));
 
 	BOOST_LOG_TRIVIAL(info)<<format("* Beams:                %d x %d ")%_nx%_ny;
 
@@ -194,7 +220,7 @@ void CBaseWave::DisplayParams()
 		BOOST_LOG_TRIVIAL(info)<<format("* Probe array:          %d x %d pixels (optimized)")%_nx%_ny;
 	else
 		BOOST_LOG_TRIVIAL(info)<<format("* Probe array:          %d x %d pixels (estimated)")%_nx%_ny;
-	BOOST_LOG_TRIVIAL(info)<<format("*                       %g x %gA")%(_nx*m_dx)%(_ny*m_dy);
+	BOOST_LOG_TRIVIAL(info)<<format("*                       %g x %gA")%(_nx*_config->Model.dx)%(_ny*_config->Model.dy);
 }
 
 /*
@@ -222,10 +248,6 @@ void CBaseWave::GetPositionOffset(int &x, int &y) const
 	y=m_detPosY;
 }
 
-float_tt CBaseWave::GetK2(int ix, int iy) const
-{
-	return m_kx2[ix]+m_ky2[iy];
-}
 
 float_tt CBaseWave::GetIntegratedIntensity() const 
 {
@@ -241,30 +263,6 @@ float_tt CBaseWave::GetIntegratedIntensity() const
 	return intIntensity/(_nx*_ny);
 }
 
-void CBaseWave::ApplyTransferFunction(std::vector<complex_tt> &wave)
-{
-	// TODO: transfer function should be passed as a 1D vector that is half the size of the wavefunc.
-	//       It should be applied by a radial lookup table (with interpolation?)
-	//       Alternatively, is it easier to just use a 2D CTF?
-	//       Whatever you do, use m_transferFunction as the storage for it.
-	int px=GetTotalPixels();
-
-	// multiply wave (in rec. space) with transfer function and write result to imagewave
-	ToFourierSpace();
-	for (int i=0;i<_nx;i++)
-		for (int j=0;j<_ny;j++)
-		{
-			// here, we apply the CTF:
-			// 20140110 - MCS - I think this is where Christoph wanted to apply the CTF - nothing is done ATM.
-
-			// TODO: use these for calculating a radius (to get the CTF value from)
-			//ix=i%m_nx;
-			//iy=i/m_ny;
-
-			//		wave[i][j] = m_wave[i][j];
-		}
-	ToRealSpace();
-}
 
 
 /*--------------------- wavelength() -----------------------------------*/

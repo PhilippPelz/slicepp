@@ -26,33 +26,25 @@
 #include "structure_IO/crystal.hpp"
 #include "data_IO/PersistenceManager.hpp"
 #include "fftw++.hpp"
-//#include "imagelib_fftw3.hpp"
-
-//#include "profiny.hpp"
-
-static std::string avgFilePrefix="diffAvg";
 
 namespace QSTEM
 {
-
-
-class QSTEM_HELPER_DLL_EXPORT CExperimentBase : public IExperiment
+class DLL_EXPORT BaseExperiment : public IExperiment
 {
 public:
-    CExperimentBase(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers);
-    virtual ~CExperimentBase(){};
+    BaseExperiment(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers);
+    virtual ~BaseExperiment(){};
     virtual void DisplayProgress(int flag);
     virtual void DisplayParams();
     virtual void Run()=0;
-
     virtual void SaveImages()=0;
+    void SetResolution(superCellBoxPtr);
+    void SetSliceThickness(superCellBoxPtr);
 
 protected:
     virtual void PostSliceProcess(unsigned absoluteSlice) {}; // Called in RunMuls after a slice is transmitted/propagated through.  Override as desired.
-
     virtual void CollectIntensity(unsigned absoluteSlice)=0;
-    virtual int RunMultislice(WavePtr wave);
-
+    virtual int RunMultislice();
     virtual void Transmit(WavePtr wave, unsigned sliceIdx);
     virtual void Propagate(WavePtr wave, float_tt dz);
     virtual void AddDPToAvgArray(const WavePtr &wave);
@@ -70,23 +62,23 @@ protected:
     inline void WriteAvgArray(std::string comment="Average Array",
                               std::map<std::string, double>params = std::map<std::string, double>())
     {
-        std::vector<unsigned> position;
-        _WriteAvgArray(avgFilePrefix, comment, params, position);
+//        std::vector<unsigned> position;
+//        _WriteAvgArray(avgFilePrefix, comment, params, position);
     }
     inline void WriteAvgArray(unsigned navg, std::string comment="Average Array",
                               std::map<std::string, double>params = std::map<std::string, double>())
     {
-        std::vector<unsigned>position(1);
-        position[0]=navg;
-        _WriteAvgArray(avgFilePrefix, comment, params, position);
+//        std::vector<unsigned>position(1);
+//        position[0]=navg;
+//        _WriteAvgArray(avgFilePrefix, comment, params, position);
     }
     inline void WriteAvgArray(unsigned posX, unsigned posY, std::string comment="Average Array",
                               std::map<std::string, double>params = std::map<std::string, double>())
     {
-        std::vector<unsigned>position(2);
-        position[0]=posX;
-        position[1]=posY;
-        _WriteAvgArray(avgFilePrefix, comment, params, position);
+//        std::vector<unsigned>position(2);
+//        position[0]=posX;
+//        position[1]=posY;
+//        _WriteAvgArray(avgFilePrefix, comment, params, position);
     }
 
     void fft_normalize(WavePtr wave);
@@ -120,7 +112,7 @@ protected:
     std::vector<float_tt> m_propxr, m_propxi, m_propyr, m_propyi;
 };
 
-typedef boost::function<CExperimentBase*(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers)> experimentCreator;
+typedef boost::function<BaseExperiment*(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers)> experimentCreator;
 typedef std::map<ExperimentType,experimentCreator> ExperimentFactory;
 
 }

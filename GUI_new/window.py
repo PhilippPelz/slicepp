@@ -15,11 +15,12 @@ from PyQt4.Qt import QTreeWidgetItem
 from pyE17.io.h5rw import h5read, h5write
 import os
 import json
-projectPath = '/home/philiipp/projects/slicepp/'
-defaultResultsPath= projectPath + 'build/release/bin/save.h5'
-defaultLoadConfigPath= projectPath + 'config.json'
-defaultSaveConfigPath= projectPath + 'config.json'
-defaultExePath= projectPath + 'build/release/bin/stem3'
+projectPath1 = '/home/philiipp/projects/slicepp/'
+projectPath = '/home/philiipp/projects/slicepp/validation/si3n4/'
+defaultResultsPath= projectPath + '7.11.h5'
+defaultLoadConfigPath= projectPath + '7.11.json'
+defaultSaveConfigPath= projectPath + '7.11.json'
+defaultExePath= projectPath1 + 'build/release/bin/stem3'
 
 class SliceGUI(QtGui.QMainWindow):
     def __init__(self):

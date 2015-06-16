@@ -29,7 +29,7 @@ namespace QSTEM
 {
 
 // Factory for creating instances of IStructureReader
-class QSTEM_HELPER_DLL_EXPORT CStructureReaderFactory
+class DLL_EXPORT CStructureReaderFactory
 {
 public:
   ~CStructureReaderFactory() { m_FactoryMap.clear(); }
@@ -51,7 +51,7 @@ private:
 
 
 // Factory for creating instances of IStructureWriter
-class QSTEM_HELPER_DLL_EXPORT CStructureWriterFactory
+class DLL_EXPORT CStructureWriterFactory
 {
 public:
   ~CStructureWriterFactory() { m_FactoryMap.clear(); }

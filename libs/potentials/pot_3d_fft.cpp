@@ -560,23 +560,6 @@ void C3DFFTPotential::SaveAtomicPotential(int znum){
 void C3DFFTPotential::GetAtomPotentialOffset3D(unsigned Znum, float_tt B,
 		unsigned &nzSub, unsigned &Nr, unsigned &Nz_lut, float_tt q,
 		ComplexVector &output) {
-	/*
-	 int ix,iy,iz,iiz,ind3d,iKind,izOffset;
-	 double zScale,kzmax,zPos,xPos;
-	 fftwf_plan plan;
-	 static double f,phase,s2,s3,kmax2,kx,kz,dkx,dky,dkz; // ,dx2,dy2,dz2;
-	 static int nx,ny,nz,nzPerSlice;
-	 static fftwf_complex **atPot = NULL;
-	 static fftwf_complex *temp = NULL;
-	 #if SHOW_SINGLE_POTENTIAL == 1
-	 ImageIOPtr imageio = ImageIOPtr();
-	 static fftwf_complex *ptr = NULL;
-	 static char fileName[256];
-	 #endif
-	 static double *splinb=NULL;
-	 static double *splinc=NULL;
-	 static double *splind=NULL;
-	 */
 
 	// if there is no charge to this atom, return NULL:
 	if (q == 0)

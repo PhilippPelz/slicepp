@@ -24,7 +24,7 @@
 namespace QSTEM
 {
 
-class QSTEM_HELPER_DLL_EXPORT CConvergentWave : public CBaseWave
+class DLL_EXPORT CConvergentWave : public CBaseWave
 {
 public:
 	CConvergentWave(const ConfigPtr& c,const PersistenceManagerPtr& p);

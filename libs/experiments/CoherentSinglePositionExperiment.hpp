@@ -25,24 +25,22 @@
 namespace QSTEM
 {
 
-class CExperimentCBED : public CExperimentBase
+class CoherentSinglePositionExperiment : public BaseExperiment
 {
 public:
-    CExperimentCBED(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers);
+    CoherentSinglePositionExperiment(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers);
 
     void Run();
 
     virtual void DisplayParams();
     virtual void WriteBeams(unsigned absoluteSlice);
-    virtual ~CExperimentCBED(){};
+    virtual ~CoherentSinglePositionExperiment(){};
 
 protected:
-    void PostSliceProcess(unsigned absoluteSlice);
+    virtual void PostSpecimenProcess()=0;
+    void PostSliceProcess();
     void CollectIntensity(unsigned absoluteSlice);
     void SaveImages();
-
-    void SetResolution(superCellBoxPtr);
-    void SetSliceThickness(superCellBoxPtr);
 
     unsigned _nbout = 1;				/* number of recorded beams */
     float_tt **_pendelloesung;
@@ -51,7 +49,6 @@ protected:
     bool _showProbe;            /* if true, saves a plot of the probe */
     bool m_storeSeries;
 };
-
 }
 #endif
 

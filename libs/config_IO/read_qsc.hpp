@@ -103,7 +103,7 @@ private:
   static ConfigReaderPtr Create(boost::filesystem::path &filename){return ConfigReaderPtr(new CQscReader(filename));}
 };
 
-class QSTEM_HELPER_DLL_EXPORT StructureConfig : IPropertyTreeReader{
+class DLL_EXPORT StructureConfig : IPropertyTreeReader{
 public:
 	boost::filesystem::path structureFilename;
 	std::vector<int> zoneAxis;
@@ -116,13 +116,13 @@ public:
 
 	virtual void Read(ptree& t);
 };
-class QSTEM_HELPER_DLL_EXPORT BeamConfig : IPropertyTreeReader{
+class DLL_EXPORT BeamConfig : IPropertyTreeReader{
 public:
 	float_tt EnergykeV, SourceDiameterAngstrom, BeamCurrentpA, DwellTimeMsec, wavelength,sigma;
 
 	virtual void Read(ptree& t);
 };
-class QSTEM_HELPER_DLL_EXPORT ModelConfig : IPropertyTreeReader{
+class DLL_EXPORT ModelConfig : IPropertyTreeReader{
 public:
 	bool UseTDS, TiltBack, CenterSlices,CenterSample,rotateToZoneAxis;
 	int TDSRuns, nx, ny, nSlices;
@@ -133,14 +133,14 @@ public:
 	DisplacementType displacementType;
 	virtual void Read(ptree& t);
 };
-class QSTEM_HELPER_DLL_EXPORT PotentialConfig : IPropertyTreeReader{
+class DLL_EXPORT PotentialConfig : IPropertyTreeReader{
 public:
 	bool Use3D, UseFFT,    PlotVrr,periodicXY,periodicZ;
 	QSTEM::StructureFactorType StructureFactorType;
 	float_tt AtomRadiusAngstrom;
 	virtual void Read(ptree& t);
 };
-class QSTEM_HELPER_DLL_EXPORT WaveConfig : IPropertyTreeReader{
+class DLL_EXPORT WaveConfig : IPropertyTreeReader{
 public:
 	float_tt Cs, C5, Cc, dV_V, alpha, Defocus, Astigmatism, AstigmatismAngle,
 		a_33, a_31, a_44, a_42, a_55, a_53, a_51, a_66, a_64, a_62, phi_33, phi_31, phi_44, phi_42, phi_55, phi_53, phi_51, phi_66, phi_64, phi_62, gaussScale,
@@ -150,7 +150,7 @@ public:
 
 	virtual void Read(ptree& t);
 };
-class QSTEM_HELPER_DLL_EXPORT OutputConfig : IPropertyTreeReader{
+class DLL_EXPORT OutputConfig : IPropertyTreeReader{
 public:
 	int LogLevel, SaveWaveIterations;
 	bool SavePotential,	SaveProjectedPotential,WriteLogFile,saveProbe,SaveWaveAfterTransmit,
@@ -163,7 +163,7 @@ public:
 	virtual void Read(ptree& t);
 };
 
-class QSTEM_HELPER_DLL_EXPORT Config{
+class DLL_EXPORT Config{
 public:
 	Config():
 		nThreads(1),
