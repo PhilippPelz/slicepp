@@ -51,7 +51,16 @@ BuildLog.htm
 
 # binaries
 /bin
-/build
+/build/release/bin
+/build/release/CMakeFiles
+/build/release/hdf5boost
+/build/release/libs
+/build/release/stem3
+/build/debug/bin
+/build/debug/CMakeFiles
+/build/debug/hdf5boost
+/build/debug/libs
+/build/debug/stem3
 /tests
 # build-generated CMake garbage
 /CMakeFiles
