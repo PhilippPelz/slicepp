@@ -44,6 +44,7 @@ set(HDF5_USE_STATIC_LIBRARIES OFF)
 find_package(Boost COMPONENTS system filesystem chrono timer log log_setup thread date_time REQUIRED)
 find_package(HDF5 COMPONENTS C CXX HL REQUIRED)					
 find_package(fftw3 REQUIRED)
+find_package(ArrayFire)
 
 include_directories(
 	${Boost_INCLUDE_DIRS} 

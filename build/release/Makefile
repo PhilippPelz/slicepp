@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/philiipp/projects/slicepp
+CMAKE_SOURCE_DIR = /space/projects/slicepp_cuda
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/philiipp/projects/slicepp/build/release
+CMAKE_BINARY_DIR = /space/projects/slicepp_cuda/build/release
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -73,9 +73,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/philiipp/projects/slicepp/build/release/CMakeFiles /home/philiipp/projects/slicepp/build/release/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /space/projects/slicepp_cuda/build/release/CMakeFiles /space/projects/slicepp_cuda/build/release/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/philiipp/projects/slicepp/build/release/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /space/projects/slicepp_cuda/build/release/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
