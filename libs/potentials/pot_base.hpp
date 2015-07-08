@@ -23,6 +23,7 @@
 #include <data_IO/PersistenceManager.hpp>
 #include "pot_interface.hpp"
 #include <map>
+#include "arrayfire.h"
 
 #ifndef POTENTIAL_BASE_H
 #define POTENTIAL_BASE_H
@@ -53,7 +54,8 @@ public:
 	virtual void ReadPotential(std::string &fileName, unsigned subSlabIdx);
 	virtual void SetStructure(StructurePtr structure);
 
-	inline ComplexArray2DView GetSlice(unsigned idx){return _t[boost::indices[idx][range(0,_c->Model.nx)][range(0,_c->Model.ny)]];}
+//	inline ComplexArray2DView GetSlice(unsigned idx){return _t[boost::indices[idx][range(0,_c->Model.nx)][range(0,_c->Model.ny)]];}
+	af::array GetSlice(unsigned idx);
 protected:
 	CPotential();
 	virtual void SliceSetup();
@@ -68,6 +70,7 @@ protected:
 
 	StructureBuilderPtr _sb;
 	ComplexArray3D _t;
+	af::array _t_af;
 
 	float_tt _ddx, _ddy, _ddz;   // oversampled resolutions
 	float_tt _dkx,_dky, _dkz,_kmax2;

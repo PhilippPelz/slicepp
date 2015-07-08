@@ -28,6 +28,7 @@
 #include "config_IO/read_qsc.hpp"
 #include "stemtypes_fftw3.hpp"
 #include <boost/function.hpp>
+#include <arrayfire.h>
 
 namespace QSTEM
 {
@@ -54,25 +55,23 @@ public:
 	virtual void ApplyTransferFunction()=0;
 	virtual WavePtr Clone()=0;
 	virtual ComplexArray2D GetWave() const = 0;
+	virtual af::array GetWaveAF() const = 0;
 	virtual void GetSizePixels(int &x, int &y) const =0;
 	virtual void GetExtents(int& nx, int& ny) const =0;
 	virtual void GetResolution(float_tt &x, float_tt &y) const =0;
 	virtual void GetPositionOffset(int &x, int &y) const =0;
-	virtual float_tt GetK2(int ix, int iy) const =0;
-	virtual float_tt GetKX2(int ix) const =0;
-	virtual float_tt GetKY2(int iy) const =0;
-	virtual float_tt GetK2Max() const =0;
+	virtual void GetK2() =0;
 	virtual float_tt GetVoltage()  const =0;
 	virtual float_tt GetWavelength()  const =0;
 	virtual float_tt GetPixelIntensity(int i) const =0;
 	virtual float_tt GetPixelIntensity(int x, int y) const =0;
 //	virtual void ApplyTransferFunction(boost::shared_array<complex_tt> &wave)=0;
 	virtual float_tt GetIntegratedIntensity() const =0;
-	virtual void Transmit(ComplexArray2DView t)=0;
+	virtual void Transmit(af::array t)=0;
 	virtual void PropagateToNextSlice()=0;
 	virtual void InitializePropagators()=0;
 	virtual void ShiftTo(float_tt x, float_tt y)=0;
-	virtual void fftShift()=0;
+	virtual af::array fftShift(af::array)=0;
 protected:
 	PersistenceManagerPtr _persist;
 	ConfigPtr _config;

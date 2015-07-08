@@ -33,11 +33,11 @@ namespace QSTEM
 {
 
 struct zoneAxisOptParams{
-	arma::mat M;
+	armamat M;
 	std::vector<int> zone;
 	std::vector<int> refZone;
 
-	zoneAxisOptParams(arma::mat M, std::vector<int> zone, std::vector<int> refZone){
+	zoneAxisOptParams(armamat M, std::vector<int> zone, std::vector<int> refZone){
 		this->M = M;
 		this->zone = zone;
 		this->refZone = refZone;
@@ -71,8 +71,8 @@ public:
 	void GetCellParameters(float_tt &ax, float_tt &by, float_tt &cz);
 	void GetCrystalBoundaries(float_tt &min_x, float_tt &max_x, float_tt &min_y, float_tt &max_y,
 			float_tt &min_z, float_tt &max_z);
-	inline arma::mat GetCellMatrix(){
-		arma::mat M = {_Mm[0][0],_Mm[1][0],_Mm[2][0],
+	inline armamat GetCellMatrix(){
+		armamat M = {_Mm[0][0],_Mm[1][0],_Mm[2][0],
 			_Mm[0][1],_Mm[1][1],_Mm[2][1],
 			_Mm[0][2],_Mm[1][2],_Mm[2][2]};
 		M.reshape(3,3);

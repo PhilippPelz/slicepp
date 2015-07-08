@@ -154,7 +154,7 @@ void CConvergentWave::FormProbe()
 	CBaseWave::FormProbe();
 	unsigned iy, ixmid, iymid;
 	float_tt rmin, rmax, aimin, aimax;
-	float_tt k2max, x, y, scale, pixel,alpha;
+	float_tt k2max, alpha;
 	float_tt ax = _nx*m_dx;
 	float_tt by = _ny*m_dy;
 	float_tt dx = ax-_nx/2*m_dx;
@@ -163,7 +163,9 @@ void CConvergentWave::FormProbe()
 	float_tt edge = SMOOTH_EDGE*avgRes;
 
 	float_tt sum = 0.0;
-
+	af::array kx, ky, kx2, ky2, k2, k2max_af, ktheta, ktheta2, phi, chi, real, imag, condition, scale;
+	af::array x, y, pixel, rx, rx2, ry, ry2;
+	af::array delta;
 	/********************************************************
 	 * formulas from:
 	 * http://cimesg1.epfl.ch/CIOL/asu94/ICT_8.html
@@ -173,24 +175,28 @@ void CConvergentWave::FormProbe()
 	 * dI_I = dI/I = lens current fluctuations
 	 * delta defocus in Angstroem (Cc in A)
 	 *******************************************************/
-	float_tt delta = m_Cc*m_dE_E;
-	if (m_printLevel > 2) printf("defocus offset: %g nm (Cc = %g)\n",delta,m_Cc);
+	float_tt delta_c = m_Cc*m_dE_E;
+	if (m_printLevel > 2) printf("defocus offset: %g nm (Cc = %g)\n",delta_c,m_Cc);
+	delta = af::constant(delta_c, _nx, _ny);
 
 	/**********************************************************
 	 *  Calculate misc constants
 	 *********************************************************/
-
-	float_tt rx = 1.0/ax;
-	float_tt rx2 = rx * rx;
-	float_tt ry = 1.0/by;
-	float_tt ry2 = ry * ry;
+//
+//	float_tt rx = 1.0/ax;
+//	float_tt rx2 = rx * rx;
+//	float_tt ry = 1.0/by;
+//	float_tt ry2 = ry * ry;
+	rx = af::constant(1.0/ax, _nx, _ny);
+	rx2 = rx*rx;
+	ry = af::constant(1.0/by, _nx, _ny);
+	ry2 = ry*ry;
 
 	ixmid = _nx/2;
 	iymid = _ny/2;
 
 	// Start in Fourier space
 	ToFourierSpace();
-
 	/* convert convergence angle from mrad to rad */
 	alpha = 0.001*m_alpha;
 	k2max = sin(alpha)/m_wavlen;  /* = K0*sin(alpha) */
@@ -206,178 +212,109 @@ void CConvergentWave::FormProbe()
        of 1/2 otherwise 1 or 0
 	 */
 	pixel = ( rx2 + ry2 );
-	scale = 1.0/sqrt((double)_nx*(double)_ny);
+	scale = af::constant(1.0/sqrt((float_tt)_nx*(float_tt)_ny), _nx, _ny);
 
-	//#pragma omp parallel for
-	for(int iy=0; iy<_ny; iy++) {
-		float_tt ky = (float_tt) iy;
-		if( iy > iymid ) ky = (double) (iy-_ny);
-		float_tt ky2 = ky*ky*ry2;
-		for(int ix=0; ix<_nx; ix++) {
-			float_tt kx = (double) ix;
-			if( ix > ixmid ) kx = (double) (ix-_nx);
-			float_tt k2 = kx*kx*rx2 + ky2;
-			float_tt ktheta2 = k2*(m_wavlen*m_wavlen);
-			float_tt ktheta = sqrt(ktheta2);
-			float_tt phi = atan2(ry*ky,rx*kx);
+	kx = af::range(_nx);
+	ky = af::range(_ny);
+	kx(af::seq(ixmid + 1, af::end)) -= _nx;
+	kx = af::tile(kx, 1, _ny);
+	ky(af::seq(iymid + 1, af::end)) -= _ny;
+	ky = af::tile(ky.T(), _nx);
+	ky2 = ky*ky*ry2;
+	kx2 = kx*kx*rx2;
+	k2 = kx2 + ky2;
+	ktheta2 = k2*(m_wavlen*m_wavlen);
+	ktheta = af::sqrt(ktheta2);
+	phi = af::atan2(ry*ky, rx*kx);
+	af::array temp1, temp2, temp3;
+	chi = ktheta2*(af::constant(m_df0, _nx, _ny) +delta + m_astigMag*af::cos(2.0*(phi-af::constant(m_astigAngle, _nx, _ny))))/2.0;
 
-			// defocus, astigmatism, and shift:
-			float_tt chi = ktheta2*(m_df0+delta + m_astigMag*cos(2.0*(phi-m_astigAngle)))/2.0;
-			ktheta2 *= ktheta;  // ktheta^3
-			if ((m_a33 > 0) || (m_a31 > 0)) {
-				//#pragma omp atomic
-				chi += ktheta2*(m_a33*cos(3.0*(phi-m_phi33))+m_a31*cos(phi-m_phi31))/3.0;
-			}
-			ktheta2 *= ktheta;   // ktheta^4
-			if ((m_a44 > 0) || (m_a42 > 0) || (m_Cs != 0)) {
-				//#pragma omp atomic
-				chi += ktheta2*(m_a44*cos(4.0*(phi-m_phi44))+m_a42*cos(2.0*(phi-m_phi42))+m_Cs)/4.0;
-			}
-			ktheta2 *= ktheta;    // ktheta^5
-			if ((m_a55 > 0) || (m_a53 > 0) || (m_a51 > 0)) {
-				//#pragma omp atomic
-				chi += ktheta2*(m_a55*cos(5.0*(phi-m_phi55))+m_a53*cos(3.0*(phi-m_phi53))+m_a51*cos(phi-m_phi51))/5.0;
-			}
-			ktheta2 *= ktheta;    // ktheta^6
-			if ((m_a66 > 0) || (m_a64 > 0) || (m_a62 = 0) || (m_C5 != 0)) {
-				//#pragma omp atomic
-				chi += ktheta2*(m_a66*cos(6.0*(phi-m_phi66))+m_a64*cos(4.0*(phi-m_phi64))+m_a62*cos(2.0*(phi-m_phi62))+m_C5)/6.0;
-			}
-			//#pragma omp atomic
-			chi *= 2*M_PI/m_wavlen;
-			//#pragma omp atomic
-			chi -= 2.0*M_PI*( (dx*kx/ax) + (dy*ky/by) );
+	ktheta2 *= ktheta;  //ktheta^3
+	condition = af::constant((int)((m_a33 > 0) || (m_a31 > 0)), _nx, _ny);
+	chi += condition*ktheta2*(m_a33*af::cos(3.0*(phi-m_phi33)) + m_a31*af::cos(phi-m_phi31))/3.0;
 
-			if ( ( _smoothen != 0) && ( fabs(k2-k2max) <= pixel)) {
-				//#pragma omp critical
-				//				{
-				float x = (float) ( 0.5*scale * cos(chi));
-				float y = (float) (-0.5*scale* sin(chi));
-				_wave[ix][iy] = complex_tt(x,y);
-				//        m_wave[ix][iy][0]= (float) ( 0.5*scale * cos(chi));
-				//        m_wave[ix][iy][1]= (float) (-0.5*scale* sin(chi));
-				//				}
-			}
-			else if ( k2 <= k2max ) {
-				//#pragma omp critical
-				//				{
-				float x = (float) ( scale * cos(chi));
-				float y = (float) ( scale* sin(chi));
-				_wave[ix][iy] = complex_tt(x,y);
+	ktheta2 *= ktheta;  //ktheta^4
+	condition = af::constant((int)((m_a44 > 0) || (m_a42 > 0) || (m_Cs != 0)), _nx, _ny);
+	chi += condition*ktheta2*(m_a44*af::cos(4.0*(phi-m_phi44)) + m_a42*af::cos(2.0*(phi-m_phi42)) + m_Cs)/4.0;
 
-				//				}
-				//        m_wave[ix][iy][0]= (float)  scale * cos(chi);
-				//        m_wave[ix][iy][1]= (float) -scale * sin(chi);
-			}
-			else {
-				//#pragma omp critical
-				_wave[ix][iy] =complex_tt(0,0);
-			}
+	ktheta2 *= ktheta;  //ktheta^5
+	condition = af::constant((int)((m_a55 > 0) || (m_a53 > 0) || (m_a51 > 0)), _nx, _ny);
+	chi += condition*ktheta2*(m_a55*af::cos(5.0*(phi-m_phi55)) + m_a53*af::cos(3.0*(phi-m_phi53)) + m_a51*af::cos(phi-m_phi51))/5.0;
 
-		}
-	}
+	ktheta2 *= ktheta;  //ktheta^6
+	condition = af::constant((int)((m_a66 > 0) || (m_a64 > 0) || (m_a62 = 0) || (m_C5 != 0)), _nx, _ny);
+	chi += condition*ktheta2*(m_a66*af::cos(6.0*(phi-m_phi66))+m_a64*af::cos(4.0*(phi-m_phi64))+m_a62*af::cos(2.0*(phi-m_phi62))+m_C5)/6.0;
+
+	chi *= 2*M_PI/m_wavlen;
+	chi -= 2.0*M_PI*( (kx*dx/ax) + (ky*dy/by) );
+	k2max_af = af::constant(k2max, _nx, _ny);
+	real = af::constant(0, _nx, _ny);
+	imag = af::constant(0, _nx, _ny);
+	condition = (k2 <= k2max_af);
+	real += condition*scale * af::cos(chi);
+	imag += condition*scale * af::sin(chi);
+
+	condition = ( _smoothen != 0)*( af::abs(k2-k2max_af) <= pixel);
+	real -= af::constant(0.5, _nx, _ny)*condition*scale * af::cos(chi);
+	imag -= af::constant(1.5, _nx, _ny)*condition*scale * af::sin(chi);
+	_wave_af = af::complex(real, imag);
+
 	/* Fourier transform into real space */
 	ToRealSpace();
 	/**********************************************************
 	 * display cross section of probe intensity
 	 */
-
 	/* multiply with gaussian in Real Space in order to avoid artifacts */
+	af::array r;
 	if (_isGaussian) {
-#pragma omp parallel for
-		for(int ix=0; ix<_nx; ix++) {
-			for(int iy=0; iy<_ny; iy++) {
-				float_tt r = exp(-((ix-_nx/2)*(ix-_nx/2)+(iy-_ny/2)*(iy-_ny/2))/(_nx*_ny*_gaussScale));
-#pragma omp critical
-				_wave[ix][iy] *= r;
-			}
-		}
+		kx = (af::range(_nx) - _nx/2);
+		ky = (af::range(_ny) - _ny/2);
+		kx = af::tile(kx, 1, _ny);
+		ky = af::tile(ky.T(), _nx);
+		r = af::exp((-1)*(kx*kx + ky*ky)/(_nx*_ny*_gaussScale));
+		_wave_af *= r;
 	}
-
 	/* Apply AIS aperture in Real Space */
 	// printf("center: %g,%g\n",dx,dy);
 	if (_CLA > 0) {
-#pragma omp parallel for
-		for(int ix=0; ix<_nx; ix++) {
-			for(int iy=0; iy<_ny; iy++) {
-				x = ix*m_dx-dx;
-				y = iy*m_dy-dy;
-				float_tt r = sqrt(x*x+y*y);
-				delta = r-0.5*_CLA+edge;
-				if (delta > 0) {
-#pragma omp critical
-					_wave[ix][iy] = 0;
-				}
-				else if (delta >= -edge) {
-					scale = 0.5*(1-cos(M_PI*delta/edge));
-#pragma omp critical
-					_wave[ix][iy] = complex_tt(scale*_wave[ix][iy].real(),scale*_wave[ix][iy].imag());
-					//          m_wave[ix][iy][0] = scale*m_wave[ix][iy][0];
-					//          m_wave[ix][iy][1] = scale*m_wave[ix][iy][1];
-				}
-			}
-		}
+		x = af::range(_nx)*m_dx-dx;
+		y = af::range(_ny)*m_dy-dy;
+		x = af::tile(x, 1, _ny);
+		y = af::tile(y.T(), _nx);
+		r = af::sqrt(x*x+y*y);
+		delta = r - af::constant(0.5*_CLA, _nx, _ny);
+		delta += af::constant(edge, _nx, _ny);
+		condition = !(delta >_zero);
+		_wave_af *= condition;
+		condition = !(delta < af::constant(-edge, _nx, _ny));
+		scale = (!condition* scale) + (condition*0.5*(af::constant(1, _nx, _ny)-cos(delta*PI/edge)));
+		_wave_af = (!condition* _wave_af) + (condition*scale*_wave_af);
 	}
-
 	/*  Normalize probe intensity to unity  */
-	for(int ix=0; ix<_nx; ix++)
-		for(int iy=0; iy<_ny; iy++)
-			sum += abs2(_wave[ix][iy]);
 
-	scale = 1.0 / sum;
-//	scale = scale * ((double)m_nx) * ((double)m_ny);
-	scale = (double) sqrt( scale );
 
-	for(int ix=0; ix<_nx; ix++)
-		for(int iy=0; iy<_ny; iy++) {
-			_wave[ix][iy] *= scale;
 
-		}
-	sum = 0;
+ 	sum = af::sum<float_tt>(af::real(_wave_af)*af::real(_wave_af) + af::imag(_wave_af)*af::imag(_wave_af));
+	float_tt scale_s = 1.0 / sum;
+	_wave_af *= (float_tt)sqrt(scale_s);
 
-	/*  Output results and find min and max to echo
-      remember that complex pix are stored in the file in FORTRAN
-      order for compatability
-	 */
+	//sum = af::sum<float_tt>(af::sqrt(af::real(_wave_af)*af::real(_wave_af) + af::imag(_wave_af)*af::imag(_wave_af)));
+	sum = 0.0;
+	af::array real2, imag2;
+	real2 = af::real(_wave_af);
+	imag2 = af::imag(_wave_af);
+	rmin = af::min<float_tt>(real2);
+	rmax = af::max<float_tt>(real2);
+	aimin = af::min<float_tt>(imag2);
+	aimax = af::max<float_tt>(imag2);
 
-	rmin = _wave[0][0].real();
-	rmax = rmin;
-	aimin = _wave[0][0].imag();
-	aimax = aimin;
-#pragma omp parallel for
-	for(int iy=0; iy<_ny; iy++) {
-		for(int ix=0; ix<_nx; ix++) {
-#pragma omp critical
-			{
-				if( _wave[ix][iy].real() < rmin )
-					rmin = _wave[ix][iy].real();
-			}
-#pragma omp critical
-			{
-				if( _wave[ix][iy].real() > rmax )
-					rmax = _wave[ix][iy].real();
-			}
-#pragma omp critical
-			{
-				if( _wave[ix][iy].imag() < aimin )
-					aimin = _wave[ix][iy].imag();
-			}
-#pragma omp critical
-			{
-				if( _wave[ix][iy].imag() > aimax )
-					aimax = _wave[ix][iy].imag();
-			}
-		}
-	}
 	m_rmin = rmin;
 	m_rmax = rmax;
 	m_aimin = aimin;
 	m_aimax = aimax;
 
-	BOOST_LOG_TRIVIAL(trace) << format("wave value range (%f .. %f,i %f ... %f)") % rmin % rmax % aimin % aimax;
-
+	BOOST_LOG_TRIVIAL(info) << format("wave value range (%f .. %f,i %f ... %f)") % rmin % rmax % aimin % aimax;
 	/**********************************************************/
-
-}  /* end probe() */
+	}  /* end probe() */
 
 } // end namespace QSTEM

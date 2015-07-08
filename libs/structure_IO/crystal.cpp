@@ -69,12 +69,12 @@ CrystalBuilder::CrystalBuilder(StructureReaderPtr& r,const ConfigPtr& c) :
 	m_wobble_temp_scale = sqrt(_c->Structure.temperatureK / 300.0);
 	_structureWriter = CStructureWriterFactory::Get()->GetWriter(c->Structure.structureFilename.string(),m_ax, m_by, m_cz);
 }
-//(const std::vector<double> &x, std::vector<double> &grad, void* f_data)
+//(const std::vector<float_tt> &x, std::vector<float_tt> &grad, void* f_data)
 double rotationCostFunc(const std::vector<double>& rotAngles,  std::vector<double> &grad, void* f_data){
 	zoneAxisOptParams* p = reinterpret_cast<zoneAxisOptParams*>(f_data);
 	std::vector<int> zone = p->zone;
 	std::vector<int> refZone = p->refZone;
-	arma::mat M = p->M;
+	armamat M = p->M;
 	//	std::vector<float_tt> zone,std::vector<float_tt> refZone
 	float_tt	phi_x = rotAngles[0]*PI/180;
 	float_tt	phi_y = rotAngles[1]*PI/180;
@@ -82,9 +82,9 @@ double rotationCostFunc(const std::vector<double>& rotAngles,  std::vector<doubl
 	float_tt cx = cos(phi_x),sx = sin(phi_x),
 			cy = cos(phi_y),    sy = sin(phi_y),
 			cz = cos(phi_z)  ,  sz = sin(phi_z);
-	arma::mat Mx = {1,0,0,0,cx,-sx,0,sx,cx};
-	arma::mat My = {cy,0,-sy,0,1,0,sy,0,cy};
-	arma::mat Mz = {cz,sz,0,-sz,cz,0,0,0,1};
+	armamat Mx = {1,0,0,0,cx,-sx,0,sx,cx};
+	armamat My = {cy,0,-sy,0,1,0,sy,0,cy};
+	armamat Mz = {cz,sz,0,-sz,cz,0,0,0,1};
 	BOOST_LOG_TRIVIAL(info)<< format("angles %f %f %f") % rotAngles[0]% rotAngles[1]% rotAngles[2];
 
 	Mx.reshape(3,3);
@@ -95,11 +95,11 @@ double rotationCostFunc(const std::vector<double>& rotAngles,  std::vector<doubl
 	//	std::cout << "Mz: "<< endl<< Mz << std::endl;
 	//	std::cout << "M: "<< endl<< M << std::endl;
 
-	arma::mat Mrot = Mx*My*Mz;
+	armamat Mrot = Mx*My*Mz;
 	//	std::cout << "Mrot: "<< endl<< Mrot << std::endl;
-	arma::vec zone1 = {(double)zone[0],(double)zone[1],(double)zone[2]};
-	arma::vec refZone1 = {(double)refZone[0],(double)refZone[1],(double)refZone[2]};
-	arma::vec v = Mrot*M*zone1;
+	armavec zone1 = {(float_tt)zone[0],(float_tt)zone[1],(float_tt)zone[2]};
+	armavec refZone1 = {(float_tt)refZone[0],(float_tt)refZone[1],(float_tt)refZone[2]};
+	armavec v = Mrot*M*zone1;
 
 	v = v/sqrt(arma::sum(v%v));
 	//	std::cout << "refZone1: "<< endl<< refZone1 << std::endl;
@@ -108,11 +108,11 @@ double rotationCostFunc(const std::vector<double>& rotAngles,  std::vector<doubl
 	//	std::cout << "tmp: "<< endl<< tmp << endl;
 	auto tmp2 = tmp%tmp;
 	//	std::cout << "tmp2: "<< endl<< tmp2 << endl;
-	double chi2 = arma::sum(tmp2);
+	float_tt chi2 = arma::sum(tmp2);
 	//	std::cout << "chi2: "<< chi2 << endl;
 	if(refZone[1]==0){
-		arma::vec vtmp = {1,0,0};
-		arma::vec vx = Mrot*M*vtmp;
+		armavec vtmp = {1,0,0};
+		armavec vx = Mrot*M*vtmp;
 		chi2 += vx[2]*vx[2];
 	}
 	//	std::cout << "chi2: "<< chi2 << endl;
@@ -150,7 +150,7 @@ void CrystalBuilder::CalculateTiltAnglesFromZoneAxis(){
 		refZone2[i] = refZone[i]/len;
 	}
 
-	arma::mat M = {_Mm[0][0],_Mm[1][0],_Mm[2][0],
+	armamat M = {_Mm[0][0],_Mm[1][0],_Mm[2][0],
 			_Mm[0][1],_Mm[1][1],_Mm[2][1],
 			_Mm[0][2],_Mm[1][2],_Mm[2][2]};
 	M.reshape(3,3);
@@ -642,8 +642,8 @@ void CrystalBuilder::TiltBoxed(int ncoord, bool handleVacancies) {
 	int atomKinds = 0, i, jVac, jequal, jChoice, i2, ix, iy, iz , atomSize;
 	static float_tt *axCell, *byCell, *czCell = NULL;
 	FloatArray2D a(boost::extents[3][1]), aOrig(boost::extents[3][1]), b(boost::extents[3][1]) ;
-	double x, y, z, dx=0, dy=0, dz=0;
-	double totOcc, lastOcc, choice;
+	float_tt x, y, z, dx=0, dy=0, dz=0;
+	float_tt totOcc, lastOcc, choice;
 
 	int Ncells= _c->Structure.nCellX * _c->Structure.nCellY * _c->Structure.nCellZ;
 	FloatArray2D u(boost::extents[1][3]),uf(boost::extents[1][3]) ;
@@ -651,8 +651,8 @@ void CrystalBuilder::TiltBoxed(int ncoord, bool handleVacancies) {
 			Mminv(boost::extents[3][3]),
 			MpRed(boost::extents[3][3]),// conversion lattice to obtain red. prim. coords/ from reduced cubic rect.
 			MpRedInv(boost::extents[3][3]),//conversion lattice to obtain red. cub. coords from reduced primitive lattice coords
-			MbPrim(boost::extents[3][3]),// double version of primitive lattice basis
-			MbPrimInv(boost::extents[3][3]),// double version of inverse primitive lattice basis
+			MbPrim(boost::extents[3][3]),// float_tt version of primitive lattice basis
+			MbPrimInv(boost::extents[3][3]),// float_tt version of inverse primitive lattice basis
 			MmOrig(boost::extents[3][3]),
 			MmOrigInv(boost::extents[3][3]);
 	dx = _offsetX;
@@ -662,7 +662,7 @@ void CrystalBuilder::TiltBoxed(int ncoord, bool handleVacancies) {
 		for (iy = 0; iy < 3; iy++)
 			Mm[ix][iy] = _Mm[iy][ix];
 
-	memcpy(MmOrig.data(), Mm.data(), 3 * 3 * sizeof(double));
+	memcpy(MmOrig.data(), Mm.data(), 3 * 3 * sizeof(float_tt));
 	Inverse_3x3(MmOrigInv, MmOrig);
 	/* remember that the angles are in rad: */
 	RotateMatrix(Mm, Mm, _c->Structure.crystalTiltX/PI180, _c->Structure.crystalTiltY/PI180, _c->Structure.crystalTiltZ/PI180);
@@ -787,7 +787,7 @@ void CrystalBuilder::TiltBoxed(int ncoord, bool handleVacancies) {
 										(y >= 0) && (y <= _c->Structure.boxY) &&
 										(z >= 0) && (z <= _c->Structure.boxZ);
 					if (atomIsInBox) {
-						newAtom.r = arma::vec({x,y,z});
+						newAtom.r = armavec({(float_tt)x,(float_tt)y,(float_tt)z});
 						newAtom.dw = _baseAtoms[jChoice].dw;
 						newAtom.occ = _baseAtoms[jChoice].occ;
 						newAtom.q = _baseAtoms[jChoice].q;
@@ -820,8 +820,8 @@ void CrystalBuilder::ReplicateUnitCell(int handleVacancies) {
 	int jVac;  // Number of vacancies total in replicated supercell
 	int jCell; // Offset (in number of coordinates) from origin cell
 	int atomKinds = 0;
-	double totalOccupancy;
-	double choice, lastOcc;
+	float_tt totalOccupancy;
+	float_tt choice, lastOcc;
 	FloatArray2D u(boost::extents[1][3]);
 	ncx = _c->Structure.nCellX;
 	ncy = _c->Structure.nCellY;
@@ -918,7 +918,7 @@ void CrystalBuilder::ReplicateUnitCell(int handleVacancies) {
 							break;
 						}
 					for (i2 = i; i2 > jequal; i2--) {
-						_atoms[jCell + i2].r = arma::vec({	_baseAtoms[i2].r[0] + icx + u[0][0],
+						_atoms[jCell + i2].r = armavec({	_baseAtoms[i2].r[0] + icx + u[0][0],
 							_baseAtoms[i2].r[1] + icy + u[0][1],
 							_baseAtoms[i2].r[2] + icz + u[0][2]});
 						//						BOOST_LOG_TRIVIAL(trace) << format("atom %d: (%3.3f, %3.3f, %3.3f) Z=%d")
@@ -988,11 +988,11 @@ void CrystalBuilder::PhononDisplacement(FloatArray2D &u, int id, int icx,
 	static FloatArray2D kVecs(boost::extents[Nk][ 3]);     // array for Nk 3-dim k-vectors
 	static FloatArray2D q1(boost::extents[3 * Ns][ Nk]), q2(boost::extents[3 * Ns][ Nk]);
 	int ik, lambda, icoord; // Ncells, nkomega;
-	double kR, kRi, kRr, wobble;
+	float_tt kR, kRi, kRr, wobble;
 	static float_tt *u2T, ux = 0, uy = 0, uz = 0; // u2Collect=0; // Ttotal=0;
 	std::map<unsigned, float_tt> u2;
 	std::map<unsigned, unsigned> u2Count;
-	// static double uxCollect=0,uyCollect=0,uzCollect=0;
+	// static float_tt uxCollect=0,uyCollect=0,uzCollect=0;
 	static int *u2CountT, runCount = 1, u2Size = -1;
 	static long iseed = 0;
 	FloatArray2D Mm(boost::extents[3][3]),
@@ -1131,7 +1131,7 @@ void CrystalBuilder::PhononDisplacement(FloatArray2D &u, int id, int icx,
 	printf("created phonon displacements %d, %d, %d %d (eigVecs: %d %d %d)!\n",
 			atom.Znum, Ns, Nk, id, Nk, 3 * Ns, 3 * Ns);
 	/* loop over k and lambda:  */
-	memset(u.data(), 0, 3 * sizeof(double));
+	memset(u.data(), 0, 3 * sizeof(float_tt));
 	for (lambda = 0; lambda < 3 * Ns; lambda++)
 		for (ik = 0; ik < Nk; ik++) {
 			// if (kVecs[ik][2] == 0){

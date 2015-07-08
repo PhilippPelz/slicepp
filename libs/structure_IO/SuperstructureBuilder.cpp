@@ -303,8 +303,8 @@ int SuperstructureBuilder::readParams(const char *datFileName){
 	 * data for each grain
 	 */
 	if (readparam(_fpParam, "box:",parStr,1)) {
-		//		BOOST_LOG_TRIVIAL(info) << parStr;
-		sscanf(parStr.c_str(),"%lf %lf %lf",&(_superCell->ax),&(_superCell->by),&(_superCell->cz));
+//		BOOST_LOG_TRIVIAL(info) << parStr;
+		sscanf(parStr.c_str(),"%f %f %f",&(_superCell->ax),&(_superCell->by),&(_superCell->cz));
 	}
 	else {
 		BOOST_LOG_TRIVIAL(info) << format("Size of super cell box not defined - exit!");
@@ -441,8 +441,7 @@ int SuperstructureBuilder::readParams(const char *datFileName){
 		/* if we found tilt data */
 		else if (gCount >= 0) {
 			if (strncmp(title,"tilt:",5) == 0) {
-				sscanf(parStr1,"%lf %lf %lf",&(grains[gCount].tiltx),
-						&(grains[gCount].tilty),&(grains[gCount].tiltz));
+				sscanf(parStr1,"%f %f %f",&(grains[gCount].tiltx), &(grains[gCount].tilty),&(grains[gCount].tiltz));
 				if (strstr(parStr1,"degree") != NULL) {
 					grains[gCount].tiltx *= PI180;
 					grains[gCount].tilty *= PI180;
@@ -451,30 +450,29 @@ int SuperstructureBuilder::readParams(const char *datFileName){
 			}
 			/* assign density */
 			else if (strncmp(title,"density:",8) == 0) {
-				sscanf(parStr1,"%lf",&(grains[gCount].density));
+				sscanf(parStr1,"%f",&(grains[gCount].density));
 				grains[gCount].rmin = pow(sqrt(15.0/144.0)/grains[gCount].density,1.0/3.0);
 			}
 			/* assign density factor */
 			else if (strncmp(title,"rmin:",5) == 0) {
-				sscanf(parStr1,"%lf",&(grains[gCount].rmin));
+				sscanf(parStr1,"%f",&(grains[gCount].rmin));
 				grains[gCount].density = sqrt(15.0/144)*pow(grains[gCount].rmin,3);
 			}
 			else if (strncmp(title,"r-factor:",9) == 0) {
-				sscanf(parStr1,"%lf",&(grains[gCount].rFactor));
+				sscanf(parStr1,"%f",&(grains[gCount].rFactor));
 			}
 			/* if we found shift data */
 			else if (strncmp(title,"translation:",12) == 0) {
-				sscanf(parStr1,"%lf %lf %lf",&(grains[gCount].shiftx),
+				sscanf(parStr1,"%f %f %f",&(grains[gCount].shiftx),
 						&(grains[gCount].shifty),&(grains[gCount].shiftz));
 			}
 			else if (strncmp(title,"sphere:",7) == 0) {
-				sscanf(parStr1,"%lf %lf %lf %lf",&(grains[gCount].sphereRadius),
-						&(grains[gCount].sphereX),&(grains[gCount].sphereY),&(grains[gCount].sphereZ));
+				sscanf(parStr1,"%f %f %f %f",&(grains[gCount].sphereRadius), &(grains[gCount].sphereX),&(grains[gCount].sphereY),&(grains[gCount].sphereZ));
 			}
 			/* if we found a new plane for this crystal */
 			else if (strncmp(title,"plane:",6) == 0) {
 				plane pl;
-				sscanf(parStr1,"%lf %lf %lf %lf %lf %lf %lf %lf %lf",
+				sscanf(parStr1,"%f %f %f %f %f %f %f %f %f",
 						&(pl.p[0]), &(pl.p[1]), &(pl.p[2]),
 						&(pl.v1[0]), &(pl.v1[1]), &(pl.v1[2]),
 						&(pl.v2[0]), &(pl.v2[1]), &(pl.v2[2]));
@@ -553,17 +551,17 @@ void SuperstructureBuilder::makeSuperCell(){
 			float_tt cx = cos(phi_x),sx = sin(phi_x),
 					cy = cos(phi_y),    sy = sin(phi_y),
 					cz = cos(phi_z)  ,  sz = sin(phi_z);
-			arma::mat Mx = {1,0,0,0,cx,-sx,0,sx,cx};
-			arma::mat My = {cy,0,-sy,0,1,0,sy,0,cy};
-			arma::mat Mz = {cz,sz,0,-sz,cz,0,0,0,1};
+			armamat Mx = {1,0,0,0,cx,-sx,0,sx,cx};
+			armamat My = {cy,0,-sy,0,1,0,sy,0,cy};
+			armamat Mz = {cz,sz,0,-sz,cz,0,0,0,1};
 			Mx.reshape(3,3);
 			My.reshape(3,3);
 			Mz.reshape(3,3);
-			arma::mat Mrot = Mx*My*Mz;
-			arma::mat M = grains[i].M;
-			arma::mat Minv = arma::inv(M);
-			arma::mat Mnew = M*Mrot;
-			arma::mat MnewInv = arma::inv(Mnew);
+			armamat Mrot = Mx*My*Mz;
+			armamat M = grains[i].M;
+			armamat Minv = arma::inv(M);
+			armamat Mnew = M*Mrot;
+			armamat MnewInv = arma::inv(Mnew);
 
 			//			std::cout << "Mrot: "<< endl<< Mrot << std::endl;
 			//			std::cout << "M: "<< endl<< M << std::endl;
@@ -694,7 +692,7 @@ void SuperstructureBuilder::SetResolution(ModelConfig& mc, const PotentialConfig
 }
 void SuperstructureBuilder::makeAmorphous(){
 	int g,p,iatom,ix,iy,iz,ic ,amorphSites,amorphAtoms,randCount;
-	static double *axCell,*byCell,*czCell=NULL;
+	static float_tt *axCell,*byCell,*czCell=NULL;
 	static FloatArray2D Mm;
 	double rCellx,rCelly,rCellz;
 	double d,r;
@@ -820,7 +818,7 @@ void SuperstructureBuilder::makeAmorphous(){
 void SuperstructureBuilder::makeSpecial(int distPlotFlag) {
 	//TODO what is atomcount, not tested
 	int g,iatom,atomCount = 0,amorphAtoms;
-	double d,r,x,y,z,dist,volume;
+	float_tt d,r,x,y,z,dist,volume;
 	int i,j,Znum,count;
 	long seed;
 	float_tt pos[3],center[3],grainBound[6];
@@ -952,7 +950,7 @@ void SuperstructureBuilder::makeSpecial(int distPlotFlag) {
 					a.occ  = 1.0;
 					a.q    = 0;
 					a.Znum = Znum;
-					a.r = arma::vec({x,y,z});
+					a.r = armavec({x,y,z});
 					_superCell->atoms.push_back(a);
 
 					for (auto& p: grains[g].planes) {

@@ -16,7 +16,8 @@
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+#include <arrayfire.h>
+#include <af/util.h>
 #include "wave_base.hpp"
 using boost::format;
 
@@ -49,29 +50,35 @@ CBaseWave::CBaseWave(const ConfigPtr& c,const PersistenceManagerPtr& p) :
 }
 void CBaseWave::InitializePropagators()
 {
-	_prop.resize(boost::extents[_nx][_ny]);
-	std::fill(_prop.origin(), _prop.origin() + _prop.size(), complex_tt(0, 0));
+
+	_prop(_nx, _ny, c32);
+	_prop = af::constant(1, _nx, _ny);
 	float_tt scale = _config->Model.dz * PI * GetWavelength();
 	//t = exp(-i pi lam k^2 dz)
-	for(int ixa = 0; ixa < _nx; ixa++)
-		for(int iya = 0; iya < _ny; iya++){
-			float_tt kx = m_kx2[ixa];
-			float_tt ky = m_ky2[iya];
-			float_tt s = scale*(m_kx2[ixa]+m_ky2[iya]);
-			complex_tt tmp = complex_tt(cos(s),sin(s));
-			_prop[ixa][iya] = tmp;
-//			BOOST_LOG_TRIVIAL(trace) << boost::format("p[%d][%d]= %g * exp(i %g) s=%g") % ixa % iya % abs(tmp) % arg(tmp) %s;
-		}
-//	_prop = fftwpp::fft2d::fftshift(_prop);
+	af::array s, kx2D, ky2D;
+// Tile the arrays to create 2D versions of the k vectors
+	kx2D = af::tile(m_kx2, 1, _ny);
+	ky2D = af::tile(m_ky2.T(), _nx);
+	s = scale*(kx2D + ky2D);
+	_prop = af::complex(af::cos(s), af::sin(s));
+
+//	TODO:
+	_prop = fftShift(_prop);
 	_persist->Save2DDataSet(_prop,"Propagator");
+	//_prop = fftShift(_prop);
 }
 
 void CBaseWave::ShiftTo(float_tt x, float_tt y){
 
 }
-void CBaseWave::fftShift(){
-	_wave = fftwpp::fft2d::fftshift(_wave);
+af::array CBaseWave::fftShift(af::array wave){
+	return af::shift(wave, wave.dims(0)/2, wave.dims(1)/2);
 }
+
+af::array CBaseWave::ifftShift(af::array wave){
+	return af::shift(wave, (wave.dims(0)+1)/2, (wave.dims(1)+1)/2);
+}
+
 void CBaseWave::ApplyTransferFunction(){
 	// TODO: transfer function should be passed as a 1D vector that is half the size of the wavefunc.
 	//       It should be applied by a radial lookup table (with interpolation?)
@@ -97,42 +104,15 @@ void CBaseWave::ApplyTransferFunction(){
 }
 void CBaseWave::PropagateToNextSlice()
 {
-	float_tt wr, wi, tr, ti;
-	float_tt scale, t;
-	float_tt dzs = 0;
-
-	_wave = fftwpp::fft2d::fftshift(_wave);
-#pragma omp parallel for private(wr, wi, tr, ti)
-	for(int i = 0; i < _nx; i++)
-		for(int j = 0; j < _ny; j++) {
-			try {
-				if((m_kx2[i] + m_ky2[j]) < m_k2max){
-					_wave[i][j] *= _prop[i][j];
-				} else {
-					_wave[i][j] = complex_tt(0,0);
-				}
-			} catch(const std::exception& e) {
-				std::cerr << e.what();
-			}
-		} /* end for(ix..) */
-	_wave = fftwpp::fft2d::ifftshift(_wave);
+	//_wave_af = fftShift(_wave_af);
+	_wave_af = _condition*(_wave_af * _prop);
+	//_wave_af = ifftShift(_wave_af);
 } /* end propagate */
-void CBaseWave::Transmit(ComplexArray2DView t)
+
+void CBaseWave::Transmit(af::array t_af)
 {
-	double wr, wi, tr, ti;
-	int nx, ny;
-	for(int ix = 0; ix < _nx; ix++) {
-		for(int iy = 0; iy < _ny; iy++) {
-			complex_tt t1 = t[ix][iy];
-			wr = _wave[ix][iy].real();
-			wi = _wave[ix][iy].imag();
-			tr = t1.real();
-			ti = t1.imag();
-			_wave[ix][iy] *= t1;
-			//			BOOST_LOG_TRIVIAL(trace) << boost::format("w=(%g,%g) t=(%2.3f,%2.3f) w*t=(%g,%g)") % wr % wi % tr % ti %
-			//					_wave[ix][iy].real() % _wave[ix][iy].imag();
-		} /* end for(iy.. ix .) */
-	}
+	_wave_af *= t_af;
+//	_persist->Save2DDataSet(_wave_af, std::to_string(slice_c) + " ");
 } /* end transmit() */
 /** Copy constructor - make sure arrays are deep-copied */
 CBaseWave::CBaseWave(const CBaseWave &other): CBaseWave(other._config,other._persist)
@@ -157,47 +137,40 @@ void CBaseWave::Initialize(std::string input_ext, std::string output_ext)
 
 void CBaseWave::InitializeKVectors()
 {
-	m_kx.resize(_nx);
-	m_kx2.resize(_nx);
-	m_ky.resize(_ny);
-	m_ky2.resize(_ny);
+	m_kx(_nx);
+	m_kx2(_nx);
+	m_ky(_ny);
+	m_ky2(_ny);
+	m_k2(_nx, _ny);
 
 	float_tt ax = _config->Model.dx*_nx;
 	float_tt by = _config->Model.dy*_ny;
 
-#pragma omp parallel for
-	for(int ixa=0; ixa<_nx; ixa++)
-	{
-		//#pragma omp critical
-		{
-			float_tt t = (float_tt)(ixa-_nx/2)/ax;
-			//			m_kx[ixa] = (ixa>_nx/2) ? (float_tt)(ixa-_nx)/ax : (float_tt)ixa/ax;
-			m_kx[ixa] = t;
-			m_kx2[ixa] = t*t;
-			BOOST_LOG_TRIVIAL(trace) << boost::format("kx[%d]= %g;  kx2[%d]= %g") % ixa % t % ixa % m_kx2[ixa];
-		}
-	}
-#pragma omp parallel for
-	for(int iya=0; iya<_ny; iya++) {
-		//#pragma omp critical
-		{
-			//			m_ky[iya] = (iya>_ny/2) ?	(float_tt)(iya-_ny)/by :(float_tt)iya/by;
-			m_ky[iya] = (float_tt)(iya-_ny/2)/ax;
-			m_ky2[iya] = m_ky[iya]*m_ky[iya];
-		}
-	}
+	m_kx = (af::range(_nx) - _nx/2)/ax;
+	m_kx2 = m_kx*m_kx;
+
+	m_ky = (af::range(_ny) - _ny/2)/ax;
+	m_ky2 = m_ky*m_ky;
+
 	m_k2max = _nx/(2.0F*ax);
 	if (_ny/(2.0F*by) < m_k2max ) m_k2max = _ny/(2.0F*by);
 	m_k2max = 2.0/3.0 * m_k2max;
 	m_k2max = m_k2max*m_k2max;
+
+	GetK2();
+	_k2max = af::constant(m_k2max, _nx, _ny);
+	_condition = (m_k2 < _k2max);
+	_condition = fftShift(_condition);
 }
 void  CBaseWave::GetExtents(int& nx, int& ny) const{
 	nx = _nx;
-	ny=_ny;
+	ny = _ny;
 }
 void CBaseWave::FormProbe(){
 	_nx = _config->Model.nx;
 	_ny = _config->Model.ny;
+	_zero = af::constant(0, _nx, _ny);
+	_wave_af = af::complex(_zero, _zero);
 	_wave.resize(boost::extents[_nx][_ny]);
 	_forward = fftwpp::fft2d(_nx,_ny,FFTW_FORWARD);
 	_backward = fftwpp::fft2d(_nx,_ny,FFTW_BACKWARD);
@@ -236,7 +209,7 @@ void CBaseWave::GetSizePixels(int &x, int &y) const
 	y=_ny;
 }
 
-void CBaseWave::GetResolution(float_tt &x, float_tt &y) const 
+void CBaseWave::GetResolution(float_tt &x, float_tt &y) const
 {
 	x=m_dx;
 	y=m_dy;
@@ -248,19 +221,20 @@ void CBaseWave::GetPositionOffset(int &x, int &y) const
 	y=m_detPosY;
 }
 
-
-float_tt CBaseWave::GetIntegratedIntensity() const 
+void CBaseWave::GetK2()
 {
-	float_tt intIntensity=0;
-	//#pragma omp parallel for
-	for (int i=0; i<_nx; i++)
-		for(int j=0;j<_ny;j++)
-		{
-			//#pragma omp atomic
-			intIntensity+=_wave[i][j].real()*_wave[i][j].real() + _wave[i][j].imag()*_wave[i][j].imag();
-		}
+	af::array kx2D(_nx, _ny), ky2D(_nx, _ny);
+	kx2D = af::tile(m_kx2, 1, _ny);
+	ky2D = af::tile(m_ky2.T(), _nx);
+	m_k2 = kx2D + ky2D;
+}
+
+float_tt CBaseWave::GetIntegratedIntensity() const
+{
+	float_tt intensity;
+	intensity = af::sum<float_tt>(af::sqrt(af::real(_wave_af)*af::real(_wave_af) + af::imag(_wave_af)*af::imag(_wave_af)));
 	// TODO: divide by px or not?
-	return intIntensity/(_nx*_ny);
+	return (intensity)/(_nx*_ny);
 }
 
 
@@ -302,7 +276,7 @@ void CBaseWave:WriteBeams(int absolute_slice) {
   // static int counter=0;
 
   if (!muls->lbeams)
-    return;  	
+    return;
 }
  */
 
@@ -312,7 +286,8 @@ void CBaseWave::ToFourierSpace()
 	if (IsRealSpace())
 	{
 		m_realSpace = false;
-		_forward.fft(_wave.data());
+		//_forward.fft(_wave.data());
+		_wave_af = af::fft2(_wave_af);
 
 	}
 }
@@ -324,7 +299,8 @@ void CBaseWave::ToRealSpace()
 	{
 		m_realSpace = true;
 		//		_wave = fftwpp::fft2d::ifftshift(_wave);
-		_backward.fftNormalized(_wave.data());
+		_wave_af = af::ifft2(_wave_af);
+		//_backward.fftNormalized(_wave.data());
 	}
 }
 

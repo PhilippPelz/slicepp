@@ -45,15 +45,11 @@ protected:
     virtual void PostSliceProcess(unsigned absoluteSlice) {}; // Called in RunMuls after a slice is transmitted/propagated through.  Override as desired.
     virtual void CollectIntensity(unsigned absoluteSlice)=0;
     virtual int RunMultislice();
-    virtual void Transmit(WavePtr wave, unsigned sliceIdx);
-    virtual void Propagate(WavePtr wave, float_tt dz);
     virtual void AddDPToAvgArray(const WavePtr &wave);
 
     void ReadAvgArray();
     void ReadAvgArray(unsigned navg);
     void ReadAvgArray(unsigned posX, unsigned posY);
-
-    void InitializePropagators(WavePtr wave);
 
     void _WriteAvgArray(std::string &fileName, std::string &comment,
                         std::map<std::string, double> &params,

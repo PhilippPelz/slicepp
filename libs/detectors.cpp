@@ -119,7 +119,7 @@ void Detector::CollectIntensity(const WavePtr &wave)
         {
           unsigned ix = i%nx;
           unsigned iy = i/nx;
-          k2 = wave->GetK2(ix, iy);
+//          k2 = wave->GetK2(ix, iy);
           intensity = wave->GetPixelIntensity(i);
 //          wave->SetDiffPatPixel((ix+nx/2)%nx,(iy+ny/2)%ny, intensity*scaleDiff);
           // TODO see  what this does and fix it

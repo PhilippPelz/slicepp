@@ -20,6 +20,8 @@
 #ifndef WAVE_BASE_H
 #define WAVE_BASE_H
 
+#include <stdio.h>
+#include <cstdlib>
 #include "stemtypes_fftw3.hpp"
 #include "wave_interface.hpp"
 #include "omp.h"
@@ -27,6 +29,8 @@
 #include <boost/log/trivial.hpp>
 #include "data_IO/PersistenceManager.hpp"
 #include "fftw++.hpp"
+#include <arrayfire.h>
+#include <af/util.h>
 
 namespace QSTEM
 {
@@ -36,7 +40,6 @@ class DLL_EXPORT CBaseWave : public IWave
 public:
 	CBaseWave(const ConfigPtr& c,const PersistenceManagerPtr& p);
 	CBaseWave( const CBaseWave& other );
-
 	bool IsRealSpace(){return m_realSpace;}
 	int GetTotalPixels() const {return _nx*_ny;}
 	void DisplayParams();
@@ -44,16 +47,16 @@ public:
 	void ToFourierSpace();
 	void GetSizePixels(int &x, int &y) const ;
 	void GetResolution(float_tt &x, float_tt &y) const ;
-	void GetPositionOffset(int &x, int &y) const ;
-	inline float_tt GetK2(int ix, int iy) const{ return m_kx2[ix]+m_ky2[iy]; };
-	inline float_tt GetKX2(int ix) const {return m_kx2[ix];}
-	inline float_tt GetKY2(int iy) const {return m_ky2[iy];}
-	inline float_tt GetK2Max() const {return m_k2max;}
+	void GetPositionOffset(int &x, int &y) const;
+	virtual void GetK2();
 	inline float_tt GetVoltage()  const {return m_v0;}
 	inline float_tt GetWavelength()  const {return m_wavlen;}
 	inline float_tt GetPixelIntensity(int i) const { return abs2(_wave.data()[i]); }
 	inline float_tt GetPixelIntensity(int x, int y) const  {return GetPixelIntensity(x+_nx*y);}
 	inline ComplexArray2D GetWave() const {return  _wave;}
+
+	inline af::array GetPixelIntensity() const {return af::real(_wave_af)*af::real(_wave_af) + af::imag(_wave_af)*af::imag(_wave_af);}
+	inline af::array GetWaveAF() const {return  _wave_af;}
 
 	void WriteBeams(int absoluteSlice);
 	float_tt GetIntegratedIntensity() const ;
@@ -62,28 +65,31 @@ public:
 	virtual WavePtr Clone()=0;
 	virtual void FormProbe();
 	virtual void GetExtents(int& nx, int& ny) const;
-	virtual void Transmit(ComplexArray2DView t);
+	virtual void Transmit(af::array t);
 	virtual void PropagateToNextSlice();
 	virtual void InitializePropagators();
 	virtual void ShiftTo(float_tt x, float_tt y);
-	virtual void fftShift();
+	virtual af::array fftShift(af::array _wave);
+	virtual af::array ifftShift(af::array _wave);
 	virtual void ApplyTransferFunction();
 protected:
-	ComplexArray2D _prop, _wave;
+	ComplexArray2D _wave;
+	af::array _prop, _wave_af;
+	af::array _condition, _zero; //for propagation
 	std::vector<float_tt> m_propxr, m_propxi, m_propyr, m_propyi;
 	bool m_realSpace;
 	int m_detPosX, m_detPosY;
 	int _nx, _ny;		      /* size of wavefunc and diffpat arrays */
 	int m_Scherzer;
 	int m_printLevel;
+	int slice_c;
 	float_tt m_dx, m_dy;  // physical pixel size of wavefunction array
 	float_tt m_k2max;
 	float_tt m_v0;
 	float_tt m_wavlen;
 
 	std::vector<int> m_position;
-	RealVector m_kx2,m_ky2,m_kx,m_ky;
-
+	af::array m_kx2, m_ky2, m_kx, m_ky, m_k2, _k2max;
 	//float_tt **m_avgArray;
 	//float_tt m_thickness;
 	//float_tt m_intIntensity;

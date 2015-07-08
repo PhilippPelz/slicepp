@@ -66,7 +66,7 @@ void CoherentSinglePositionExperiment::Run()
 	for (_runCount = 0;_runCount < _c->Model.TDSRuns;_runCount++) {
 		auto box = _structureBuilder->DisplaceAtoms();
 		_pot->MakeSlices(box);
-		if (_c->Output.saveProbe) _persist->SaveProbe(_wave->GetWave());
+		if (_c->Output.saveProbe) _persist->SaveProbe(_wave->GetWaveAF());
 		RunMultislice();
 		if (_runCount == 0) {
 			if (_lbeams) {

@@ -226,36 +226,6 @@ void CExperimentBase::ComputeAverageU2()
  */
 
 
-void BaseExperiment::InitializePropagators(WavePtr wave)
-{
-	int nx, ny;
-
-	wave->GetSizePixels(nx, ny);
-	m_propxr.resize(nx);
-	m_propxi.resize(nx);
-	m_propyr.resize(ny);
-	m_propyi.resize(ny);
-
-	float_tt scale = _c->Model.dz * PI;
-
-	//		BOOST_LOG_TRIVIAL(debug) << format("* InitializePropagators") ;
-
-#pragma omp parallel for
-	for(int ixa = 0; ixa < nx; ixa++) {
-		float_tt t = scale * (wave->GetKX2(ixa) * wave->GetWavelength());
-		m_propxr[ixa] = (float_tt)cos(t);
-		m_propxi[ixa] = (float_tt)-sin(t);
-		//			BOOST_LOG_TRIVIAL(debug) << format("* m_propx[%d] = (%g,%g)") % ixa % m_propxr[ixa] %
-		// m_propxi[ixa];
-	}
-#pragma omp parallel for
-	for(int iya = 0; iya < ny; iya++) {
-		float_tt t = scale * (wave->GetKY2(iya) * wave->GetWavelength());
-		m_propyr[iya] = (float_tt)cos(t);
-		m_propyi[iya] = (float_tt)-sin(t);
-	}
-}
-
 int BaseExperiment::RunMultislice()
 {
 	int printFlag = 0;
@@ -290,29 +260,27 @@ int BaseExperiment::RunMultislice()
 		BOOST_LOG_TRIVIAL(info) << format("Specimen thickness: %g Angstroms\n") % cztot;
 	}
 
-
 	BOOST_LOG_TRIVIAL(info) << "Propagating through slices ...";
 	for(islice = 0; islice < _c->Model.nSlices; islice++) {
 
 		_wave->Transmit(_pot->GetSlice(islice));
 //		Transmit(wave, islice);
-
-		if(_c->Output.SaveWaveAfterTransmit) _persist->SaveWaveAfterTransmit(_wave->GetWave(), islice);
+		if(_c->Output.SaveWaveAfterTransmit) _persist->SaveWaveAfterTransmit(_wave->GetWaveAF(), islice);
 
 		_wave->ToFourierSpace();
 
-		if(_c->Output.SaveWaveAfterTransform) _persist->SaveWaveAfterTransform(_wave->GetWave(), islice);
+		if(_c->Output.SaveWaveAfterTransform) _persist->SaveWaveAfterTransform(_wave->GetWaveAF(), islice);
 
 		_wave->PropagateToNextSlice();
 //		Propagate(wave, islice);
 
-		if(_c->Output.SaveWaveAfterPropagation) _persist->SaveWaveAfterPropagation(_wave->GetWave(), islice);
+		if(_c->Output.SaveWaveAfterPropagation) _persist->SaveWaveAfterPropagation(_wave->GetWaveAF(), islice);
 
 		CollectIntensity(islice);
 
 		_wave->ToRealSpace();
 
-		if(_c->Output.SaveWaveAfterSlice && islice % _c->Output.SaveWaveIterations == 0) _persist->SaveWaveAfterSlice(_wave->GetWave(),islice);
+		if(_c->Output.SaveWaveAfterSlice && islice % _c->Output.SaveWaveIterations == 0) _persist->SaveWaveAfterSlice(_wave->GetWaveAF(),islice);
 		PostSliceProcess(islice);
 
 		if(islice % (int)ceil(_c->Model.nSlices / 10.0) == 0)
@@ -321,72 +289,6 @@ int BaseExperiment::RunMultislice()
 	return 0;
 } // end of runMulsSTEM
 
-void BaseExperiment::Propagate(WavePtr wave, float_tt dz)
-{
-	float_tt wr, wi, tr, ti;
-	float_tt scale, t;
-	float_tt dx, dy;
-	int nx, ny;
-
-	wave->GetResolution(dx, dy);
-	wave->GetSizePixels(nx, ny);
-
-	ComplexArray2DPtr w = wave->GetWave();
-
-#pragma omp parallel for private(wr, wi, tr, ti)
-	for(int i = 0; i < nx; i++)
-		for(int j = 0; i < ny; i++) {
-			try {
-				if((wave->GetKX2(i) + wave->GetKY2(j)) < wave->GetK2Max()) {
-					wr = w[i][j].real();
-					wi = w[i][j].imag();
-					tr = wr * m_propyr[j] - wi * m_propyi[j];
-					ti = wr * m_propyi[j] + wi * m_propyr[j];
-					w[i][j] = complex_tt(tr * m_propxr[i] - ti * m_propxi[i], tr * m_propxi[i] + ti * m_propxr[i]);
-				} else {
-					w[i][j] = 0.0F;
-				}
-			} catch(const std::exception& e) {
-				std::cerr << e.what();
-			}
-		} /* end for(ix..) */
-} /* end propagate */
-
-/*------------------------ transmit() ------------------------*/
-/*
-transmit the wavefunction thru one layer
-(simply multiply wave by transmission function)
-
-waver,i[ix][iy]  = real and imaginary parts of wavefunction
-transr,i[ix][iy] = real and imag parts of transmission functions
-
-nx, ny = size of array
-
-on entrance waver,i and transr,i are in real space
-
-only waver,i will be changed by this routine
- */
-void BaseExperiment::Transmit(WavePtr wave, unsigned sliceIdx)
-{
-	double wr, wi, tr, ti;
-	int nx, ny;
-	ComplexArray2DPtr w = wave->GetWave();
-	wave->GetSizePixels(nx, ny);
-
-	/*  trans += posx; */
-	for(unsigned ix = 0; ix < nx; ix++) {
-		for(unsigned iy = 0; iy < ny; iy++) {
-			complex_tt t = _pot->GetSlicePixel(sliceIdx, ix , iy );
-			wr = w[ix][iy].real();
-			wi = w[ix][iy].imag();
-			tr = t.real();
-			ti = t.imag();
-			w[ix][iy] *= t;
-			BOOST_LOG_TRIVIAL(trace) << boost::format("w=(%g,%g) t=(%2.3f,%2.3f) w*t=(%g,%g)") % wr % wi % tr % ti %
-					w[ix][iy].real() % w[ix][iy].imag();
-		} /* end for(iy.. ix .) */
-	}
-} /* end transmit() */
 
 void BaseExperiment::AddDPToAvgArray(const WavePtr& wave)
 {

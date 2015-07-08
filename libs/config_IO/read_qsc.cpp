@@ -156,14 +156,14 @@ void BeamConfig::Read(ptree& t){
 	BeamCurrentpA=t.get<float_tt>("beam.beamCurrentpA");
 	DwellTimeMsec=t.get<float_tt>("beam.dwellTimeMsec");
 
-	double w;
-	const double emass=510.99906; /* electron rest mass in keV */
-	const double hc=12.3984244; /* Planck's const x speed of light*/
+	float_tt w;
+	const float_tt emass=510.99906; /* electron rest mass in keV */
+	const float_tt hc=12.3984244; /* Planck's const x speed of light*/
 
 	/* electron wavelength in Angstroms */
 	wavelength = hc/sqrt( EnergykeV * ( 2*emass + EnergykeV ) );
 
-	double s, pi, x;
+	float_tt s, pi, x;
 	x = ( emass + EnergykeV ) / ( 2.0*emass + EnergykeV);
 	pi = 4.0 * atan( 1.0 );
 	sigma = 2.0 * pi * x / (wavelength*EnergykeV);  // 2*pi*kz*(1+kev/emaxx)/(2*emass+kev)

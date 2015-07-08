@@ -17,6 +17,6 @@ CoherentCBED::~CoherentCBED() {
 }
 void CoherentCBED::PostSpecimenProcess(){
 	_wave->ToFourierSpace();
-	_wave->fftShift();
+	_wave->fftShift(_wave->GetWaveAF());
 }
 } /* namespace QSTEM */
