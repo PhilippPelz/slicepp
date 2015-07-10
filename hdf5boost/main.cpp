@@ -16,7 +16,7 @@ int main(int argc, char *argv[]){
 
 	// allocate array using the "extents" helper.
 	// This makes it easier to see how big the array is
-	multi_array<double, 3>  float_data(extents[NX][NY][NZ]);
+	multi_array<float_tt, 3>  float_data(extents[NX][NY][NZ]);
 	ComplexArray3D complex_data(extents[NX][NY][NZ]);
 	// use resize to change size when necessary
 	// float_data.resize(extents[NX + 5][NY + 4][NZ + 3]);

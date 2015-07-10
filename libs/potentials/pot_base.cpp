@@ -189,7 +189,7 @@ void CPotential::MakeSlices(superCellBoxPtr info) {
 
 	BOOST_LOG_TRIVIAL(info)<< "Adding atoms to slices ...";
 
-//#pragma omp parallel for shared(atomsAdded,info)
+#pragma omp parallel for shared(atomsAdded,info)
 	for (std::vector<atom>::iterator a = info->atoms.begin();
 			a < info->atoms.end(); a = a + 1) {
 		atom atom(a);
@@ -233,7 +233,7 @@ void CPotential::MakePhaseGratings() {
 	%_t.shape()[0]%scale%mm0%_c->Beam.sigma;
 
 	float_tt minph = 3.1, maxph = 0, minabs = 100, maxabs = 0;
-	_t_af.host(_t.data());
+//	_t_af.host(_t.data());
 #pragma omp parallel for
 	for(complex_tt* v = _t.data(); v < (_t.data() + _t.num_elements()); v++)
 	{

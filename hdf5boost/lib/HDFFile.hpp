@@ -16,7 +16,7 @@
 #include <cstdint>
 //#include <algorithm>
 
-#include "Complex.hpp"
+#include "../../libs/stemtypes_fftw3.hpp"
 using boost::multi_array;
 using boost::extents;
 
@@ -27,8 +27,8 @@ using boost::extents;
 using namespace std;
 
 typedef struct {
-	double r;   /*real part */
-	double i;   /*imaginary part */
+	float_tt r;   /*real part */
+	float_tt i;   /*imaginary part */
 } complex_t;
 
 typedef multi_array<Complex, 3> ComplexArray3D;
@@ -67,16 +67,16 @@ public:
 	virtual ~HDFFile();
 	int SaveComplexArray2D(ComplexArray2D a, string dsetName);
 	int SaveComplexArray3D(ComplexArray3D a, string dsetName);
-	int SaveRealArray2D(multi_array<double,2> a, string dsetName);
-	int SaveRealArray3D(multi_array<double,3> a, string dsetName);
+	int SaveRealArray2D(multi_array<float_tt,2> a, string dsetName);
+	int SaveRealArray3D(multi_array<float_tt,3> a, string dsetName);
 	int SaveInt(int value,string dsetName);
-	int SaveDouble(double value,string dsetName);
+	int SaveDouble(float_tt value,string dsetName);
 	int SaveString(string value,string dsetName);
 	int SaveInt(hid_t locID, int value,string dsetName);
-	int SaveDouble(hid_t locID,double value,string dsetName);
+	int SaveDouble(hid_t locID,float_tt value,string dsetName);
 	int SaveString(hid_t locID,string value,string dsetName);
 	int SaveAttributeInt(string dsetName, string attName, int data);
-	int SaveAttributeDouble(string dsetName, string attName, double data);
+	int SaveAttributeDouble(string dsetName, string attName, float_tt data);
 	int SaveAttributeString(string dsetName, string attName, string data);
 	Group* CreateGroup(string groupName);
 

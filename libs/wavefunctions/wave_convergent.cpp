@@ -245,8 +245,8 @@ void CConvergentWave::FormProbe()
 	condition = af::constant((int)((m_a66 > 0) || (m_a64 > 0) || (m_a62 = 0) || (m_C5 != 0)), _nx, _ny);
 	chi += condition*ktheta2*(m_a66*af::cos(6.0*(phi-m_phi66))+m_a64*af::cos(4.0*(phi-m_phi64))+m_a62*af::cos(2.0*(phi-m_phi62))+m_C5)/6.0;
 
-	chi *= 2*M_PI/m_wavlen;
-	chi -= 2.0*M_PI*( (kx*dx/ax) + (ky*dy/by) );
+	chi *= 2*PI/m_wavlen;
+	chi -= 2.0*PI*( (kx*dx/ax) + (ky*dy/by) );
 	k2max_af = af::constant(k2max, _nx, _ny);
 	real = af::constant(0, _nx, _ny);
 	imag = af::constant(0, _nx, _ny);

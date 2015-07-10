@@ -49,6 +49,7 @@ find_package(ArrayFire)
 include_directories(
 	${Boost_INCLUDE_DIRS} 
 	"${FFTW3_INCLUDE_DIRS}"
+	${ArrayFire_INCLUDE_DIRS}
 )
 
 
