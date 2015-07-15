@@ -111,7 +111,7 @@ void CBaseWave::PropagateToNextSlice()
 
 void CBaseWave::Transmit(af::array t_af)
 {
-	_wave_af *= t_af;
+	_wave_af(af::seq(_wave_af.dims(0)*_wave_af.dims(1))) *= t_af(af::seq(_wave_af.dims(0)*_wave_af.dims(1)));
 //	_persist->Save2DDataSet(_wave_af, std::to_string(slice_c) + " ");
 } /* end transmit() */
 /** Copy constructor - make sure arrays are deep-copied */

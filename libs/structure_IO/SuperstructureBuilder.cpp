@@ -239,7 +239,7 @@ int SuperstructureBuilder::removeVacancies(std::vector<atom>& atoms){
 }
 void SuperstructureBuilder::computeCenterofMass(){
 	int i;
-	double cmx=0.0,cmy=0.0,cmz=0.0;
+	float_tt cmx=0.0,cmy=0.0,cmz=0.0;
 
 	for (i=0;i<_superCell->atoms.size();i++) {
 		cmx += _superCell->atoms[i].r[0];
@@ -519,7 +519,8 @@ void SuperstructureBuilder::makeSuperCell(){
 			Mrot(boost::extents[3][3]),
 			Mr(boost::extents[3][3]),
 			Mr2(boost::extents[3][3]);
-	arma::rowvec a(3),b(3);
+
+	armarowvec a(3),b(3);
 	float_tt maxLength,dx,dy,dz,d,dxs,dys,dzs;
 	// float_tt xpos,ypos,zpos;
 	int nxmin = 20000,nxmax=0,nymin=20000,nymax=0,nzmin=20000,nzmax=0;

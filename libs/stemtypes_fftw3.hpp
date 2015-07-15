@@ -26,6 +26,7 @@ QSTEM - image simulation for TEM/STEM/CBED
 #if(FLOAT_PRECISION == 1)
 
 typedef float float_tt;
+#define armarowvec arma::frowvec
 #define armavec arma::fvec
 #define armamat arma::fmat
 #define afcfloat af::cfloat
@@ -38,6 +39,7 @@ typedef float float_tt;
 #else  // FLOAT_PRECISION
 
 typedef double float_tt;
+#define armarowvec arma::rowvec
 #define armavec arma::vec
 #define armamat arma::mat
 #define afcfloat af::cdouble
