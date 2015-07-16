@@ -157,11 +157,9 @@ void C2DFFTPotential::AddAtomPeriodic(atom& atom, float_tt atomBoxX, int iAtomX,
 	af::array vz;
 
 	// shift the potentials, the cost is reasonable
-	af::array pot12 = af::shift(_atomPot[atom.Znum], -1, 0);
-	af::array pot21 = af::shift(_atomPot[atom.Znum], 0, -1);
-	af::array pot22 = af::shift(_atomPot[atom.Znum], -1, -1);
 
-	vz = s11 * _atomPot[atom.Znum] + s12 * pot12 + s21 * pot21 + s22 * pot22;
+
+	vz = s11 * _atomPot[atom.Znum] + s12 * _atomPotShifted[atom.Znum] + s21 * _atomPotShifted[atom.Znum + 200] + s22 * _atomPotShifted[atom.Znum + 400];
 	added = af::sum<float_tt>(af::real(vz(yindex, xindex)));
 	vz = af::real(vz);
 	iax = (iax) % (_c->Model.nx);
@@ -260,7 +258,11 @@ void C2DFFTPotential::ComputeAtomPotential(int Znum) {
 
 		// make sure we don't produce negative potential:
 		// if (min < 0) for (ix=0;ix<nx;ix++) for (iy=0;iy<ny;iy++) atPot[Znum][iy+ix*ny][0] -= min;
+
 		_atomPot[Znum] = af::array(_nx, _ny, (afcfloat *)atomPot.data(), afHost);
+		_atomPotShifted.insert(std::pair<int, af::array>(Znum, af::shift(_atomPot[Znum], -1, 0)));
+		_atomPotShifted.insert(std::pair<int, af::array>(Znum + 200, af::shift(_atomPot[Znum], 0, -1)));
+		_atomPotShifted.insert(std::pair<int, af::array>(Znum + 400, af::shift(_atomPot[Znum], -1, -1)));
 		BOOST_LOG_TRIVIAL(info)<< format("Created 2D %d x %d potential array for Z=%d (B=%g A^2)") % _nx % _ny% Znum% B;
 	}
 
