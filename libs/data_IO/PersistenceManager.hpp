@@ -30,13 +30,16 @@ public:
 	void SaveWaveAfterSlice(af::array wave, int slice);
 	void SaveWaveAfterPropagation(af::array wave, int slice);
 	void SavePotential(ComplexArray3D a);
+	void SavePotential(af::array data);
 	void SaveProjectedPotential(ComplexArray2DPtr a);
+	void SaveProjectedPotential(af::array data);
 	void Save2DDataSet(ComplexArray2DPtr a, string name);
 	void Save3DDataSet(ComplexArray3DPtr a, string name);
 	void Save2DDataSet(af::array data, string name);
 	void StoreToDisc();
 	void InitStorage();
 	virtual ~PersistenceManager();
+	bool potSaved;
 protected:
 	HDFFile _file;
 	ConfigPtr _c;

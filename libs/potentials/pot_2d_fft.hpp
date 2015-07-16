@@ -47,7 +47,7 @@ protected:
 	virtual void ComputeAtomPotential(int Znum) ;
 	virtual void SaveAtomicPotential(int znum);
 	virtual void CenterAtomZ(std::vector<atom>::iterator &atom, float_tt &z);
-	std::map<int, ComplexArray2D> _atomPot;
+	std::map<int, af::array> _atomPot;
 
 	friend class CPotFactory;
 	// Create an instance of this class, wrapped in a shared ptr

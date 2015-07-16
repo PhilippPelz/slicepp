@@ -25,7 +25,7 @@ namespace QSTEM {
 C2DFFTPotential::C2DFFTPotential(const ConfigPtr& c,
 		const PersistenceManagerPtr& p) :
 		CPotential(c, p) {
-	_atomPot = std::map<int, ComplexArray2D>();
+	_atomPot = std::map<int, af::array>();
 }
 
 void C2DFFTPotential::DisplayParams() {
@@ -99,29 +99,26 @@ void C2DFFTPotential::AddAtomNonPeriodic(atom& atom, float_tt atomBoxX,
 
 	af::array iax = af::seq(iax0, iax1 - 1, 1);
 	af::array iay = af::seq(iay0, iay1 - 1, 1);
-	af::array xindex = iOffsX + OVERSAMPLING * (iax - iax0);
-	af::array yindex = iOffsY + OVERSAMPLING * (iay - iay0);
+	af::array xindex = (iOffsX + OVERSAMPLING * (iax - iax0));
+	af::array yindex = (iOffsY + OVERSAMPLING * (iay - iay0));
 
-	af::array pot = af::array(_nx, _ny, (afcfloat*)_atomPot[atom.Znum].data());
 	af::array vz;
-	af::array pot12 = af::shift(pot, -1, 0);
-	af::array pot21 = af::shift(pot, 0, -1);
-	af::array pot22 = af::shift(pot, -1, -1);
-	vz = s11 * pot + s12 * pot12 + s21 * pot21 + s22 * pot22;
-	added = af::sum<float_tt>(af::real(vz(xindex, yindex)));
+
+	// shift the potentials, the cost is reasonable
+	af::array pot12 = af::shift(_atomPot[atom.Znum], -1, 0);
+	af::array pot21 = af::shift(_atomPot[atom.Znum], 0, -1);
+	af::array pot22 = af::shift(_atomPot[atom.Znum], -1, -1);
+
+	vz = s11 * _atomPot[atom.Znum] + s12 * pot12 + s21 * pot21 + s22 * pot22;
+	added = af::sum<float_tt>(af::real(vz(yindex, xindex)));
 	vz = af::real(vz);
-	iax = iax % _c->Model.nx;
-	iay = iay % _c->Model.ny;
-	iax = af::tile(iax, 1, iay.dims(0));
-	iay = af::tile(iay.T(), iax.dims(0));
-	iax = af::flat(iax);
-	iay = af::flat(iay);
-	xindex = af::tile(xindex, 1, yindex.dims(0));
-	yindex = af::tile(yindex.T(), xindex.dims(0));
-	xindex = af::flat(xindex);
-	yindex = af::flat(yindex);
-	_t_af(iAtomZ * _c->Model.nx * _c->Model.ny + iax * _c->Model.ny + iay) +=
-			vz(xindex * _ny + yindex);
+	iax = (iax) % (_c->Model.nx);
+	af::array xc = (iax < 0);
+	iax += _c->Model.nx * xc;
+	iay = (iay) % (_c->Model.ny);
+	af::array yc = (iay < 0);
+	iay += _c->Model.ny * yc;
+	_t_af(iay, iax, iAtomZ) += vz(yindex, xindex);
 
 //ComplexArray2D pot = _atomPot[atom.Znum];
 	BOOST_LOG_TRIVIAL(trace)<< format("atom xyz (%-02.3f,%-02.3f,%-02.3f) Ixyz (%-3d,%-3d,%-3d) iax (%-3d .. %-3d) iay (%-3d .. %-3d)")
@@ -157,15 +154,14 @@ void C2DFFTPotential::AddAtomPeriodic(atom& atom, float_tt atomBoxX, int iAtomX,
 	af::array xindex = (iOffsX + OVERSAMPLING * (iax - iax0));
 	af::array yindex = (iOffsY + OVERSAMPLING * (iay - iay0));
 
-	af::array pot = af::array(_nx, _ny, (afcfloat *)_atomPot[atom.Znum].data(), afHost);
 	af::array vz;
 
 	// shift the potentials, the cost is reasonable
-	af::array pot12 = af::shift(pot, -1, 0);
-	af::array pot21 = af::shift(pot, 0, -1);
-	af::array pot22 = af::shift(pot, -1, -1);
+	af::array pot12 = af::shift(_atomPot[atom.Znum], -1, 0);
+	af::array pot21 = af::shift(_atomPot[atom.Znum], 0, -1);
+	af::array pot22 = af::shift(_atomPot[atom.Znum], -1, -1);
 
-	vz = s11 * pot + s12 * pot12 + s21 * pot21 + s22 * pot22;
+	vz = s11 * _atomPot[atom.Znum] + s12 * pot12 + s21 * pot21 + s22 * pot22;
 	added = af::sum<float_tt>(af::real(vz(yindex, xindex)));
 	vz = af::real(vz);
 	iax = (iax) % (_c->Model.nx);
@@ -174,17 +170,6 @@ void C2DFFTPotential::AddAtomPeriodic(atom& atom, float_tt atomBoxX, int iAtomX,
 	iay = (iay) % (_c->Model.ny);
 	af::array yc = (iay < 0);
 	iay += _c->Model.ny * yc;
-//	iax = af::tile(iax, 1, iay.dims(0));
-//	iay = af::tile(iay.T(), iax.dims(0));
-//	iax = af::flat(iax);
-//	iay = af::flat(iay);
-//	xindex = af::tile(xindex, 1, yindex.dims(0));
-//	yindex = af::tile(yindex.T(), xindex.dims(0));
-//	xindex = af::flat(xindex);
-//	yindex = af::flat(yindex);
-	//vz = af::flat(af::complex(vz, 0.0));
-	//_t_af(iAtomZ * _c->Model.nx * _c->Model.ny + iay * _c->Model.nx + iax) += af::complex(vz(yindex * _nx + xindex), 0);
-	//af_print(vz);
 	_t_af(iay, iax, iAtomZ) += vz(yindex, xindex);
 	// flattened array computations are faster and do not produce weird errors
 }
@@ -231,8 +216,8 @@ void C2DFFTPotential::ComputeAtomPotential(int Znum) {
 	if (_atomPot.count(Znum) == 0) {
 		// setup cubic spline interpolation:
 		splinh(scatPar[0], scatPar[Znum], splinb, splinc, splind, N_SF);
-		_atomPot.insert(std::pair<int, ComplexArray2D>(Znum, ComplexArray2D(boost::extents[_nx][_ny])));
-		//cout<<_atomPot[Znum][0][0]<<endl;
+		_atomPot.insert(std::pair<int, af::array>(Znum, af::constant(0, _nx, _ny)));
+		ComplexArray2D atomPot(boost::extents[_nx][_ny]);
 		for (int ix = 0; ix < _nx; ix++) {
 			float_tt kx = _dkx * (ix < _nx / 2 ? ix : _nx - ix);
 			for (int iy = 0; iy < _ny; iy++) {
@@ -245,21 +230,21 @@ void C2DFFTPotential::ComputeAtomPotential(int Znum) {
 					float_tt f = seval(scatPar[0], scatPar[Znum], splinb, splinc, splind, N_SF, sqrt(s2))* exp(-s2 * B * 0.25);
 
 					float_tt phase = PI * (kx * _c->Model.dx * _nx + ky * _c->Model.dy * _ny);
-					_atomPot[Znum][ix][iy] = complex_tt(f * cos(phase),f * sin(phase));
+					atomPot[ix][iy] = complex_tt(f * cos(phase),f * sin(phase));
 				}else{
-					_atomPot[Znum][ix][iy] = complex_tt(0, 0);
+					atomPot[ix][iy] = complex_tt(0, 0);
 				}
 			}
 		}
 
 #if FLOAT_PRECISION == 1
-		fftwf_complex *ptr = reinterpret_cast<fftwf_complex*>(_atomPot[Znum].data());
+		fftwf_complex *ptr = reinterpret_cast<fftwf_complex*>(atomPot.data());
 		fftwf_plan plan = fftwf_plan_dft_2d(_nx, _ny, ptr, ptr, FFTW_BACKWARD,
 		FFTW_ESTIMATE);
 		fftwf_execute(plan);
 		fftwf_destroy_plan(plan);
 #else
-		fftw_complex *ptr=(fftw_complex *)(_atomPot[Znum].data());
+		fftw_complex *ptr=(fftw_complex *)(atomPot.data());
 		fftw_plan plan = fftw_plan_dft_2d(_nx,_ny,ptr,ptr,FFTW_BACKWARD,FFTW_ESTIMATE);
 		fftw_execute(plan);
 		fftw_destroy_plan(plan);
@@ -268,13 +253,14 @@ void C2DFFTPotential::ComputeAtomPotential(int Znum) {
 
 		for (unsigned ix = 0; ix < _nx; ix++)
 			for (unsigned iy = 0; iy < _ny; iy++) {
-				_atomPot[Znum][ix][iy] *= _dkx * _dky
+				atomPot[ix][iy] *= _dkx * _dky
 						* (OVERSAMPLING * OVERSAMPLING);
 //				cout<<_atomPot[Znum][ix][iy]<<endl;
 			}
 
 		// make sure we don't produce negative potential:
 		// if (min < 0) for (ix=0;ix<nx;ix++) for (iy=0;iy<ny;iy++) atPot[Znum][iy+ix*ny][0] -= min;
+		_atomPot[Znum] = af::array(_nx, _ny, (afcfloat *)atomPot.data(), afHost);
 		BOOST_LOG_TRIVIAL(info)<< format("Created 2D %d x %d potential array for Z=%d (B=%g A^2)") % _nx % _ny% Znum% B;
 	}
 

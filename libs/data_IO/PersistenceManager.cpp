@@ -14,7 +14,7 @@ PersistenceManager::PersistenceManager() :
 				ComplexArray3D(boost::extents[1][1][1])), _waveSlicesAfterSlice(
 				ComplexArray3D(boost::extents[1][1][1])), _probe(
 				ComplexArray2D(boost::extents[1][1])), _projectedPotential(
-				ComplexArray2D(boost::extents[1][1])), _info(NULL) {
+				ComplexArray2D(boost::extents[1][1])), _info(NULL), potSaved(false){
 }
 PersistenceManager::PersistenceManager(const ConfigPtr c) :
 		PersistenceManager() {
@@ -98,10 +98,24 @@ void PersistenceManager::SaveWaveAfterSlice(af::array wave, int slice) {
 void PersistenceManager::SavePotential(ComplexArray3D a) {
 	_potential = a;
 }
-void PersistenceManager::SaveProjectedPotential(ComplexArray2DPtr a) {
 
+void PersistenceManager::SavePotential(af::array data) {
+	potSaved = true;
+	ComplexArray3D a(boost::extents[data.dims(2)][data.dims(0)][data.dims(1)]);
+	data.host(a.data());
+	SavePotential(a);
+}
+
+void PersistenceManager::SaveProjectedPotential(ComplexArray2DPtr a) {
 	_projectedPotential = ComplexArray2D(a);
 }
+
+void PersistenceManager::SaveProjectedPotential(af::array data) {
+	ComplexArray2D a(boost::extents[data.dims(0)][data.dims(1)]);
+	data.host(a.data());
+	SaveProjectedPotential(a);
+}
+
 void PersistenceManager::Save3DDataSet(ComplexArray3DPtr a, string name) {
 	_file.SaveComplexArray3D(ComplexArray3D(a), name);
 }
