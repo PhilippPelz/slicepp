@@ -173,7 +173,9 @@ void CPotential::CenterAtomZ(atom& atom, float_tt &z) {
 void CPotential::MakeSlices(superCellBoxPtr info) {
 	time_t time0, time1;
 	SliceSetup();
-	_t_af = af::complex(af::constant(0, _c->Model.nx, _c->Model.ny, _c->Model.nSlices), af::constant(0, _c->Model.nx, _c->Model.ny, _c->Model.nSlices));
+	for (int i = 0; i < _c->Model.nSlices; i++){
+		std::fill(_t[i].origin(), _t[i].origin() + _t[i].size(), complex_tt(0, 0));
+	}
 	for (std::vector<int>::iterator a = info->uniqueatoms.begin();
 			a < info->uniqueatoms.end(); a = a + 1) {
 		ComputeAtomPotential(*a);
@@ -186,7 +188,7 @@ void CPotential::MakeSlices(superCellBoxPtr info) {
 
 	BOOST_LOG_TRIVIAL(info)<< "Adding atoms to slices ...";
 	//_t_af = af::flat(_t_af);
-//#pragma omp parallel for shared(atomsAdded,info)
+#pragma omp parallel for shared(atomsAdded,info)
 	for (std::vector<atom>::iterator a = info->atoms.begin();
 			a < info->atoms.end(); a = a + 1) {
 		atom atom(a);
@@ -205,6 +207,9 @@ void CPotential::MakeSlices(superCellBoxPtr info) {
 			loadbar(atomsAdded + 1, info->atoms.size());
 
 	}
+	for (int i = 0; i < _c->Model.nSlices; i++){
+		_t_af.push_back(af::array(_c->Model.nx, _c->Model.ny, (afcfloat *)_t[i].origin()));
+	}
 	MakePhaseGratings();
 	BandlimitTransmissionFunction();
 
@@ -213,10 +218,13 @@ void CPotential::MakeSlices(superCellBoxPtr info) {
 	% difftime(time1, time0)%( difftime(time1, time0) / info->atoms.size());
 
 	if (_c->Output.SavePotential)
-		_persist->SavePotential(_t_af);
+		_persist->SavePotential(_t_af, _c->Model.nSlices);
 	if (_c->Output.SaveProjectedPotential){
-		if(!_persist->potSaved)
-			_t_af.host(_t.data());
+		if(!_persist->potSaved){
+			for (int i = 0; i < _c->Model.nSlices; i++){
+				_t_af[i].host(_t[i].origin());
+			}
+		}
 		WriteProjectedPotential();
 	}
 }
@@ -231,10 +239,14 @@ void CPotential::MakePhaseGratings() {
 	%_t.shape()[0]%scale%mm0%_c->Beam.sigma;
 
 	float_tt minph = 3.1, maxph = 0, minabs = 100, maxabs = 0;
-	_t_af = scale * af::real(_t_af);
-	maxph = af::max<float_tt>(_t_af);
-	minph = af::min<float_tt>(_t_af);
-	_t_af = af::complex(af::cos(_t_af), af::sin(_t_af));
+	for (int i = 0; i < _c->Model.nSlices; i++){
+		_t_af[i] = scale * af::real(_t_af[i]);
+		if (af::max<float_tt>(_t_af[i]) > maxph)
+			maxph = af::max<float_tt>(_t_af[i]);
+		if (af::min<float_tt>(_t_af[i]) < minph)
+			minph = af::min<float_tt>(_t_af[i]);
+		_t_af[i] = af::complex(af::cos(_t_af[i]), af::sin(_t_af[i]));
+	}
 	BOOST_LOG_TRIVIAL(info)<<format("Phase values %g ... %g")%minph%maxph;
 }
 
@@ -473,12 +485,7 @@ void CPotential::GetSizePixels(unsigned int &nx, unsigned int &ny) const {
 }
 
 af:: array CPotential::GetSlice(unsigned idx){
-	//idx = (idx <_c->Model.nSlices - 1)? idx + 1:idx;
-	//ComplexArray2D a = _t[boost::indices[idx][range(0, _c->Model.nx)][range( 0, _c->Model.ny)]];
-	af::array slice = _t_af(af::span, af::span, idx);
-	//slice = af::moddims(slice, _c->Model.nx, _c->Model.ny);
-	//af::array slice = af::array(_c->Model.nx, _c->Model.ny, (afcfloat *) a.data());
-	return slice;
+	return _t_af[idx];
 }
 
 void CPotential::ResizeSlices() {

@@ -70,7 +70,7 @@ protected:
 
 	StructureBuilderPtr _sb;
 	ComplexArray3D _t;
-	af::array _t_af;
+	std::vector<af::array> _t_af;
 
 	float_tt _ddx, _ddy, _ddz;   // oversampled resolutions
 	float_tt _dkx,_dky, _dkz,_kmax2;

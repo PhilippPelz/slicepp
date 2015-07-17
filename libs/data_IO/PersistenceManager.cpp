@@ -99,10 +99,12 @@ void PersistenceManager::SavePotential(ComplexArray3D a) {
 	_potential = a;
 }
 
-void PersistenceManager::SavePotential(af::array data) {
+void PersistenceManager::SavePotential(std::vector<af::array> data, int nslices) {
 	potSaved = true;
-	ComplexArray3D a(boost::extents[data.dims(2)][data.dims(0)][data.dims(1)]);
-	data.host(a.data());
+	ComplexArray3D a(boost::extents[nslices][data[0].dims(0)][data[0].dims(1)]);
+	for (int i = 0; i < nslices; i++){
+		data[i].host(a[i].origin());
+	}
 	SavePotential(a);
 }
 
