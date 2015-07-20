@@ -163,8 +163,9 @@ void CConvergentWave::FormProbe()
 	float_tt edge = SMOOTH_EDGE*avgRes;
 
 	float_tt sum = 0.0;
-	af::array kx, ky, kx2, ky2, k2, k2max_af, ktheta, ktheta2, phi, chi, real, imag, condition, scale;
-	af::array x, y, pixel, rx, rx2, ry, ry2;
+	bool condition;
+	af::array kx, ky, kx2, ky2, k2, k2max_af, ktheta, ktheta2, phi, chi, real, imag, scale;
+	af::array x, y, pixel, rx, ry, rx2, ry2;
 	af::array delta;
 	/********************************************************
 	 * formulas from:
@@ -226,37 +227,38 @@ void CConvergentWave::FormProbe()
 	ktheta2 = k2*(m_wavlen*m_wavlen);
 	ktheta = af::sqrt(ktheta2);
 	phi = af::atan2(ry*ky, rx*kx);
-	af::array temp1, temp2, temp3;
-	chi = ktheta2*(af::constant(m_df0, _nx, _ny) +delta + m_astigMag*af::cos(2.0*(phi-af::constant(m_astigAngle, _nx, _ny))))/2.0;
+	chi = ktheta2*(m_df0 +delta + m_astigMag*af::cos(2.0*(phi-m_astigAngle)))/2.0;
 
 	ktheta2 *= ktheta;  //ktheta^3
-	condition = af::constant((int)((m_a33 > 0) || (m_a31 > 0)), _nx, _ny);
-	chi += condition*ktheta2*(m_a33*af::cos(3.0*(phi-m_phi33)) + m_a31*af::cos(phi-m_phi31))/3.0;
+	if ((m_a33 > 0) || (m_a31 > 0))
+		chi += ktheta2*(m_a33*af::cos(3.0*(phi-m_phi33)) + m_a31*af::cos(phi-m_phi31))/3.0;
 
 	ktheta2 *= ktheta;  //ktheta^4
-	condition = af::constant((int)((m_a44 > 0) || (m_a42 > 0) || (m_Cs != 0)), _nx, _ny);
-	chi += condition*ktheta2*(m_a44*af::cos(4.0*(phi-m_phi44)) + m_a42*af::cos(2.0*(phi-m_phi42)) + m_Cs)/4.0;
+	if ((m_a44 > 0) || (m_a42 > 0) || (m_Cs != 0))
+		chi += ktheta2*(m_a44*af::cos(4.0*(phi-m_phi44)) + m_a42*af::cos(2.0*(phi-m_phi42)) + m_Cs)/4.0;
 
 	ktheta2 *= ktheta;  //ktheta^5
-	condition = af::constant((int)((m_a55 > 0) || (m_a53 > 0) || (m_a51 > 0)), _nx, _ny);
-	chi += condition*ktheta2*(m_a55*af::cos(5.0*(phi-m_phi55)) + m_a53*af::cos(3.0*(phi-m_phi53)) + m_a51*af::cos(phi-m_phi51))/5.0;
+	if ((m_a55 > 0) || (m_a53 > 0) || (m_a51 > 0))
+		chi += ktheta2*(m_a55*af::cos(5.0*(phi-m_phi55)) + m_a53*af::cos(3.0*(phi-m_phi53)) + m_a51*af::cos(phi-m_phi51))/5.0;
 
 	ktheta2 *= ktheta;  //ktheta^6
-	condition = af::constant((int)((m_a66 > 0) || (m_a64 > 0) || (m_a62 = 0) || (m_C5 != 0)), _nx, _ny);
-	chi += condition*ktheta2*(m_a66*af::cos(6.0*(phi-m_phi66))+m_a64*af::cos(4.0*(phi-m_phi64))+m_a62*af::cos(2.0*(phi-m_phi62))+m_C5)/6.0;
+	if ((m_a66 > 0) || (m_a64 > 0) || (m_a62 = 0) || (m_C5 != 0))
+		chi += ktheta2*(m_a66*af::cos(6.0*(phi-m_phi66))+m_a64*af::cos(4.0*(phi-m_phi64))+m_a62*af::cos(2.0*(phi-m_phi62))+m_C5)/6.0;
+
+	af::array condition2;
 
 	chi *= 2*PI/m_wavlen;
 	chi -= 2.0*PI*( (kx*dx/ax) + (ky*dy/by) );
 	k2max_af = af::constant(k2max, _nx, _ny);
 	real = af::constant(0, _nx, _ny);
 	imag = af::constant(0, _nx, _ny);
-	condition = (k2 <= k2max_af);
-	real += condition*scale * af::cos(chi);
-	imag += condition*scale * af::sin(chi);
+	condition2 = (k2 <= k2max_af);
+	real += condition2*scale * af::cos(chi);
+	imag += condition2*scale * af::sin(chi);
 
-	condition = ( _smoothen != 0)*( af::abs(k2-k2max_af) <= pixel);
-	real -= af::constant(0.5, _nx, _ny)*condition*scale * af::cos(chi);
-	imag -= af::constant(1.5, _nx, _ny)*condition*scale * af::sin(chi);
+	condition2 = ( _smoothen != 0)*( af::abs(k2-k2max_af) <= pixel);
+	real -= af::constant(0.5, _nx, _ny)*condition2*scale * af::cos(chi);
+	imag -= af::constant(1.5, _nx, _ny)*condition2*scale * af::sin(chi);
 	_wave_af = af::complex(real, imag);
 
 	/* Fourier transform into real space */
@@ -267,6 +269,7 @@ void CConvergentWave::FormProbe()
 	/* multiply with gaussian in Real Space in order to avoid artifacts */
 	af::array r;
 	if (_isGaussian) {
+		af::array kx, ky;
 		kx = (af::range(_nx) - _nx/2);
 		ky = (af::range(_ny) - _ny/2);
 		kx = af::tile(kx, 1, _ny);
@@ -284,9 +287,9 @@ void CConvergentWave::FormProbe()
 		r = af::sqrt(x*x+y*y);
 		delta = r - af::constant(0.5*_CLA, _nx, _ny);
 		delta += af::constant(edge, _nx, _ny);
-		condition = !(delta >_zero);
+		condition2 = !(delta >_zero);
 		_wave_af *= condition;
-		condition = !(delta < af::constant(-edge, _nx, _ny));
+		condition2 = !(delta < af::constant(-edge, _nx, _ny));
 		scale = (!condition* scale) + (condition*0.5*(af::constant(1, _nx, _ny)-cos(delta*PI/edge)));
 		_wave_af = (!condition* _wave_af) + (condition*scale*_wave_af);
 	}
@@ -300,13 +303,12 @@ void CConvergentWave::FormProbe()
 
 	//sum = af::sum<float_tt>(af::sqrt(af::real(_wave_af)*af::real(_wave_af) + af::imag(_wave_af)*af::imag(_wave_af)));
 	sum = 0.0;
-	af::array real2, imag2;
-	real2 = af::real(_wave_af);
-	imag2 = af::imag(_wave_af);
-	rmin = af::min<float_tt>(real2);
-	rmax = af::max<float_tt>(real2);
-	aimin = af::min<float_tt>(imag2);
-	aimax = af::max<float_tt>(imag2);
+	real = af::real(_wave_af);
+	imag = af::imag(_wave_af);
+	rmin = af::min<float_tt>(real);
+	rmax = af::max<float_tt>(real);
+	aimin = af::min<float_tt>(imag);
+	aimax = af::max<float_tt>(imag);
 
 	m_rmin = rmin;
 	m_rmax = rmax;
