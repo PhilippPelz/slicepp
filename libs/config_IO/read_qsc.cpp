@@ -170,6 +170,16 @@ void BeamConfig::Read(ptree& t){
 
 }
 
+void ScanConfig::Read(ptree& t){
+	Scanx = t.get<int>("scan.scanx");
+	Scany = t.get<int>("scan.scany");
+	xPos = t.get<int>("scan.x Start Position");
+	yPos = t.get<int>("scan.y Start Position");
+	xStep = t.get<int>("scan.xStep");
+	yStep = t.get<int>("scan.yStep");
+	scanType = t.get<int>("scan.scanType");
+}
+
 Config::Config(ptree& t){
 	ExperimentType =static_cast<QSTEM::ExperimentType>(t.get<int>("mode"));
 	nThreads = t.get<int>("nthreads");
@@ -179,6 +189,7 @@ Config::Config(ptree& t){
 	Output =OutputConfig();
 	Wave =WaveConfig();
 	Beam = BeamConfig();
+	Scan = ScanConfig();
 
 
 	Structure.Read(t);
@@ -187,6 +198,7 @@ Config::Config(ptree& t){
 	Output.Read(t);
 	Wave.Read(t);
 	Beam.Read(t);
+	Scan.Read(t);
 }
 
 

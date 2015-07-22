@@ -34,6 +34,8 @@ public:
 	virtual ~CConvergentWave(){};
 	virtual WavePtr Clone();
 	virtual void FormProbe();
+	virtual void FormProbe(int &scanx, int &scany);
+	void ConstructWave();
 protected:
 	// Coefficients to aberration function:
 	float_tt m_a33, m_a31;

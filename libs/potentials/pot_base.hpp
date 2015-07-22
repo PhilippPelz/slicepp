@@ -55,7 +55,8 @@ public:
 	virtual void SetStructure(StructurePtr structure);
 
 //	inline ComplexArray2DView GetSlice(unsigned idx){return _t[boost::indices[idx][range(0,_c->Model.nx)][range(0,_c->Model.ny)]];}
-	af::array GetSlice(unsigned idx);
+	virtual af::array GetSlice(unsigned idx);
+	virtual af::array ManagePotentialSlice(af::array slice, int startx, int starty, int nx, int ny);
 protected:
 	CPotential();
 	virtual void SliceSetup();

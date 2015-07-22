@@ -27,7 +27,6 @@ PersistenceManager::~PersistenceManager() {
 	delete _info;
 }
 void PersistenceManager::SaveProbe(ComplexArray2DPtr a) {
-
 	_probe = ComplexArray2D(a);
 }
 
@@ -40,8 +39,8 @@ void PersistenceManager::SaveProbe(af::array wave) {
 void PersistenceManager::SaveWaveAfterTransmit(ComplexArray2DPtr a, int slice) {
 
 #pragma omp parallel for
-	for (int i = 0; i < _c->Model.nx; i++)
-		for (int j = 0; j < _c->Model.ny; j++) {
+	for (int i = 0; i < a.size(); i++)
+		for (int j = 0; j < a.num_elements()/a.size(); j++) {
 			_waveSlicesAfterTransmit[slice][i][j] = a[i][j];
 		}
 }
@@ -54,8 +53,8 @@ void PersistenceManager::SaveWaveAfterTransform(ComplexArray2DPtr a,
 		int slice) {
 
 #pragma omp parallel for
-	for (int i = 0; i < _c->Model.nx; i++)
-		for (int j = 0; j < _c->Model.ny; j++) {
+	for (int i = 0; i < a.size(); i++)
+		for (int j = 0; j < a.num_elements()/a.size(); j++) {
 			_waveSlicesAfterFT[slice][i][j] = a[i][j];
 		}
 }
@@ -68,8 +67,8 @@ void PersistenceManager::SaveWaveAfterPropagation(ComplexArray2DPtr a,
 		int slice) {
 
 #pragma omp parallel for
-	for (int i = 0; i < _c->Model.nx; i++)
-		for (int j = 0; j < _c->Model.ny; j++) {
+	for (int i = 0; i < a.size(); i++)
+		for (int j = 0; j < a.num_elements()/a.size(); j++) {
 			_waveSlicesAfterProp[slice][i][j] = a[i][j];
 		}
 }
@@ -83,8 +82,8 @@ void PersistenceManager::SaveWaveAfterPropagation(af::array wave, int slice) {
 void PersistenceManager::SaveWaveAfterSlice(ComplexArray2DPtr a, int slice) {
 
 #pragma omp parallel for
-	for (int i = 0; i < _c->Model.nx; i++)
-		for (int j = 0; j < _c->Model.ny; j++) {
+	for (int i = 0; i < a.size(); i++)
+		for (int j = 0; j < a.num_elements()/a.size(); j++) {
 			_waveSlicesAfterSlice[slice][i][j] = a[i][j];
 		}
 }
@@ -143,6 +142,20 @@ void PersistenceManager::InitStorage() {
 	_projectedPotential.resize(e2);
 }
 
+void PersistenceManager::ResizeStorage(int xdim, int ydim) {
+	auto e3 = boost::extents[_c->Model.nSlices][xdim][ydim];
+	auto e2 = boost::extents[xdim][ydim];
+	_potential.resize(e3);
+	_waveSlicesAfterSlice.resize(e3);
+	_waveSlicesAfterProp.resize(e3);
+	_waveSlicesAfterFT.resize(e3);
+	_waveSlicesAfterTransmit.resize(e3);
+	_probe.resize(e2);
+	_projectedPotential.resize(e2);
+}
+
+
+
 void PersistenceManager::StoreToDisc() {
 	_file.SaveComplexArray2D(_probe, "probe");
 	_file.SaveComplexArray2D(_projectedPotential, "projectedPotential");
@@ -151,7 +164,6 @@ void PersistenceManager::StoreToDisc() {
 	_file.SaveComplexArray3D(_waveSlicesAfterProp, "waveSlicesAfterProp");
 	_file.SaveComplexArray3D(_waveSlicesAfterSlice, "waveSlicesAfterSlice");
 	_file.SaveComplexArray3D(_potential, "potentialSlices");
-	af::deviceGC();
 }
 } /* namespace QSTEM */
 

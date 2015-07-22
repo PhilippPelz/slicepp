@@ -44,6 +44,8 @@ CBaseWave::CBaseWave(const ConfigPtr& c,const PersistenceManagerPtr& p) :
 	m_dy = c->Model.dy;
 	m_v0 = c->Beam.EnergykeV;
 	m_realSpace = true;
+	m_detPosX = c->Scan.xPos;
+	m_detPosY = c->Scan.yPos;
 	// TODO: where does this belong?
 	//m_electronScale = m_beamCurrent*m_dwellTime*MILLISEC_PICOAMP;
 	Initialize(".img", ".img");
@@ -136,11 +138,6 @@ void CBaseWave::Initialize(std::string input_ext, std::string output_ext)
 
 void CBaseWave::InitializeKVectors()
 {
-	m_kx(_nx);
-	m_kx2(_nx);
-	m_ky(_ny);
-	m_ky2(_ny);
-	m_k2(_nx, _ny);
 
 	float_tt ax = _config->Model.dx*_nx;
 	float_tt by = _config->Model.dy*_ny;
@@ -161,6 +158,7 @@ void CBaseWave::InitializeKVectors()
 	_condition = (m_k2 < _k2max);
 	_condition = fftShift(_condition);
 }
+
 void  CBaseWave::GetExtents(int& nx, int& ny) const{
 	nx = _nx;
 	ny = _ny;
@@ -175,6 +173,18 @@ void CBaseWave::FormProbe(){
 	_backward = fftwpp::fft2d(_nx,_ny,FFTW_BACKWARD);
 	InitializeKVectors();
 }
+
+void CBaseWave::FormProbe(int &scanx, int &scany){
+	_nx = _config->Scan.Scanx;
+	_ny = _config->Scan.Scany;
+	scanx = _nx;
+	scany = _ny;
+	_zero = af::constant(0, _nx, _ny);
+	_wave_af = af::complex(_zero, _zero);
+	_wave.resize(boost::extents[_nx][_ny]);
+	InitializeKVectors();
+}
+
 void CBaseWave::DisplayParams()
 {
 	BOOST_LOG_TRIVIAL(info) <<
@@ -219,6 +229,13 @@ void CBaseWave::GetPositionOffset(int &x, int &y) const
 	x=m_detPosX;
 	y=m_detPosY;
 }
+
+void CBaseWave::SetPositionOffset(int x, int y)
+{
+	m_detPosX = x;
+	m_detPosY = y;
+}
+
 
 void CBaseWave::GetK2()
 {

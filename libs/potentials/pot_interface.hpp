@@ -56,6 +56,7 @@ public:
 	virtual af::array GetSlice(unsigned idx) =0;
 	virtual complex_tt GetSlicePixel(unsigned iz, unsigned ix, unsigned iy)=0;
 	virtual void SetStructure(StructurePtr structure)=0;
+	virtual af::array ManagePotentialSlice(af::array slice, int startx, int starty, int nx, int ny){};
 	virtual ~IPotential(){};
 protected:
 	IPotential(){};

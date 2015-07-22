@@ -48,6 +48,7 @@ public:
 	void GetSizePixels(int &x, int &y) const ;
 	void GetResolution(float_tt &x, float_tt &y) const ;
 	void GetPositionOffset(int &x, int &y) const;
+	void SetPositionOffset(int x, int y);
 	virtual void GetK2();
 	inline float_tt GetVoltage()  const {return m_v0;}
 	inline float_tt GetWavelength()  const {return m_wavlen;}
@@ -57,6 +58,7 @@ public:
 
 	inline af::array GetPixelIntensity() const {return af::real(_wave_af)*af::real(_wave_af) + af::imag(_wave_af)*af::imag(_wave_af);}
 	inline af::array GetWaveAF() const {return  _wave_af;}
+	inline af::array GetProbe() const {return  _probe;}
 
 	void WriteBeams(int absoluteSlice);
 	float_tt GetIntegratedIntensity() const ;
@@ -64,6 +66,7 @@ public:
 	virtual ~CBaseWave();
 	virtual WavePtr Clone()=0;
 	virtual void FormProbe();
+	virtual void FormProbe(int &scanx, int &scany);
 	virtual void GetExtents(int& nx, int& ny) const;
 	virtual void Transmit(af::array t);
 	virtual void PropagateToNextSlice();
@@ -74,7 +77,7 @@ public:
 	virtual void ApplyTransferFunction();
 protected:
 	ComplexArray2D _wave;
-	af::array _prop, _wave_af;
+	af::array _prop, _wave_af, _probe;
 	af::array _condition, _zero; //for propagation
 	std::vector<float_tt> m_propxr, m_propxi, m_propyr, m_propyi;
 	bool m_realSpace;

@@ -104,6 +104,7 @@ void Bootstrapper::RegisterExperimentTypes(){
 	_experimentFactory[ExperimentType::CBED] = boost::factory<CoherentCBED*>();
 	_experimentFactory[ExperimentType::STEM] = boost::factory<CExperimentSTEM*>();
 	_experimentFactory[ExperimentType::TEM] = boost::factory<CoherentTEM*>();
+	_experimentFactory[ExperimentType::PTYC] = boost::factory<Ptychograph*>();
 }
 void Bootstrapper::RegisterPotentialTypes(){
 	_potentialFactory["3DFFT"]= boost::factory<C3DFFTPotential*>();

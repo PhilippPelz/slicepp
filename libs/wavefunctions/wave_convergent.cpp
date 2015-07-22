@@ -152,6 +152,16 @@ void CConvergentWave::DisplayParams()
 void CConvergentWave::FormProbe()
 {
 	CBaseWave::FormProbe();
+	ConstructWave();
+}  /* end probe() */
+
+void CConvergentWave::FormProbe(int &scanx, int &scany)
+{
+	CBaseWave::FormProbe(scanx, scany);
+	ConstructWave();
+}
+
+void CConvergentWave::ConstructWave(){
 	unsigned iy, ixmid, iymid;
 	float_tt rmin, rmax, aimin, aimax;
 	float_tt k2max, alpha;
@@ -314,9 +324,10 @@ void CConvergentWave::FormProbe()
 	m_rmax = rmax;
 	m_aimin = aimin;
 	m_aimax = aimax;
+	_probe = af::array(_wave_af);
 
 	BOOST_LOG_TRIVIAL(info) << format("wave value range (%f .. %f,i %f ... %f)") % rmin % rmax % aimin % aimax;
 	/**********************************************************/
-	}  /* end probe() */
+}
 
 } // end namespace QSTEM

@@ -48,6 +48,7 @@ public:
 	}
 	virtual ~IWave(){};
 	virtual void FormProbe()=0;
+	virtual void FormProbe(int &scanx, int &scany) = 0;
 	virtual void DisplayParams()=0;
 	virtual void ToRealSpace()=0;
 	virtual void ToFourierSpace()=0;
@@ -56,10 +57,12 @@ public:
 	virtual WavePtr Clone()=0;
 	virtual ComplexArray2D GetWave() const = 0;
 	virtual af::array GetWaveAF() const = 0;
+	virtual af::array GetProbe() const = 0;
 	virtual void GetSizePixels(int &x, int &y) const =0;
 	virtual void GetExtents(int& nx, int& ny) const =0;
 	virtual void GetResolution(float_tt &x, float_tt &y) const =0;
 	virtual void GetPositionOffset(int &x, int &y) const =0;
+	virtual void SetPositionOffset(int x, int y)=0;
 	virtual void GetK2() =0;
 	virtual float_tt GetVoltage()  const =0;
 	virtual float_tt GetWavelength()  const =0;

@@ -163,6 +163,12 @@ public:
 	virtual void Read(ptree& t);
 };
 
+class DLL_EXPORT ScanConfig : IPropertyTreeReader{
+public:
+	int Scanx, Scany, xPos, yPos, xStep, yStep, scanType;
+	virtual void Read(ptree& t);
+};
+
 class DLL_EXPORT Config{
 public:
 	Config():
@@ -178,6 +184,7 @@ public:
 	OutputConfig Output;
 	WaveConfig Wave;
 	BeamConfig Beam;
+	ScanConfig Scan;
 
 	//virtual ExperimentType ExperimentType() = 0;
 	//virtual PrintLevel PrintLevel() = 0;

@@ -488,6 +488,10 @@ af:: array CPotential::GetSlice(unsigned idx){
 	return _t_af[idx];
 }
 
+af::array CPotential::ManagePotentialSlice(af::array slice, int startx, int starty, int nx, int ny){
+	return slice(af::seq(startx, startx + nx - 1), af::seq(starty, starty + ny - 1));
+}
+
 void CPotential::ResizeSlices() {
 }
 

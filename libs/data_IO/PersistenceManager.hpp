@@ -38,6 +38,7 @@ public:
 	void Save2DDataSet(af::array data, string name);
 	void StoreToDisc();
 	void InitStorage();
+	void ResizeStorage(int xdim, int ydim);
 	virtual ~PersistenceManager();
 	bool potSaved;
 protected:
