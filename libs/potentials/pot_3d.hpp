@@ -15,7 +15,7 @@ public:
   //virtual void makeSlices(int nlayer, char *fileName, atom *center);
   void CenterAtomZ(std::vector<atom>::iterator &atom, float_tt &z);
   bool CheckAtomZInBounds(float_tt atomZ);
-  virtual void AddAtomToSlices(atom& atom,  float_tt atomX, float_tt atomY, float_tt atomZ);
+  virtual void AddAtomToSlices(atom& atom );
   void _AddAtomRealSpace(atom &atom,
                          float_tt atomBoxX, unsigned ix,
                          float_tt atomBoxY, unsigned iy,
@@ -25,6 +25,8 @@ protected:
   virtual void ComputeAtomPotential(int Znum);
   virtual void SaveAtomicPotential(int znum);
   virtual void SliceSetup();
+
+  float_tt _ddz;
 
   friend class CPotFactory;
   // Create an instance of this class, wrapped in a shared ptr

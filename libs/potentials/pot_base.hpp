@@ -17,11 +17,12 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../stemtypes_fftw3.hpp"
+#include "stemtypes_fftw3.hpp"
 #include "structure_IO/crystal.hpp"
 #include "scatfactsRez.hpp"
-#include <data_IO/PersistenceManager.hpp>
+#include "data_IO/PersistenceManager.hpp"
 #include "pot_interface.hpp"
+
 #include <map>
 
 #ifndef POTENTIAL_BASE_H
@@ -49,9 +50,7 @@ public:
 	virtual void CenterAtomZ(atom& atom, float_tt &z);
 	virtual void DisplayParams();
 	virtual void MakeSlices(superCellBoxPtr info);
-	virtual void Refresh();
 	virtual void ReadPotential(std::string &fileName, unsigned subSlabIdx);
-	virtual void SetStructure(StructurePtr structure);
 
 	inline ComplexArray2DView GetSlice(unsigned idx){return _t[boost::indices[idx][range(0,_c->Model.nx)][range(0,_c->Model.ny)]];}
 protected:
@@ -59,33 +58,47 @@ protected:
 	virtual void SliceSetup();
 	void ResizeSlices();
 	void MakePhaseGratings();
-	void BandlimitTransmissionFunction();
 	void ReadSlice(const std::string &fileName, ComplexArray2DView slice, unsigned idx);
+	void SetScatteringFactors(float_tt kmax);
 
-	virtual void AddAtomToSlices(atom& atom, float_tt atomX, float_tt atomY, float_tt atomZ)=0;
+	virtual void AddAtomToSlices(atom& atom)=0;
 	virtual void ComputeAtomPotential(int znum)=0;
 	virtual void SaveAtomicPotential(int znum)=0;
+	virtual void CleanUp(){};
 
 	StructureBuilderPtr _sb;
 	ComplexArray3D _t;
 
-	float_tt _ddx, _ddy, _ddz;   // oversampled resolutions
-	float_tt _dkx,_dky, _dkz,_kmax2;
+	// oversampled resolutions
+	float_tt _ddx, _ddy;
+	float_tt _dkx,_dky, _dkz,_kmax,_kmax2;
+	// total potential thickness
 	float_tt _totalThickness;
-	float_tt _dr, _atomRadius2;
+	// step width in which radial V(r,z) is defined
+	float_tt _dr;
+	float_tt _atomRadius2;
 	float_tt _offsetX, _offsetY;
-	int _iRadX, _iRadY, _iRadZ, _iRad2;
-	int _nx,_ny;
+	// atom radius in units of dx
+	int _nRadX;
+	// atom radius in units of dy
+	int _nRadY;
+	// atom radius in units of dz
+	int _nRadZ;
+	// transverse squared atom radius
+	int _nRad2Trans;
+	// number of total potential sampling points in x
+	int _ndiaAtomX;
+	// number of total potential sampling points in y
+	int _ndiaAtomY;
 	int _boxNx, _boxNy, m_boxNz;
-	int m_scatFactor = 0 ;  // TODO: NOT USED YET The scattering factor type.  One of: 0 (Doyle-Turner); 1 (Wieck-Kohl); 2 (Custom)
-
+	// atom radius in units of the potential sampling
+	unsigned _nrAtomTrans ;
 	std::vector<float_tt> _sliceThicknesses;
 	std::vector<float_tt> _slicePos;
 
 	float_tt sfLUT(float_tt s,int atKind);
 	void splinh( float_tt x[], float_tt y[],  std::vector<float_tt>& b,std::vector<float_tt>& c,std::vector<float_tt>& d, int n);
-	float_tt seval( float_tt *x, float_tt *y,std::vector<float_tt>& b,std::vector<float_tt>& c,
-			std::vector<float_tt>& d, int n, float_tt x0 );
+	float_tt seval( float_tt *x, float_tt *y,std::vector<float_tt>& b,std::vector<float_tt>& c, std::vector<float_tt>& d, int n, float_tt x0 );
 };
 }
 

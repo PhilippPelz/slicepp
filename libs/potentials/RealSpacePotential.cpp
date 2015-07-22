@@ -132,11 +132,11 @@ void RealSpacePotential::AddAtomRealSpace(atom& atom, float_tt atomX, float_tt a
 	unsigned iAtomY = (int) floor(atomY / _c->Model.dy);
 	unsigned iAtomZ = (int) floor(atomZ / _sliceThicknesses[0]);
 
-	for (int iax = -_iRadX; iax <= _iRadX; iax++) {
+	for (int iax = -_nRadX; iax <= _nRadX; iax++) {
 		if (!_c->Potential.periodicXY) {
 			if (iax + iAtomX < 0) {
 				iax = -iAtomX;
-				if (abs(iax) > _iRadX)
+				if (abs(iax) > _nRadX)
 					break;
 			}
 			if (iax + iAtomX >= _c->Model.nx)
@@ -144,11 +144,11 @@ void RealSpacePotential::AddAtomRealSpace(atom& atom, float_tt atomX, float_tt a
 		}
 		float_tt x = (iAtomX + iax) * _c->Model.dx - atomX;
 		unsigned ix = (iax + iAtomX + 16 * _c->Model.nx) % _c->Model.nx; /* shift into the positive range */
-		for (int iay = -_iRadY; iay <= _iRadY; iay++) {
+		for (int iay = -_nRadY; iay <= _nRadY; iay++) {
 			if (!_c->Potential.periodicXY) {
 				if (iay + iAtomY < 0) {
 					iay = -iAtomY;
-					if (abs(iay) > _iRadY)
+					if (abs(iay) > _nRadY)
 						break;
 				}
 				if (iay + iAtomY >= _c->Model.ny)

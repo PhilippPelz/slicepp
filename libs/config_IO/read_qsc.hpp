@@ -107,14 +107,15 @@ class DLL_EXPORT StructureConfig : IPropertyTreeReader{
 public:
 	boost::filesystem::path structureFilename;
 	std::vector<int> zoneAxis;
-	int nCellX;
-	int nCellY;
-	int nCellZ;
+	int nCellX=8;
+	int nCellY=8;
+	int nCellZ=8;
 	bool isBoxed,rotateToZoneAxis;
-	float_tt temperatureK, crystalTiltX, crystalTiltY, crystalTiltZ,xOffset,
-	yOffset,zOffset,boxX,boxY,boxZ;
+	float_tt temperatureK, crystalTiltX, crystalTiltY, crystalTiltZ,xOffset=0,
+	yOffset=0,zOffset=0,boxX,boxY,boxZ;
 
 	virtual void Read(ptree& t);
+	bool HasOffset(){return xOffset != 0 || yOffset != 0 || zOffset != 0;};
 };
 class DLL_EXPORT BeamConfig : IPropertyTreeReader{
 public:
@@ -135,9 +136,10 @@ public:
 };
 class DLL_EXPORT PotentialConfig : IPropertyTreeReader{
 public:
-	bool Use3D, UseFFT,    PlotVrr,periodicXY,periodicZ;
+	bool Use3D, UseFFT,    PlotVrr,periodicXY,periodicZ,DoZInterpolation,UseQPotentialOffsets;
 	QSTEM::StructureFactorType StructureFactorType;
-	float_tt AtomRadiusAngstrom;
+	//atom radius in angstrom
+	float_tt ratom;
 	virtual void Read(ptree& t);
 };
 class DLL_EXPORT WaveConfig : IPropertyTreeReader{

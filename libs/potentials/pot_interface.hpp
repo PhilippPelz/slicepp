@@ -20,11 +20,13 @@
 #include "stemtypes_fftw3.hpp"
 #include "config_IO/read_interface.hpp"
 #include "structure_IO/crystal.hpp"
-#include <boost/format.hpp>
-#include <boost/log/trivial.hpp>
 #include "config_IO/read_qsc.hpp"
 #include "data_IO/PersistenceManager.hpp"
+
+#include <boost/format.hpp>
+#include <boost/log/trivial.hpp>
 #include <boost/function.hpp>
+
 using boost::format;
 
 #ifndef POTENTIAL_INTERFACE_H
@@ -48,13 +50,11 @@ public:
 	virtual void MakeSlices(superCellBoxPtr info){};
 	virtual void ReadPotential(std::string &fileName, unsigned subSlabIdx){};
 
-	virtual void Refresh()=0;
 	virtual void GetSizePixels(unsigned &nx, unsigned &ny) const =0;
 	virtual void WriteSlice(unsigned idx, std::string prefix)=0;
 	virtual void WriteProjectedPotential()=0;
 	virtual ComplexArray2DView GetSlice(unsigned idx)=0;
 	virtual complex_tt GetSlicePixel(unsigned iz, unsigned ix, unsigned iy)=0;
-	virtual void SetStructure(StructurePtr structure)=0;
 	virtual ~IPotential(){};
 protected:
 	IPotential(){};

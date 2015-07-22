@@ -75,7 +75,8 @@ void CExperimentSTEM::Run()
 
 
 		if (m_equalDivs) {
-			_pot->Refresh();
+			//TODO removed
+//			_pot->Refresh();
 		}
 
 		/****************************************
@@ -86,7 +87,8 @@ void CExperimentSTEM::Run()
 			 * build the potential slices from atomic configuration
 			 ******************************************************/
 			if (!m_equalDivs) {
-				_pot->Refresh();
+				// TODO removed
+//				_pot->Refresh();
 			}
 
 			m_completePixels=0;

@@ -21,10 +21,10 @@
 #define EXPERIMENT_BASE_H
 
 #include "experiment_interface.hpp"
-#include "potentials/pot_factory.hpp"
 #include "wavefunctions/wave_interface.hpp"
 #include "structure_IO/crystal.hpp"
 #include "data_IO/PersistenceManager.hpp"
+#include "potentials/pot_interface.hpp"
 #include "fftw++.hpp"
 
 namespace QSTEM
@@ -62,23 +62,14 @@ protected:
     inline void WriteAvgArray(std::string comment="Average Array",
                               std::map<std::string, double>params = std::map<std::string, double>())
     {
-//        std::vector<unsigned> position;
-//        _WriteAvgArray(avgFilePrefix, comment, params, position);
     }
     inline void WriteAvgArray(unsigned navg, std::string comment="Average Array",
                               std::map<std::string, double>params = std::map<std::string, double>())
     {
-//        std::vector<unsigned>position(1);
-//        position[0]=navg;
-//        _WriteAvgArray(avgFilePrefix, comment, params, position);
     }
     inline void WriteAvgArray(unsigned posX, unsigned posY, std::string comment="Average Array",
                               std::map<std::string, double>params = std::map<std::string, double>())
     {
-//        std::vector<unsigned>position(2);
-//        position[0]=posX;
-//        position[1]=posY;
-//        _WriteAvgArray(avgFilePrefix, comment, params, position);
     }
 
     void fft_normalize(WavePtr wave);
@@ -87,12 +78,14 @@ protected:
     unsigned m_avgRuns, _runCount;  // number of runs to average; runs currently averaged
     unsigned m_printLevel;
 
-    boost::filesystem::path m_outputLocation;
-
     ConfigPtr _c;
-    StructureBuilderPtr _structureBuilder;  // The structure of the sample (atom positions)
-    WavePtr _wave;		   // The electron wave (this may be copied for multiprocessing)
-    PotPtr _pot;      // The sample potential
+    // the electron wave
+    WavePtr _wave;
+    // the sample potential
+    PotPtr _pot;
+    // the structure builder
+    StructureBuilderPtr _structureBuilder;
+    // saving stuff
     PersistenceManagerPtr _persist;
 
     float_tt m_intIntensity;  // Integrated intensity from experiment - if too low,

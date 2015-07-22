@@ -100,8 +100,7 @@ bool C2DPotential::CheckAtomZInBounds(float_tt atomZ)
 }
 
 
-void C2DPotential::AddAtomToSlices(atom& atom, float_tt atomX, float_tt atomY,
-                                               float_tt atomZ)
+void C2DPotential::AddAtomToSlices(atom& atom )
 {
   // Note that if you override this method, you should do the following check to make sure the atom is in bounds.
   // skip atoms that are beyond the cell's boundaries
@@ -112,7 +111,7 @@ void C2DPotential::AddAtomToSlices(atom& atom, float_tt atomX, float_tt atomY,
 //    }
 
   // Calls parent class method, which in turn calls method below after computing ix, iy, iAtomZ
-  AddAtomRealSpace(atom, atomX, atomY, atomZ);
+  AddAtomRealSpace(atom, atom.r[0], atom.r[1], atom.r[2]);
 }
 
 void C2DPotential::_AddAtomRealSpace(atom& atom,

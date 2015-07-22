@@ -26,8 +26,8 @@ namespace QSTEM
 C3DPotential::C3DPotential(const ConfigPtr& c,const PersistenceManagerPtr& p) : RealSpacePotential(c,p )
 {
 	m_sliceStep = 2*_c->Model.nx*_c->Model.ny;
-	m_boxNz = (int)(_c->Potential.AtomRadiusAngstrom/_ddz+2.0);
-	_totalThickness += 2*_c->Potential.AtomRadiusAngstrom;
+	m_boxNz = (int)(_c->Potential.ratom/_ddz+2.0);
+	_totalThickness += 2*_c->Potential.ratom;
 }
 void C3DPotential::ComputeAtomPotential(int Znum){
 
@@ -37,6 +37,7 @@ void C3DPotential::SaveAtomicPotential(int znum){
 }
 void C3DPotential::SliceSetup(){
 	CPotential::SliceSetup();
+	_ddz = _c->Model.dz / (double) OVERSAMPLINGZ;
 }
 void C3DPotential::DisplayParams()
 {
@@ -109,21 +110,14 @@ void C3DPotential::AtomBoxLookUp(complex_tt &val, int Znum, float_tt x, float_tt
 
 bool C3DPotential::CheckAtomZInBounds(float_tt atomZ)
 {
-	/*
-	 * c = the thickness of the current slab.
-	 *
-	 * if the z-position of this atom is outside the potential slab
-	 * we won't consider it and skip to the next
-	 */
-	return ((atomZ + _c->Potential.AtomRadiusAngstrom < _totalThickness) && (atomZ - _c->Potential.AtomRadiusAngstrom + _c->Model.dz >= 0));
+	return ((atomZ + _c->Potential.ratom < _totalThickness) && (atomZ - _c->Potential.ratom + _c->Model.dz >= 0));
 }
 
-void C3DPotential::AddAtomToSlices(atom& atom,
-		float_tt atomX, float_tt atomY, float_tt atomZ)
+void C3DPotential::AddAtomToSlices(atom& atom )
 {
-	if (!_c->Potential.periodicZ && CheckAtomZInBounds(atomZ))
+	if (!_c->Potential.periodicZ && CheckAtomZInBounds( atom.r[2]))
 	{
-		AddAtomRealSpace(atom, atomX, atomY, atomZ);
+		AddAtomRealSpace(atom, atom.r[0],  atom.r[1],  atom.r[2]);
 	}
 }
 
@@ -143,10 +137,10 @@ void C3DPotential::_AddAtomRealSpace(atom &atom,
 	// TODO: iRadZ is also calculated in the base class, one level up.  Which is correct?
 	unsigned iRadZ = (unsigned)(sqrt(_atomRadius2-r2sqr)/_sliceThicknesses[0]+1.0);
 	/* loop through the slices that this atoms contributes to */
-	for (int iaz=-_iRadZ;iaz <=_iRadZ;iaz++) {
+	for (int iaz=-_nRadZ;iaz <=_nRadZ;iaz++) {
 		if (!_c->Potential.periodicZ) {
 			if (iaz+iAtomZ < 0) {
-				if (-iAtomZ <= _iRadZ) iaz = -iAtomZ;
+				if (-iAtomZ <= _nRadZ) iaz = -iAtomZ;
 				else break;
 				if (abs(iaz)>_c->Model.nSlices) break;
 			}

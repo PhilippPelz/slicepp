@@ -145,9 +145,9 @@ void BaseExperiment::SetSliceThickness(superCellBoxPtr b){
 	default:
 		break;
 	}
-	int atomRadiusSlices = ceil(_c->Potential.AtomRadiusAngstrom / _c->Model.dz);
+	int atomRadiusSlices = ceil(_c->Potential.ratom / _c->Model.dz) ;
 	if(_c->Potential.Use3D)
-		_c->Model.nSlices += 2 * atomRadiusSlices;
+		_c->Model.nSlices += 2 * atomRadiusSlices + 2;
 }
 void BaseExperiment::DisplayProgress(int flag)
 {

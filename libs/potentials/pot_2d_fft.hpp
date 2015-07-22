@@ -32,7 +32,7 @@ public:
 
 
 	virtual void MakeSlices(superCellBoxPtr info);
-	virtual void AddAtomToSlices(atom& atom, float_tt atomX, float_tt atomY, float_tt atomZ);
+	virtual void AddAtomToSlices(atom& atom);
 protected:
 	virtual void AddAtomPeriodic(atom& atom,
 			float_tt atomBoxX, int ix,

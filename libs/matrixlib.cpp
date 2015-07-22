@@ -677,7 +677,7 @@ static float_tt sphi_x=0, sphi_y=0, sphi_z=0;
 void rotateMatrix(const FloatArray2D& matrixIn, FloatArray2D& matrixOut, float_tt phi_x, float_tt phi_y, float_tt phi_z) {
 	int i,j,k;
 	static FloatArray2D Mrot(boost::extents[3][3]);
-	std::fill(Mrot.origin(), Mrot.origin() + Mrot.size(), 0);
+	std::fill(Mrot.data(), Mrot.data() + Mrot.size(), 0);
 	Mrot[0][0] = Mrot[1][1] = Mrot[2][2] = 1;
 	std::vector<float_tt>matrixOutTemp(9);
 

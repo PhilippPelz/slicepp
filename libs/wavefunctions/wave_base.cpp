@@ -50,7 +50,7 @@ CBaseWave::CBaseWave(const ConfigPtr& c,const PersistenceManagerPtr& p) :
 void CBaseWave::InitializePropagators()
 {
 	_prop.resize(boost::extents[_nx][_ny]);
-	std::fill(_prop.origin(), _prop.origin() + _prop.size(), complex_tt(0, 0));
+	std::fill(_prop.data(), _prop.data() + _prop.size(), complex_tt(0, 0));
 	float_tt scale = _config->Model.dz * PI * GetWavelength();
 	//t = exp(-i pi lam k^2 dz)
 	for(int ixa = 0; ixa < _nx; ixa++)

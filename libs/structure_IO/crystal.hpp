@@ -23,9 +23,10 @@
 #include "stemtypes_fftw3.hpp"
 #include "config_IO/read_qsc.hpp"
 #include "structure_readers.hpp"
+#include "structure_IO/IStructureBuilder.hpp"
+
 #include <string>
 #include <map>
-#include "structure_IO/IStructureBuilder.hpp"
 #include <armadillo>
 #include <boost/filesystem.hpp>
 
@@ -85,6 +86,7 @@ public:
 	inline unsigned GetNumberOfAtoms(){return _atoms.size();}
 	inline virtual float_tt GetU2(unsigned znum){return m_u2[znum];}
 	inline std::vector<atom> GetUnitCellAtoms(){return _baseAtoms;}
+
 	virtual superCellBoxPtr DisplaceAtoms();
 	virtual superCellBoxPtr Build();
 	virtual void DisplayParams();
@@ -102,11 +104,12 @@ public:
 protected:
 	boost::filesystem::path m_structureFile;
 	bool _fillUnitCell;
-	FloatArray2D _Mm;                     /* metric matrix Mm(ax,by,cz,alpha,beta,gamma).  Used to go from fractional
-                                          coordinates to physical cartesian coordinates.  */
-	FloatArray2D m_MmInv;                  /* inverse of metric matrix.  Used to go from physical, cartesian coordinates
-                                          back to fractional coordinates. */
-	float_tt m_ax, m_by, m_cz;           /* lattice parameters */
+	// unit cell matrix multiply by this to go from fractional to cartesian
+	FloatArray2D _Mm;
+	// inverse of unit cell matrix, got back to fractional coordinates
+	FloatArray2D m_MmInv;
+	// lattice parameters
+	float_tt m_ax, m_by, m_cz;
 	float_tt m_cAlpha, m_cBeta, m_cGamma;
 	float_tt _maxX, _minX;
 	float_tt _maxY, _minY;
@@ -114,11 +117,11 @@ protected:
 
 	bool m_adjustCubeSize;
 	float_tt _offsetX, _offsetY;
-	float_tt m_ctiltx, m_ctilty, m_ctiltz;  /* crystal tilt in mrad */
-	unsigned m_nCellX, m_nCellY, m_nCellZ;  /* number of unit cells in x-y-z dir*/
 	float_tt m_wobble_temp_scale;
-	std::map<unsigned, float_tt> m_u2;  /* (current) rms displacement of atoms */
-	std::map<unsigned, unsigned> m_u2Count; /* count of atoms that have been displaced.  Used for computing m_u2avg. */
+	/* (current) rms displacement of atoms */
+	std::map<unsigned, float_tt> m_u2;
+	/* count of atoms that have been displaced.  Used for computing m_u2avg. */
+	std::map<unsigned, unsigned> m_u2Count;
 
 	boost::filesystem::path m_phononFile;
 	StructureWriterPtr _structureWriter;

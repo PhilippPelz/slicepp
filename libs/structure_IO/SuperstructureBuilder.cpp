@@ -114,7 +114,7 @@ superCellBoxPtr SuperstructureBuilder::Build(){
 
 		}
 	}
-	if (0) { // (moldyFlag) {
+	if (0) {
 		///////////////////////////////////////////////////////////////
 		// write Moldy input file, without presence of amorphous phase:
 		sprintf(moldyName,"%s",datFileName);
@@ -129,27 +129,12 @@ superCellBoxPtr SuperstructureBuilder::Build(){
 		// superCell2Moldy(fp,superCell);
 		fclose(mainfp);
 	} // end of: if moldyFlag ...
-//	strcpy(outFileName,datFileName);
-
-	// atomPtr = readUnitCell(&natoms,fileName,&muls);
-	// writePDB(atomPtr,nat  /* reset the input file and advance to the next crystal row */
-
-//	str = strchr(outFileName,'.');
-//	if (str == NULL) str=outFileName+strlen(outFileName);
-//	sprintf(str,".cfg");
-	//		muls->ax = (float)superCell.ax;
-	//		muls->by = (float)superCell.by;
-	//		muls->c	= (float)superCell.cz;
 
 	removeVacancies(_superCell->atoms);
 
-	//		printf("will write cfg file to %s\n",outFileName);
-	//		writeCFG(superCell.atoms, superCell.natoms, outFileName, muls);
-	//		printf("wrote cfg file to %s\n",outFileName);
-
 	/**************************************************************
 	 * find the charge for the Y-atoms, in order to remain neutral:
-	 */
+	 ***************************************************************/
 	charge = 0.0;
 	if (0) {
 		//			for (ak=0;ak<muls->atomKinds;ak++) {
@@ -168,8 +153,11 @@ superCellBoxPtr SuperstructureBuilder::Build(){
 		//			}
 	}
 	else {
-		for (j=0;j<_superCell->atoms.size();j++) {
-			charge += _superCell->atoms[j].q*_superCell->atoms[j].occ;
+		for (auto& a : _superCell->atoms) {
+			charge += a.q*a.occ;
+			if(_c->Potential.Use3D){
+				a.r[2] += _c->Potential.ratom;
+			}
 		}
 	}
 	BOOST_LOG_TRIVIAL(info) << format("Total charge: %g, i.e. %g %s") %charge%(int)abs(charge)%((charge > 0) ? "holes" : "electrons");
@@ -628,6 +616,8 @@ void SuperstructureBuilder::makeSuperCell(){
 
 									if (dxs*dxs+dys*dys+dzs*dzs < grains[i].sphereRadius*grains[i].sphereRadius) {
 										_superCell->atoms.push_back(at);
+										_superCell->zNumIndices[at.Znum].push_back(_superCell->atoms.size());
+										for(auto visitor : _atomVisitors) visitor(at);
 //										BOOST_LOG_TRIVIAL(info)<< format("atom %d in sphere: (%3.3f,%3.3f,%3.3f)") % _superCell->atoms.size() % at.r[0]%at.r[1]%at.r[2];
 									}
 								}
@@ -643,6 +633,8 @@ void SuperstructureBuilder::makeSuperCell(){
 									}
 									if (isIn) {
 										_superCell->atoms.push_back(at);
+										_superCell->zNumIndices[at.Znum].push_back(_superCell->atoms.size());
+										for(auto visitor : _atomVisitors) visitor(at);
 //										BOOST_LOG_TRIVIAL(info)<< format("atom %d in grain: (%3.3f,%3.3f,%3.3f)") % _superCell->atoms.size() % at.r[0]%at.r[1]%at.r[2];
 									}
 								}
@@ -811,6 +803,8 @@ void SuperstructureBuilder::makeAmorphous(){
 				a.r[1] = amorphCell[iz].r[1];
 				a.r[2] = amorphCell[iz].r[2];
 				_superCell->atoms.push_back(a);
+				_superCell->zNumIndices[a.Znum].push_back(_superCell->atoms.size());
+				for(auto visitor : _atomVisitors) visitor(a);
 			}
 		} /* end of if amorph,i.e. crystalline */
 	} /* g=0..nGrains .. */
@@ -954,6 +948,7 @@ void SuperstructureBuilder::makeSpecial(int distPlotFlag) {
 					a.Znum = Znum;
 					a.r = arma::vec({x,y,z});
 					_superCell->atoms.push_back(a);
+					_superCell->zNumIndices[a.Znum].push_back(_superCell->atoms.size());
 
 					for (auto& p: grains[g].planes) {
 						d = findLambda(&p,a.r.mem,1);

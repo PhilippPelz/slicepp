@@ -11,6 +11,8 @@
 #include "config_IO/read_qsc.hpp"
 #include "structureInterface.hpp"
 
+#include<list>
+
 namespace QSTEM {
 
 class IStructureBuilder {
@@ -24,10 +26,13 @@ public:
 	virtual void DisplayParams()=0;
 	virtual void SetSliceThickness(ModelConfig& mc)=0;
 	virtual void SetResolution(ModelConfig& mc, const PotentialConfig pc)=0;
+	// Register a function that is called on every atom when it has its final position in the sample
+	void RegisterAtomVisitor(boost::function<void(const atom& a)>);
 protected:
 	IStructureBuilder(){};
 	StructureReaderPtr _r;
 	ConfigPtr _c;
+	std::list<boost::function<void(const atom& a)>> _atomVisitors;
 };
 typedef boost::shared_ptr<IStructureBuilder> StructureBuilderPtr;
 typedef boost::function<IStructureBuilder*(StructureReaderPtr& r,const ConfigPtr& c) > structureBuilderCreator;

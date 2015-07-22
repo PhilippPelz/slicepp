@@ -87,7 +87,9 @@ void PotentialConfig::Read(ptree& t){
 	periodicXY=t.get<bool>("model.potential.periodicXY");
 	periodicZ=t.get<bool>("model.potential.periodicZ");
 	StructureFactorType  = static_cast<QSTEM::StructureFactorType>(t.get<int>("model.potential.structureFactors"));
-	AtomRadiusAngstrom=t.get<float_tt>("model.potential.atomRadiusAngstrom");
+	ratom=t.get<float_tt>("model.potential.atomRadiusAngstrom");
+	DoZInterpolation = t.get<bool>("model.potential.DoZInterpolation");
+	UseQPotentialOffsets = t.get<bool>("model.potential.UseQPotentialOffsets");
 }
 void OutputConfig::Read(ptree& t){
 	LogLevel=t.get<int>("output.loglevel");

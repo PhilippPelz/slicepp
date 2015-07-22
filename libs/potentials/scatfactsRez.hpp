@@ -18,6 +18,8 @@ QSTEM - image simulation for TEM/STEM/CBED
 */
 
 // Table of scattering factors from Rez et al., generated from files sent by P. Rez:
+// Rez, D., P. Rez, and I. Grant. “Dirac–Fock Calculations of X-Ray Scattering Factors and
+// Contributions to the Mean Inner Potential for Electron Scattering.” Acta Crystallographica Section A Foundations of Crystallography 50, no. 4 (July 1, 1994): 481–97. doi:10.1107/S0108767393013200.
 
 #ifndef SCATFACTS_REZ_H
 #define SCATFACTS_REZ_H
@@ -25,7 +27,7 @@ QSTEM - image simulation for TEM/STEM/CBED
 #define N_ELEM 93
 #define N_SF 123
 
-#include "../stemtypes_fftw3.hpp"
+#include "stemtypes_fftw3.hpp"
 
 namespace QSTEM
 {

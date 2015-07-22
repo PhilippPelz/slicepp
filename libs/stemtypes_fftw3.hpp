@@ -28,8 +28,9 @@ QSTEM - image simulation for TEM/STEM/CBED
 #include <cmath>
 #include <iomanip>
 #include <map>
+#include <list>
 #include <armadillo>
-
+#include <boost/rational.hpp>
 using namespace std;
 
 #define FLOAT_PRECISION 0
@@ -43,7 +44,7 @@ typedef double float_tt;
 
 namespace QSTEM
 {
-
+typedef boost::rational<unsigned> ratio;
 typedef Complex complex_tt;
 typedef std::vector<float_tt> RealVector;
 typedef std::vector<complex_tt> ComplexVector;
@@ -55,6 +56,9 @@ typedef boost::multi_array<float_tt, 2> FloatArray2D;
 typedef ComplexArray3D::index ComplexArray3DIndex;
 typedef boost::multi_array_types::index_range range;
 typedef ComplexArray3D::array_view<2>::type ComplexArray2DView;
+typedef ComplexArray3D::array_view<3>::type ComplexArray3DView;
+typedef FloatArray2D::array_view<2>::type FloatArray2DView;
+typedef FloatArray3D::array_view<3>::type FloatArray3DView;
 typedef boost::multi_array_ref<complex_tt,3> ComplexArray3DPtr;
 typedef boost::multi_array_ref<complex_tt,2> ComplexArray2DPtr;
 
@@ -169,10 +173,16 @@ struct grainBox {
 } ;
 
 struct superCellBox {
-	float_tt cmx,cmy,cmz;  /* fractional center of mass coordinates */
+	// center of mass coordinates
+	float_tt cmx,cmy,cmz;
+	// supercell size
 	float_tt ax,by,cz;
-	std::vector<atom> atoms; /* contains all the atoms within the super cell */
+	// all atoms in the supercell
+	std::vector<atom> atoms;
+	// all unique Z numbers
 	std::vector<int> uniqueatoms;
+	// a map of all indices in [atoms] for a specific Znum
+	std::map<unsigned,std::vector<unsigned>> zNumIndices;
 };
 
 
