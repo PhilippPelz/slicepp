@@ -155,11 +155,6 @@ void CConvergentWave::FormProbe()
 	ConstructWave();
 }  /* end probe() */
 
-void CConvergentWave::FormProbe(int &scanx, int &scany)
-{
-	CBaseWave::FormProbe(scanx, scany);
-	ConstructWave();
-}
 
 void CConvergentWave::ConstructWave(){
 	unsigned iy, ixmid, iymid;

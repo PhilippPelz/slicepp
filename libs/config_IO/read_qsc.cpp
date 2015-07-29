@@ -147,6 +147,8 @@ void WaveConfig::Read(ptree& t){
 	AISaperture=t.get<float_tt>("wave.AISaperture");
 	tiltX=t.get<float_tt>("wave.tiltX");
 	tiltY=t.get<float_tt>("wave.tiltY");
+	nx = t.get<int>("wave.nx");
+	ny = t.get<int>("wave.ny");
 //	posX=t.get<float_tt>("wave.posX");
 //	posY=t.get<float_tt>("wave.posY");
 }
@@ -171,8 +173,7 @@ void BeamConfig::Read(ptree& t){
 }
 
 void ScanConfig::Read(ptree& t){
-	Scanx = t.get<int>("scan.scanx");
-	Scany = t.get<int>("scan.scany");
+
 	xPos = t.get<int>("scan.x Start Position");
 	yPos = t.get<int>("scan.y Start Position");
 	xStep = t.get<int>("scan.xStep");

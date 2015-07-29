@@ -164,8 +164,8 @@ void  CBaseWave::GetExtents(int& nx, int& ny) const{
 	ny = _ny;
 }
 void CBaseWave::FormProbe(){
-	_nx = _config->Model.nx;
-	_ny = _config->Model.ny;
+	_nx = _config->Wave.nx;
+	_ny = _config->Wave.ny;
 	_zero = af::constant(0, _nx, _ny);
 	_wave_af = af::complex(_zero, _zero);
 	_wave.resize(boost::extents[_nx][_ny]);
@@ -174,15 +174,9 @@ void CBaseWave::FormProbe(){
 	InitializeKVectors();
 }
 
-void CBaseWave::FormProbe(int &scanx, int &scany){
-	_nx = _config->Scan.Scanx;
-	_ny = _config->Scan.Scany;
-	scanx = _nx;
-	scany = _ny;
-	_zero = af::constant(0, _nx, _ny);
-	_wave_af = af::complex(_zero, _zero);
-	_wave.resize(boost::extents[_nx][_ny]);
-	InitializeKVectors();
+
+void CBaseWave::ResetProbe(){
+	_wave_af = af::array(_probe);
 }
 
 void CBaseWave::DisplayParams()

@@ -70,6 +70,7 @@ void BaseExperiment::DisplayParams()
 void BaseExperiment::SetResolution(superCellBoxPtr b){
 	float_tt max_x = b->ax, max_y=b->by, max_z=b->cz, zTotal;
 	ModelConfig& mc = _c->Model;
+	WaveConfig& wc = _c->Wave;
 
 	//TODO: nx,ny = integer multiple of # unit cells
 	//TODO: super cell size = N * unit cell size
@@ -125,6 +126,10 @@ void BaseExperiment::SetResolution(superCellBoxPtr b){
 		}
 		break;
 
+	}
+	if (_c->ExperimentType != ExperimentType::PTYC){
+		wc.nx = mc.nx;
+		wc.ny = mc.ny;
 	}
 }
 void BaseExperiment::SetSliceThickness(superCellBoxPtr b){
@@ -226,7 +231,7 @@ void CExperimentBase::ComputeAverageU2()
  */
 
 
-int BaseExperiment::RunMultislice()
+int BaseExperiment::RunMultislice(af::array t_af )
 {
 	int printFlag = 0;
 	int showEverySlice = 1;
@@ -240,7 +245,6 @@ int BaseExperiment::RunMultislice()
 	int nx, ny, xpos,ypos;
 
 	_wave->GetSizePixels(nx, ny);
-	_wave->GetPositionOffset(xpos, ypos);
 
 	printFlag = (_c->Output.LogLevel > 3);
 	fftScale = 1.0 / (nx * ny);
@@ -264,7 +268,7 @@ int BaseExperiment::RunMultislice()
 	BOOST_LOG_TRIVIAL(info) << "Propagating through slices ...";
 	for(islice = 0; islice < _c->Model.nSlices; islice++) {
 
-		_wave->Transmit(_pot->ManagePotentialSlice(_pot->GetSlice(islice), xpos, ypos, nx, ny));
+		_wave->Transmit(t_af.slice(islice));
 //		Transmit(wave, islice);
 		if(_c->Output.SaveWaveAfterTransmit) _persist->SaveWaveAfterTransmit(_wave->GetWaveAF(), islice);
 

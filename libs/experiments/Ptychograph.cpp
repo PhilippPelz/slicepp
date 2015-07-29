@@ -51,7 +51,6 @@ void Ptychograph::Run()
 	double timer,timerTot ;
 	float_tt t=0;
 	FloatArray2D avgPendelloesung(boost::extents[_nbout][_c->Model.nSlices]);
-	int nx, ny;
 	std::map<std::string, double> params;
 	std::vector<unsigned> position(1);         // Used to indicate the number of averages
 	std::vector<std::pair<int, int>> scanPositions;
@@ -65,41 +64,55 @@ void Ptychograph::Run()
 	SetResolution(box);
 	SetSliceThickness(box);
 
-	_wave->FormProbe(nx, ny);
+	_wave->FormProbe();
+	scanPositions = _scan->GetScanPositions();
 //	_persist->InitStorage();
-	_persist->ResizeStorage(nx, ny);
+	_persist->ResizeStorage(_c->Wave.nx, _c->Wave.ny);
 	_wave->InitializePropagators();
 	_wave->DisplayParams();
 	_pot->DisplayParams();
-	scanPositions = _scan->GetScanPositions();
 	for (_runCount = 0;_runCount < _c->Model.TDSRuns;_runCount++) {
 		auto box = _structureBuilder->DisplaceAtoms();
+		//PotPtr p  _pot ;
+		//p ->MakeSlices(box);
+
 		_pot->MakeSlices(box);
-		if (_c->Output.saveProbe) _persist->SaveProbe(_wave->GetWaveAF());
-		RunMultislice();
-		if (_runCount == 0) {
-			if (_lbeams) {
-				for (iy=0;iy<_c->Model.nSlices ;iy++) {
-					for (ix=0;ix<_nbout;ix++) {
-						avgPendelloesung[ix][iy] = _pendelloesung[ix][iy];
+		if (_c->Output.saveProbe) _persist->SaveProbe(_wave->GetProbe());
+		BOOST_LOG_TRIVIAL(info) << format("Calculating for %.1f position(s)") % scanPositions.size();
+		for(std::vector<std::pair<int, int>>::size_type i = 0; i != scanPositions.size(); i++) {
+			_wave->SetPositionOffset(scanPositions[i].first, scanPositions[i].second);
+
+			int xp = scanPositions[i].first, yp = scanPositions[i].second;
+			//  _pot = p->GetSubPotential(xp,yp,size)
+			// auto e = CoherentSinglePositionExperiment(p,...);
+			// e.Run();
+			BOOST_LOG_TRIVIAL(info) << format("\n==== Position %.lf (%.lf, %.lf) ====") % (i + 1) % xp % yp;
+			//RunMultislice(p->GetSubPotential(xp,yp,size));
+			RunMultislice(_pot->GetSubPotential(xp, yp, _c->Wave.nx, _c->Wave.ny));
+			if (_runCount == 0) {
+				if (_lbeams) {
+					for (iy=0;iy<_c->Model.nSlices ;iy++) {
+						for (ix=0;ix<_nbout;ix++) {
+							avgPendelloesung[ix][iy] = _pendelloesung[ix][iy];
+						}
 					}
 				}
 			}
-		}
-		else {
-			m_storeSeries = 1;
-			if (m_saveLevel == 0)	m_storeSeries = 0;
-			else if (_runCount % m_saveLevel != 0) m_storeSeries = 0;
-			if (m_storeSeries)
-			{
-				params["1/Wavelength"] = 1.0/_wave->GetWavelength();
-				WriteAvgArray(_runCount+1, "Averaged Diffraction pattern, unit: 1/A", params);
+			else {
+				m_storeSeries = 1;
+				if (m_saveLevel == 0)	m_storeSeries = 0;
+				else if (_runCount % m_saveLevel != 0) m_storeSeries = 0;
+				if (m_storeSeries)
+				{
+					params["1/Wavelength"] = 1.0/_wave->GetWavelength();
+					WriteAvgArray(_runCount+1, "Averaged Diffraction pattern, unit: 1/A", params);
+				}
 			}
-
+			_wave->ResetProbe();
+			_persist->StoreToDiscMP(i + 1, xp, yp);
 		}
 	DisplayProgress(1);
 	BOOST_LOG_TRIVIAL(info) << "Saving to disc...";
-	_persist->StoreToDisc();
 	BOOST_LOG_TRIVIAL(info) << "Finished saving...";
 
 	}

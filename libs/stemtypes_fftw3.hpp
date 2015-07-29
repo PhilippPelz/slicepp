@@ -63,13 +63,13 @@ typedef double float_tt;
 #include <armadillo>
 #include <cfloat>
 #include <arrayfire.h>
-
+#include <boost/rational.hpp>
 using namespace std;
 
 
 namespace QSTEM
 {
-
+typedef boost::rational<unsigned> ratio;
 typedef Complex complex_tt;
 typedef std::vector<float_tt> RealVector;
 typedef std::vector<complex_tt> ComplexVector;

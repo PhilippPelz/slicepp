@@ -66,7 +66,7 @@ public:
 	virtual ~CBaseWave();
 	virtual WavePtr Clone()=0;
 	virtual void FormProbe();
-	virtual void FormProbe(int &scanx, int &scany);
+	virtual void ResetProbe();
 	virtual void GetExtents(int& nx, int& ny) const;
 	virtual void Transmit(af::array t);
 	virtual void PropagateToNextSlice();

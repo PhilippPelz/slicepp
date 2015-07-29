@@ -43,8 +43,6 @@ void CoherentSinglePositionExperiment::Run()
 	double timer,timerTot ;
 	float_tt t=0;
 	FloatArray2D avgPendelloesung(boost::extents[_nbout][_c->Model.nSlices]);
-	int nx, ny;
-	_wave->GetSizePixels(nx, ny);
 	std::map<std::string, double> params;
 	std::vector<unsigned> position(1);         // Used to indicate the number of averages
 
@@ -66,8 +64,8 @@ void CoherentSinglePositionExperiment::Run()
 	for (_runCount = 0;_runCount < _c->Model.TDSRuns;_runCount++) {
 		auto box = _structureBuilder->DisplaceAtoms();
 		_pot->MakeSlices(box);
-		if (_c->Output.saveProbe) _persist->SaveProbe(_wave->GetWaveAF());
-		RunMultislice();
+		if (_c->Output.saveProbe) _persist->SaveProbe(_wave->GetProbe());
+		RunMultislice(_pot->GetSubPotential(0, 0, _c->Model.nx, _c->Model.ny));
 		if (_runCount == 0) {
 			if (_lbeams) {
 				for (iy=0;iy<_c->Model.nSlices ;iy++) {

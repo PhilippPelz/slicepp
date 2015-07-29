@@ -66,18 +66,6 @@ void CPlaneWave::FormProbe()
 	_probe = af::array(_wave_af);
 }
 
-void CPlaneWave::FormProbe(int &scanx, int &scany)
-{
-	CBaseWave::FormProbe(scanx, scany);
-	float_tt scale = 1/sqrt((float_tt)(_nx*_ny));
-	if ((_config->Wave.tiltX == 0) && (_config->Wave.tiltY == 0)) {
-		af::array theta = af::constant(0, _nx, _ny);
-		_wave_af = scale*af::complex(cos(theta), sin(theta));
-	}
-	else {
-		TiltBeam();
-	}
-}
 
 
 void CPlaneWave::TiltBeam(bool tiltBack)

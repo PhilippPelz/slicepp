@@ -6,6 +6,7 @@
  */
 
 #include "PersistenceManager.hpp"
+#include <string>
 
 namespace QSTEM {
 PersistenceManager::PersistenceManager() :
@@ -98,12 +99,10 @@ void PersistenceManager::SavePotential(ComplexArray3D a) {
 	_potential = a;
 }
 
-void PersistenceManager::SavePotential(std::vector<af::array> data, int nslices) {
+void PersistenceManager::SavePotential(af::array data) {
 	potSaved = true;
-	ComplexArray3D a(boost::extents[nslices][data[0].dims(0)][data[0].dims(1)]);
-	for (int i = 0; i < nslices; i++){
-		data[i].host(a[i].origin());
-	}
+	ComplexArray3D a(boost::extents[data.dims(2)][data.dims(0)][data.dims(1)]);
+	data.host(a.data());
 	SavePotential(a);
 }
 
@@ -165,5 +164,25 @@ void PersistenceManager::StoreToDisc() {
 	_file.SaveComplexArray3D(_waveSlicesAfterSlice, "waveSlicesAfterSlice");
 	_file.SaveComplexArray3D(_potential, "potentialSlices");
 }
+
+void PersistenceManager::StoreToDiscMP(int pos, int x, int y) {
+	std::string info = "_" + std::to_string(pos) + "_(" + to_string(x) + ", " + to_string(y) + ")";
+	if (pos == 1){
+		_file.SaveComplexArray2D(_probe, "probe");
+		_file.SaveComplexArray2D(_projectedPotential, "projectedPotential");
+		_file.SaveComplexArray3D(_waveSlicesAfterTransmit, "waveSlicesAfterTransmit" + info);
+		_file.SaveComplexArray3D(_waveSlicesAfterFT, "waveSlicesAfterFT" + info);
+		_file.SaveComplexArray3D(_waveSlicesAfterProp, "waveSlicesAfterProp" + info);
+		_file.SaveComplexArray3D(_waveSlicesAfterSlice, "waveSlicesAfterSlice" + info);
+		_file.SaveComplexArray3D(_potential, "potentialSlices");
+	}
+	else{
+//		_file.SaveComplexArray3D(_waveSlicesAfterTransmit,"waveSlicesAfterTransmit" + info);
+//		_file.SaveComplexArray3D(_waveSlicesAfterFT, "waveSlicesAfterFT");
+//		_file.SaveComplexArray3D(_waveSlicesAfterProp, "waveSlicesAfterProp" + info);
+		_file.SaveComplexArray3D(_waveSlicesAfterSlice, "waveSlicesAfterSlice" + info);
+	}
+}
+
 } /* namespace QSTEM */
 

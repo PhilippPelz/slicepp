@@ -56,22 +56,23 @@ public:
 
 //	inline ComplexArray2DView GetSlice(unsigned idx){return _t[boost::indices[idx][range(0,_c->Model.nx)][range(0,_c->Model.ny)]];}
 	virtual af::array GetSlice(unsigned idx);
-	virtual af::array ManagePotentialSlice(af::array slice, int startx, int starty, int nx, int ny);
+	virtual af::array GetSubPotential(int startx, int starty, int nx, int ny);
 protected:
 	CPotential();
-	virtual void SliceSetup();
+
 	void ResizeSlices();
 	void MakePhaseGratings();
 	void BandlimitTransmissionFunction();
 	void ReadSlice(const std::string &fileName, ComplexArray2DView slice, unsigned idx);
 
+	virtual void SliceSetup();
 	virtual void AddAtomToSlices(atom& atom, float_tt atomX, float_tt atomY, float_tt atomZ)=0;
 	virtual void ComputeAtomPotential(int znum)=0;
 	virtual void SaveAtomicPotential(int znum)=0;
 
 	StructureBuilderPtr _sb;
 	ComplexArray3D _t;
-	std::vector<af::array> _t_af;
+	af::array _t_af;
 
 	float_tt _ddx, _ddy, _ddz;   // oversampled resolutions
 	float_tt _dkx,_dky, _dkz,_kmax2;

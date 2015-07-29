@@ -30,13 +30,14 @@ public:
 	void SaveWaveAfterSlice(af::array wave, int slice);
 	void SaveWaveAfterPropagation(af::array wave, int slice);
 	void SavePotential(ComplexArray3D a);
-	void SavePotential(std::vector<af::array> data, int nslices);
+	void SavePotential(af::array data);
 	void SaveProjectedPotential(ComplexArray2DPtr a);
 	void SaveProjectedPotential(af::array data);
 	void Save2DDataSet(ComplexArray2DPtr a, string name);
 	void Save3DDataSet(ComplexArray3DPtr a, string name);
 	void Save2DDataSet(af::array data, string name);
 	void StoreToDisc();
+	void StoreToDiscMP(int pos, int x, int y);
 	void InitStorage();
 	void ResizeStorage(int xdim, int ydim);
 	virtual ~PersistenceManager();

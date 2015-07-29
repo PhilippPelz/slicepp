@@ -144,7 +144,7 @@ default(none)
 
 				// MCS - update the probe wavefunction with its position
 
-				RunMultislice();
+				RunMultislice(_pot->GetSubPotential(0, 0, _c->Wave.nx, _c->Wave.ny));
 
 
 				/***************************************************************

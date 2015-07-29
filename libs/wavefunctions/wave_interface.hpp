@@ -48,7 +48,6 @@ public:
 	}
 	virtual ~IWave(){};
 	virtual void FormProbe()=0;
-	virtual void FormProbe(int &scanx, int &scany) = 0;
 	virtual void DisplayParams()=0;
 	virtual void ToRealSpace()=0;
 	virtual void ToFourierSpace()=0;
@@ -75,6 +74,7 @@ public:
 	virtual void InitializePropagators()=0;
 	virtual void ShiftTo(float_tt x, float_tt y)=0;
 	virtual af::array fftShift(af::array)=0;
+	virtual void ResetProbe()=0;
 protected:
 	PersistenceManagerPtr _persist;
 	ConfigPtr _config;

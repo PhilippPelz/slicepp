@@ -207,23 +207,19 @@ void CPotential::MakeSlices(superCellBoxPtr info) {
 			loadbar(atomsAdded + 1, info->atoms.size());
 
 	}
-	for (int i = 0; i < _c->Model.nSlices; i++){
-		_t_af.push_back(af::array(_c->Model.nx, _c->Model.ny, (afcfloat *)_t[i].origin()));
-	}
+	_t_af = af::array(_c->Model.nx, _c->Model.ny, _c->Model.nSlices, (afcfloat *)_t.data());
+
 	MakePhaseGratings();
 	BandlimitTransmissionFunction();
-
 	time(&time1);
 	BOOST_LOG_TRIVIAL(info)<< format( "%g sec used for real space potential calculation (%g sec per atom)")
 	% difftime(time1, time0)%( difftime(time1, time0) / info->atoms.size());
 
 	if (_c->Output.SavePotential)
-		_persist->SavePotential(_t_af, _c->Model.nSlices);
+		_persist->SavePotential(_t_af);
 	if (_c->Output.SaveProjectedPotential){
 		if(!_persist->potSaved){
-			for (int i = 0; i < _c->Model.nSlices; i++){
-				_t_af[i].host(_t[i].origin());
-			}
+			_t_af.host(_t.data());
 		}
 		WriteProjectedPotential();
 	}
@@ -239,14 +235,10 @@ void CPotential::MakePhaseGratings() {
 	%_t.shape()[0]%scale%mm0%_c->Beam.sigma;
 
 	float_tt minph = 3.1, maxph = 0, minabs = 100, maxabs = 0;
-	for (int i = 0; i < _c->Model.nSlices; i++){
-		_t_af[i] = scale * af::real(_t_af[i]);
-		if (af::max<float_tt>(_t_af[i]) > maxph)
-			maxph = af::max<float_tt>(_t_af[i]);
-		if (af::min<float_tt>(_t_af[i]) < minph)
-			minph = af::min<float_tt>(_t_af[i]);
-		_t_af[i] = af::complex(af::cos(_t_af[i]), af::sin(_t_af[i]));
-	}
+		_t_af = scale * af::real(_t_af);
+		maxph = af::max<float_tt>(_t_af);
+		minph = af::min<float_tt>(_t_af);
+		_t_af = af::complex(af::cos(_t_af), af::sin(_t_af));
 	BOOST_LOG_TRIVIAL(info)<<format("Phase values %g ... %g")%minph%maxph;
 }
 
@@ -479,18 +471,19 @@ float_tt CPotential::seval(float_tt *x, float_tt *y, std::vector<float_tt>& b,
 
 } /* end seval() */
 
+af::array CPotential::GetSubPotential(int startx, int starty, int nx, int ny){
+	return _t_af(af::seq(startx, startx + nx -1), af::seq(starty, starty + ny -1), af::span);
+}
+
 void CPotential::GetSizePixels(unsigned int &nx, unsigned int &ny) const {
 	nx = _c->Model.nx;
 	ny = _c->Model.ny;
 }
 
 af:: array CPotential::GetSlice(unsigned idx){
-	return _t_af[idx];
+	return _t_af(af::span, af::span, idx);
 }
 
-af::array CPotential::ManagePotentialSlice(af::array slice, int startx, int starty, int nx, int ny){
-	return slice(af::seq(startx, startx + nx - 1), af::seq(starty, starty + ny - 1));
-}
 
 void CPotential::ResizeSlices() {
 }

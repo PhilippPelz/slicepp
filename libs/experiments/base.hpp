@@ -44,7 +44,7 @@ public:
 protected:
     virtual void PostSliceProcess(unsigned absoluteSlice) {}; // Called in RunMuls after a slice is transmitted/propagated through.  Override as desired.
     virtual void CollectIntensity(unsigned absoluteSlice)=0;
-    virtual int RunMultislice();
+    virtual int RunMultislice(af::array t_af);
     virtual void AddDPToAvgArray(const WavePtr &wave);
 
     void ReadAvgArray();

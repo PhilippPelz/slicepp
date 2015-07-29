@@ -394,6 +394,8 @@ superCellBoxPtr CrystalBuilder::Build(){
 			for (int j = 0 ; j < _atoms.size(); j++) {
 				_atoms[j].r[0] += _c->Structure.xOffset;
 				_atoms[j].r[1] += _c->Structure.yOffset;
+
+				// TODO CUDA populate std::vector<float> xyz; and std::vector<int> Z;
 			}
 		}
 	} // end of Ncell mode conversion to cartesian coords and tilting.
@@ -793,6 +795,8 @@ void CrystalBuilder::TiltBoxed(int ncoord, bool handleVacancies) {
 						newAtom.q = _baseAtoms[jChoice].q;
 						newAtom.Znum = _baseAtoms[jChoice].Znum;
 						_atoms.push_back(newAtom);
+
+						// TODO populate CUDA xyz and Z
 						BOOST_LOG_TRIVIAL(trace) << format("atom %d: (%3.3f, %3.3f, %3.3f)") % _atoms.size() % newAtom.r[0] % newAtom.r[1] % newAtom.r[2];
 					}
 				}

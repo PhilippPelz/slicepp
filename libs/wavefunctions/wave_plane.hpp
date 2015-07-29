@@ -31,7 +31,6 @@ public:
   CPlaneWave(const ConfigPtr& c,const PersistenceManagerPtr& p);
   CPlaneWave(const CPlaneWave& other);
   virtual void FormProbe();
-  virtual void FormProbe(int &scanx, int &scany);
   void TiltBeam(bool tiltBack=false);
   void TiltBack();
   virtual void DisplayParams();
