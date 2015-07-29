@@ -97,6 +97,8 @@ public:
 
 	std::vector<atom> _baseAtoms; // The atoms read directly from the input file (no alteration)
 	std::vector<atom> _atoms; // The atoms after duplication, tilt, and phonon shaking
+	std::vector<float_tt> _xyzPos
+	std::vector<int> _znums;
 	std::vector<int> _uniqueAtoms;
 	float_tt _sizeX,_sizeY,_sizeZ;
 protected:
