@@ -400,6 +400,7 @@ superCellBoxPtr CrystalBuilder::Build(){
 				_xyzPos.push_back(_atoms[j].r[1]);
 				_xyzPos.push_back(_atoms[j].r[2]);
 				_znums.push_back(_atoms[j].Znum);
+				_occupancy.push_back(_atoms[j].occ);
 			}
 		}
 	} // end of Ncell mode conversion to cartesian coords and tilting.
@@ -416,6 +417,9 @@ superCellBoxPtr CrystalBuilder::Build(){
 	_superCellBox->cmy = boxCenterY;
 	_superCellBox->cmz = boxCenterZ;
 	_superCellBox->uniqueatoms = _uniqueAtoms;
+	_superCellBox->xyzPos = _xyzPos;
+	_superCellBox->znums = _znums;
+	_superCellBox->occupancy = _occupancy;
 	return _superCellBox;
 }
 
@@ -804,6 +808,7 @@ void CrystalBuilder::TiltBoxed(int ncoord, bool handleVacancies) {
 						_xyzPos.push_back(newAtom.r[1]);
 						_xyzPos.push_back(newAtom.r[2]);
 						_znums.push_back(newAtom.Znum);
+						_occupancy.push_back(newAtom.occ);
 						BOOST_LOG_TRIVIAL(trace) << format("atom %d: (%3.3f, %3.3f, %3.3f)") % _atoms.size() % newAtom.r[0] % newAtom.r[1] % newAtom.r[2];
 					}
 				}

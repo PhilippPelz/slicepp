@@ -149,6 +149,7 @@ void WaveConfig::Read(ptree& t){
 	tiltY=t.get<float_tt>("wave.tiltY");
 	nx = t.get<int>("wave.nx");
 	ny = t.get<int>("wave.ny");
+	imPot = t.get<float>("wave.imaginary potential factor");
 //	posX=t.get<float_tt>("wave.posX");
 //	posY=t.get<float_tt>("wave.posY");
 }

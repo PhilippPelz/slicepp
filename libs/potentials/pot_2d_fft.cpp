@@ -96,16 +96,20 @@ void C2DFFTPotential::AddAtomNonPeriodic(atom& atom, float_tt atomBoxX,
 	float_tt s22 = ddx * ddy;
 
 	complex_tt added = complex_tt(0, 0);
-	int iax[iax1 - iax0];
-	int iay[iay1 - iay0];
-#pragma omp parallel
-	for (int i = iax0; i <iax1; i++){
-		iax[i - iax0] = i % _c->Model.nx;
+	ComplexArray2DPtr pot = _atomPot[atom.Znum];
+	for (int iax = iax0; iax < iax1; iax++) { // TODO: should use ix += OVERSAMPLING
+		for (int iay = iay0; iay < iay1; iay++) {
+			int xindex = (iOffsX + OVERSAMPLING * (iax - iax0));
+			int yindex = iOffsY + OVERSAMPLING * (iay-iay0);
+			float_tt vz = (s11 * pot[xindex][yindex]
+						+ s12 * pot[xindex+1][yindex]
+						+ s21 * pot[xindex][yindex+1]
+						+ s22 * pot[xindex+1][yindex+1]).real();
+			_t[iAtomZ][iax % _c->Model.nx][iay %_c->Model.ny] += complex_tt(vz,0);
+
+		}
 	}
-#pragma omp parallel
-	for (int i = iay0; i <iay1; i++){
-		iay[i - iay0] = i % _c->Model.ny;
-	}
+
 
 
 //ComplexArray2D pot = _atomPot[atom.Znum];

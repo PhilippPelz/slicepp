@@ -2,11 +2,11 @@ cmake_minimum_required (VERSION 2.8)
 project (hdf5boost)
 
 set( HDF5_USE_STATIC_LIBRARIES OFF)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC" )
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -std=c++11" )
 find_package(Boost COMPONENTS filesystem system REQUIRED)
 find_package(HDF5 COMPONENTS C CXX HL REQUIRED)
 
-ADD_DEFINITIONS(-std=c++0x)
+ADD_DEFINITIONS(-std=c++11)
 
 add_subdirectory(lib)
 

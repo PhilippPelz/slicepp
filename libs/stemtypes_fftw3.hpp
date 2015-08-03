@@ -101,6 +101,7 @@ typedef boost::multi_array_ref<complex_tt,2> ComplexArray2DPtr;
 #define ELECTRON_CHARGE (1.6021773e-19)
 #define PICO_AMPERE (1e-12/ELECTRON_CHARGE)
 #define MILLISEC_PICOAMP (1e-3*PICO_AMPERE)
+#define EM_SIGMA 7288400
 
 ////////////////////////////////////////////////////////////////
 
@@ -199,6 +200,9 @@ struct superCellBox {
 	float_tt ax,by,cz;
 	std::vector<atom> atoms; /* contains all the atoms within the super cell */
 	std::vector<int> uniqueatoms;
+	std::vector<int> znums;
+	std::vector<float_tt> xyzPos;
+	std::vector<float_tt> occupancy;
 };
 
 
