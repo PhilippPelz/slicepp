@@ -1,0 +1,48 @@
+box: 500 400 110
+
+special: amorphous 0   % random distribution of dopands in 1 nm thick film of anorthite glass
+ 			  
+%     Znum R[A] count concentration (in A^-3, will be used, if count == 0)
+atom: 6   0.77 0     1.084   % C - 1084 atoms per nm^3
+plane: 0 0 00 0 1 0  1 0 0 
+plane: 0 0 30 1 0 0  0 1 0
+
+%crystal: substrate /home/philiipp/projects/slicepp/Examples/cif/Si3N4-beta.cif
+%plane: 0 0 40 0 1 0  1 0 0 
+%plane: 0 0 60 1 0 0  0 1 0
+
+crystal: NP1 /home/philiipp/projects/slicepp/Examples/cif/au.cif % name of first cystal
+sphere: 25 150 150 55
+zoneaxis: 1 0 0
+
+crystal: NP1 /home/philiipp/projects/slicepp/Examples/cif/au.cif % name of first cystal
+sphere: 25 200 200 55
+zoneaxis: 0 1 0
+
+crystal: NP1 /home/philiipp/projects/slicepp/Examples/cif/au.cif % name of first cystal
+sphere: 30 150 250 60
+zoneaxis: 1 2 0
+
+crystal: NP1 /home/philiipp/projects/slicepp/Examples/cif/au.cif % name of first cystal
+sphere: 15 200 300 45
+zoneaxis: 1 1 1
+
+crystal: NP1 /home/philiipp/projects/slicepp/Examples/cif/au.cif % name of first cystal
+sphere: 35 150 350 65
+zoneaxis: 1 1 1
+
+crystal: NP1 /home/philiipp/projects/slicepp/Examples/cif/au.cif % name of first cystal
+sphere: 40 250 125 70
+zoneaxis: 1 1 2
+
+crystal: NP1 /home/philiipp/projects/slicepp/Examples/cif/au.cif % name of first cystal
+sphere: 25 275 200 55
+zoneaxis: 1 0 0
+
+crystal: NP1 /home/philiipp/projects/slicepp/Examples/cif/au.cif % name of first cystal
+sphere: 30 250 275 60
+zoneaxis: 1 1 0
+
+crystal: NP1 /home/philiipp/projects/slicepp/Examples/cif/au.cif % name of first cystal
+sphere: 20 250 350 50
+zoneaxis: 1 0 0

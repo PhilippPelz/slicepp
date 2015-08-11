@@ -69,19 +69,18 @@ BuildLog.htm
 /hdf5boost/*.cmake
 CMakeCache.txt
 generate.stamp*
-
+CMakeFiles
+CMakeScripts
+Makefile
+cmake_install.cmake
+install_manifest.txt
 
 # test files
 CTest*
 
 
-# img results from debug testing
 *.img
-# but include the ones from any testing directory
-#    these are for the unit tests.
-!/tests/data/*.img
-test_bin/Release
-stem3/debug_data/STO_4x4/_0.cfg
-tests/data/test.img
-tests/data/mulswav.img
-tests/data/SrTiO3_test_write_1.cfg
+*.so
+*.o
+*.la
+*.h5
