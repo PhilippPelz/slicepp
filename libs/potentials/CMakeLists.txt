@@ -8,6 +8,8 @@ FILE(GLOB H_FILES "*.hpp")
 FILE(GLOB CU_FILES "*.cu")
 
 SOURCE_GROUP(potentials FILES ${C_FILES} ${H_FILES} ${CU_FILES})
+cuda_add_cufft_to_target(potentials)
+cuda_add_cublas_to_target(potentials)
 
 # Add files from this folder to the list of files for the shared library
 set (LIBS_C_FILES ${LIBS_C_FILES} ${C_FILES} ${CU_FILES} PARENT_SCOPE})

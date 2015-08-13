@@ -153,21 +153,6 @@ void C2DFFTPotential::AddAtomPeriodic(atom& atom, float_tt atomBoxX, int iAtomX,
 
 		}
 	}
-
-
-//	vz = af::translate(_atomPot[atom.Znum], ddx, ddy, AF_INTERP_BILINEAR);
-//	added = af::sum<float_tt>(af::real(vz));
-//	vz = af::real(vz);
-//	iax = (iax) % (_c->Model.nx);
-//	af::array xc = (iax < 0);
-//	iax += _c->Model.nx * xc;
-//	iay = (iay) % (_c->Model.ny);
-//	af::array yc = (iay < 0);
-//	iay += _c->Model.ny * yc;
-//	vz = af::complex(vz, 0);
-//	vz = af::resize((float_tt)iax.dims(0)/vz.dims(0), vz, AF_INTERP_BILINEAR);
-//	_t_af[iAtomZ](iax, iay) += vz;
-	// flattened array computations are faster and do not produce weird errors
 }
 void C2DFFTPotential::SliceSetup() {
 	CPotential::SliceSetup();

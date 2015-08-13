@@ -84,6 +84,7 @@ void PotentialConfig::Read(ptree& t){
 	PlotVrr=t.get<bool>("model.potential.plotVr_r");
 	Use3D=t.get<bool>("model.potential.3D");
 	UseFFT=t.get<bool>("model.potential.FFT");
+	PotentialType = t.get<std::string>("model.potential.Type");
 	periodicXY=t.get<bool>("model.potential.periodicXY");
 	periodicZ=t.get<bool>("model.potential.periodicZ");
 	StructureFactorType  = static_cast<QSTEM::StructureFactorType>(t.get<int>("model.potential.structureFactors"));

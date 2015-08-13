@@ -22,7 +22,6 @@ FILE(GLOB QSTEM_LIB_CU "${CMAKE_SOURCE_DIR}/libs/*/*.cu")
 FILE(GLOB STEM3_C_FILES "${CMAKE_SOURCE_DIR}/stem3/*.cpp")
 FILE(GLOB STEM3_H_FILES "${CMAKE_SOURCE_DIR}/stem3/*.hpp")
 
-
 cuda_add_executable(stem3 ${STEM3_C_FILES} ${STEM3_H_FILES} ${QSTEM_LIB_HEADERS} ${QSTEM_LIB_HEADERS2} ${QSTEM_LIB_HEADERS3} ${QSTEM_LIB_CU})
 
 # m is libm - math libraries on Unix systems

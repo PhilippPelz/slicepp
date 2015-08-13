@@ -25,12 +25,26 @@ Email: wouter.vandenbroek@uni-ulm.de, wouter.vandenbroek1@gmail.com,
 #ifndef projectedPotential_kzgfhbgw564gdlg74sg43jf96mhhse3ns
 #define projectedPotential_kzgfhbgw564gdlg74sg43jf96mhhse3ns
 
+#define FLOAT_PRECISION 1
+#define DBL_STD_MAX 1.0e+308
+#if(FLOAT_PRECISION == 1)
+typedef float float_tt;
+
+#else  // FLOAT_PRECISION
+typedef double float_tt;
+
+#endif  // FLOAT_PRECISION
+
+#define EM_SIGMA 7288400
+const float_tt PI = 2*acos((float_tt)0.0);
+
+
 #include <cufft.h>
-#include "stemtypes_fftw3.hpp"
-#include "CUDA2DPotential.hpp"
+#include "CoordinateArithmetics.hpp"
 
 
 namespace QSTEM {
+	__global__ void projectedPotential_d ( cufftComplex* V, int Z, int nx, int ny, float_tt dx, float_tt dy);
 	__device__ void parametersKirkland_d ( float* a, float* b, float* c, float* d, int Z, int i );
 	void normalizeProjectedPotential ( cufftComplex* V, int size, int gS, int bS );
 
@@ -40,6 +54,6 @@ namespace QSTEM {
 //void writeMATLABCode();
 
 //void writeDeviceCode();
-	__global__ void projectedPotential_d ( cufftComplex* V, int Z, int nx, int ny, float_tt dx, float_tt dy);
+
 }
 #endif

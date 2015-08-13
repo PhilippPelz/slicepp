@@ -77,12 +77,14 @@ void Bootstrapper::Initialize(){
 	auto structureBuilder = StructureBuilderPtr(_structureBuilderFactory[p.extension().string()](sreader,_c));
 	auto persist = PersistenceManagerPtr(new PersistenceManager(_c));
 
-	std::stringstream str;
-	str << (_c->Potential.Use3D ? "3D" : "2D");
-	str << (_c->Potential.UseFFT ? "FFT" : "");
+//	std::stringstream str;
+//	str << (_c->Potential.Use3D ? "3D" : "2D");
+//	str << (_c->Potential.UseFFT ? "FFT" : "");
 
+	std::string str = _c->Potential.PotentialType;
+	std::transform(str.begin(), str.end(),str.begin(), ::toupper);
 	auto wave = WavePtr(_waveFactory[_c->Wave.type](_c,persist));
-	auto potential = PotPtr(_potentialFactory[str.str()](_c,persist));
+	auto potential = PotPtr(_potentialFactory[str](_c,persist));
 	_e = ExperimentPtr( _experimentFactory[_c->ExperimentType](_c,structureBuilder,wave,potential,persist));
 }
 ExperimentPtr Bootstrapper::GetExperiment(){
@@ -111,6 +113,7 @@ void Bootstrapper::RegisterPotentialTypes(){
 	_potentialFactory["2DFFT"]= boost::factory<C2DFFTPotential*>();
 	_potentialFactory["3D"]= boost::factory<C3DPotential*>();
 	_potentialFactory["2D"]= boost::factory<C2DPotential*>();
+	_potentialFactory["CUDA"]= boost::factory<CUDA2DPotential*>();
 }
 void Bootstrapper::RegisterStructureTypes(){
 

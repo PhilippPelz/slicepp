@@ -19,7 +19,7 @@
 
 
 #include "pot_factory.hpp"
-
+#include "CUDA2DPotential.hpp"
 #include "pot_2d.hpp"
 #include "pot_2d_fft.hpp"
 #include "pot_3d.hpp"
@@ -55,7 +55,7 @@ PotPtr CPotFactory::GetPotential(bool _3D, bool fft,const ConfigPtr c)
 	std::stringstream str;
 	str << (_3D ? "3D" : "2D");
 	str << (fft ? "FFT" : "");
-//	str << std::ends;
+	str << std::ends;
 	return GetPotential(str.str(),c);
 }
 

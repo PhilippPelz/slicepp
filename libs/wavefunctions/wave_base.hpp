@@ -100,8 +100,6 @@ protected:
 	//float_tt m_beamCurrent;
 	//float_tt m_dwellTime;
 
-	fftwpp::fft2d _forward, _backward;
-
 	void Initialize(std::string input_ext, std::string output_ext);
 	void InitializeKVectors();
 	float_tt Wavelength(float_tt keV);

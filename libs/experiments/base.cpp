@@ -243,6 +243,7 @@ int BaseExperiment::RunMultislice(af::array t_af )
 	char outStr[64];
 	double fftScale;
 	int nx, ny, xpos,ypos;
+	time_t time0, time1;
 
 	_wave->GetSizePixels(nx, ny);
 
@@ -266,6 +267,7 @@ int BaseExperiment::RunMultislice(af::array t_af )
 	}
 
 	BOOST_LOG_TRIVIAL(info) << "Propagating through slices ...";
+	time(&time0);
 	for(islice = 0; islice < _c->Model.nSlices; islice++) {
 
 		_wave->Transmit(t_af.slice(islice));
@@ -291,6 +293,9 @@ int BaseExperiment::RunMultislice(af::array t_af )
 		if(islice % (int)ceil(_c->Model.nSlices / 10.0) == 0)
 			loadbar(islice + 1, _c->Model.nSlices);
 	} /* end for(islice...) */
+	time(&time1);
+	BOOST_LOG_TRIVIAL(info)<< format( "%g sec used for wave propagation (%g sec per slice)")
+	% difftime(time1, time0)%( difftime(time1, time0) / _c->Model.nSlices);
 	return 0;
 } // end of runMulsSTEM
 

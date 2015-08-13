@@ -46,6 +46,7 @@ namespace bpt = boost::property_tree;
 #include "potentials/pot_2d_fft.hpp"
 #include "potentials/pot_3d.hpp"
 #include "potentials/pot_3d_fft.hpp"
+#include "potentials/CUDA2DPotential.hpp"
 #include "stemtypes_fftw3.hpp"
 #include "structure_IO/structureInterface.hpp"
 #include "structure_IO/IStructureBuilder.hpp"

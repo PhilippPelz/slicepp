@@ -170,7 +170,8 @@ void CConvergentWave::ConstructWave(){
 	float_tt sum = 0.0;
 	bool condition;
 	af::array kx, ky, kx2, ky2, k2, k2max_af, ktheta, ktheta2, phi, chi, real, imag, scale;
-	af::array x, y, pixel, rx, ry, rx2, ry2;
+	//af::array x, y, pixel, rx, ry, rx2, ry2;
+	af::array x, y;
 	af::array delta;
 	/********************************************************
 	 * formulas from:
@@ -189,14 +190,14 @@ void CConvergentWave::ConstructWave(){
 	 *  Calculate misc constants
 	 *********************************************************/
 //
-//	float_tt rx = 1.0/ax;
-//	float_tt rx2 = rx * rx;
-//	float_tt ry = 1.0/by;
-//	float_tt ry2 = ry * ry;
-	rx = af::constant(1.0/ax, _nx, _ny);
-	rx2 = rx*rx;
-	ry = af::constant(1.0/by, _nx, _ny);
-	ry2 = ry*ry;
+	float_tt rx = 1.0/ax;
+	float_tt rx2 = rx * rx;
+	float_tt ry = 1.0/by;
+	float_tt ry2 = ry * ry;
+//	rx = af::constant(1.0/ax, _nx, _ny);
+//	rx2 = rx*rx;
+//	ry = af::constant(1.0/by, _nx, _ny);
+//	ry2 = ry*ry;
 
 	ixmid = _nx/2;
 	iymid = _ny/2;
@@ -217,7 +218,7 @@ void CConvergentWave::ConstructWave(){
        if a pixel is on the apertur boundary give it a weight
        of 1/2 otherwise 1 or 0
 	 */
-	pixel = ( rx2 + ry2 );
+	float_tt pixel = ( rx2 + ry2 );
 	scale = af::constant(1.0/sqrt((float_tt)_nx*(float_tt)_ny), _nx, _ny);
 
 	kx = af::range(_nx);
@@ -261,7 +262,7 @@ void CConvergentWave::ConstructWave(){
 	real += condition2*scale * af::cos(chi);
 	imag += condition2*scale * af::sin(chi);
 
-	condition2 = ( _smoothen != 0)*( af::abs(k2-k2max_af) <= pixel);
+	condition2 = ( _smoothen != 0)*( af::abs(k2-k2max) <= pixel);
 	real -= af::constant(0.5, _nx, _ny)*condition2*scale * af::cos(chi);
 	imag -= af::constant(1.5, _nx, _ny)*condition2*scale * af::sin(chi);
 	_wave_af = af::complex(real, imag);

@@ -172,6 +172,13 @@ superCellBoxPtr SuperstructureBuilder::Build(){
 			charge += _superCell->atoms[j].q*_superCell->atoms[j].occ;
 		}
 	}
+	for (int j = 0 ; j < _superCell->atoms.size(); j++) {
+		_superCell->xyzPos.push_back(_superCell->atoms[j].r[0]);
+		_superCell->xyzPos.push_back(_superCell->atoms[j].r[1]);
+		_superCell->xyzPos.push_back(_superCell->atoms[j].r[2]);
+		_superCell->znums.push_back(_superCell->atoms[j].Znum);
+		_superCell->occupancy.push_back(_superCell->atoms[j].occ);
+	}
 	BOOST_LOG_TRIVIAL(info) << format("Total charge: %g, i.e. %g %s") %charge%(int)abs(charge)%((charge > 0) ? "holes" : "electrons");
 	return _superCell;
 }

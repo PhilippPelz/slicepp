@@ -51,11 +51,12 @@ typedef double float_tt;
 
 #endif  // FLOAT_PRECISION
 
+
+#include "Complex.hpp"
 #include "fftw3.h"
 #include <boost/shared_ptr.hpp>
 #include "boost/multi_array.hpp"
 #include "elTable.hpp"
-#include "Complex.hpp"
 #include <complex>
 #include <cmath>
 #include <iomanip>

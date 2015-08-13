@@ -135,9 +135,10 @@ public:
 };
 class DLL_EXPORT PotentialConfig : IPropertyTreeReader{
 public:
-	bool Use3D, UseFFT,    PlotVrr,periodicXY,periodicZ;
+	bool Use3D, UseFFT, PlotVrr,periodicXY,periodicZ;
 	QSTEM::StructureFactorType StructureFactorType;
 	float_tt AtomRadiusAngstrom;
+	std::string PotentialType;
 	virtual void Read(ptree& t);
 };
 class DLL_EXPORT WaveConfig : IPropertyTreeReader{

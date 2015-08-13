@@ -57,6 +57,7 @@ public:
 //	inline ComplexArray2DView GetSlice(unsigned idx){return _t[boost::indices[idx][range(0,_c->Model.nx)][range(0,_c->Model.ny)]];}
 	virtual af::array GetSlice(unsigned idx);
 	virtual af::array GetSubPotential(int startx, int starty, int nx, int ny);
+	virtual af::array GetPotential();
 protected:
 	CPotential();
 

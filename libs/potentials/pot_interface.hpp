@@ -17,14 +17,16 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <boost/format.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/function.hpp>
 #include "stemtypes_fftw3.hpp"
 #include "config_IO/read_interface.hpp"
 #include "structure_IO/crystal.hpp"
-#include <boost/format.hpp>
-#include <boost/log/trivial.hpp>
+
 #include "config_IO/read_qsc.hpp"
 #include "data_IO/PersistenceManager.hpp"
-#include <boost/function.hpp>
+
 using boost::format;
 
 #ifndef POTENTIAL_INTERFACE_H
@@ -57,6 +59,7 @@ public:
 	virtual complex_tt GetSlicePixel(unsigned iz, unsigned ix, unsigned iy)=0;
 	virtual void SetStructure(StructurePtr structure)=0;
 	virtual af::array GetSubPotential(int startx, int starty, int nx, int ny){};
+	virtual af::array GetPotential(){};
 	virtual ~IPotential(){};
 protected:
 	IPotential(){};

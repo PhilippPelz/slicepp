@@ -33,10 +33,7 @@ void CreateWaveFunctionDataSets(int x, int y, std::vector<int> positions, std::s
 	//	imageIO.CreateComplexDataSet(potDataSetLabel, positions);
 	//	imageIO.CreateComplexDataSet(mulswavDataSetLabel, positions);
 }
-CBaseWave::CBaseWave(const ConfigPtr& c,const PersistenceManagerPtr& p) :
-				_forward(fftwpp::fft2d(c->Model.nx,c->Model.ny,FFTW_FORWARD)),
-				_backward(fftwpp::fft2d(c->Model.nx,c->Model.ny,FFTW_BACKWARD)),
-				IWave(c,p)
+CBaseWave::CBaseWave(const ConfigPtr& c,const PersistenceManagerPtr& p) :  IWave(c,p)
 {
 	_nx = c->Model.nx;
 	_ny = c->Model.ny;
@@ -52,9 +49,6 @@ CBaseWave::CBaseWave(const ConfigPtr& c,const PersistenceManagerPtr& p) :
 }
 void CBaseWave::InitializePropagators()
 {
-
-	_prop(_nx, _ny, c32);
-	_prop = af::constant(1, _nx, _ny);
 	float_tt scale = _config->Model.dz * PI * GetWavelength();
 	//t = exp(-i pi lam k^2 dz)
 	af::array s, kx2D, ky2D;
@@ -169,8 +163,6 @@ void CBaseWave::FormProbe(){
 	_zero = af::constant(0, _nx, _ny);
 	_wave_af = af::complex(_zero, _zero);
 	_wave.resize(boost::extents[_nx][_ny]);
-	_forward = fftwpp::fft2d(_nx,_ny,FFTW_FORWARD);
-	_backward = fftwpp::fft2d(_nx,_ny,FFTW_BACKWARD);
 	InitializeKVectors();
 }
 
@@ -233,7 +225,7 @@ void CBaseWave::SetPositionOffset(int x, int y)
 
 void CBaseWave::GetK2()
 {
-	af::array kx2D(_nx, _ny), ky2D(_nx, _ny);
+	af::array kx2D, ky2D;
 	kx2D = af::tile(m_kx2, 1, _ny);
 	ky2D = af::tile(m_ky2.T(), _nx);
 	m_k2 = kx2D + ky2D;
@@ -296,7 +288,6 @@ void CBaseWave::ToFourierSpace()
 	if (IsRealSpace())
 	{
 		m_realSpace = false;
-		//_forward.fft(_wave.data());
 		_wave_af = af::fft2(_wave_af);
 
 	}
@@ -308,9 +299,7 @@ void CBaseWave::ToRealSpace()
 	if (!IsRealSpace())
 	{
 		m_realSpace = true;
-		//		_wave = fftwpp::fft2d::ifftshift(_wave);
 		_wave_af = af::ifft2(_wave_af);
-		//_backward.fftNormalized(_wave.data());
 	}
 }
 

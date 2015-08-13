@@ -19,6 +19,7 @@
 
 
 #include <stdlib.h>
+#include <iostream>
 #include "crystal.hpp"
 #include "stemtypes_fftw3.hpp"
 #include "random.hpp"
@@ -63,6 +64,7 @@ CrystalBuilder::CrystalBuilder(StructureReaderPtr& r,const ConfigPtr& c) :
 																_baseAtoms(std::vector<atom>()),
 																_atoms(std::vector<atom>()),
 																_xyzPos(std::vector<float_tt>()),
+																_occupancy(std::vector<float_tt>()),
 																_znums(std::vector<int>()),
 																_Mm(FloatArray2D(boost::extents[3][3])),
 																m_MmInv(FloatArray2D(boost::extents[3][3])),
@@ -396,14 +398,17 @@ superCellBoxPtr CrystalBuilder::Build(){
 			for (int j = 0 ; j < _atoms.size(); j++) {
 				_atoms[j].r[0] += _c->Structure.xOffset;
 				_atoms[j].r[1] += _c->Structure.yOffset;
-				_xyzPos.push_back(_atoms[j].r[0]);
-				_xyzPos.push_back(_atoms[j].r[1]);
-				_xyzPos.push_back(_atoms[j].r[2]);
-				_znums.push_back(_atoms[j].Znum);
-				_occupancy.push_back(_atoms[j].occ);
 			}
 		}
 	} // end of Ncell mode conversion to cartesian coords and tilting.
+
+	for (int j = 0 ; j < _atoms.size(); j++) {
+		_xyzPos.push_back(_atoms[j].r[0]);
+		_xyzPos.push_back(_atoms[j].r[1]);
+		_xyzPos.push_back(_atoms[j].r[2]);
+		_znums.push_back(_atoms[j].Znum);
+		_occupancy.push_back(_atoms[j].occ);
+	}
 
 	_sizeX = boxXmax - boxXmin;
 	_sizeY = boxYmax - boxYmin;
@@ -803,12 +808,6 @@ void CrystalBuilder::TiltBoxed(int ncoord, bool handleVacancies) {
 						newAtom.q = _baseAtoms[jChoice].q;
 						newAtom.Znum = _baseAtoms[jChoice].Znum;
 						_atoms.push_back(newAtom);
-
-						_xyzPos.push_back(newAtom.r[0]);
-						_xyzPos.push_back(newAtom.r[1]);
-						_xyzPos.push_back(newAtom.r[2]);
-						_znums.push_back(newAtom.Znum);
-						_occupancy.push_back(newAtom.occ);
 						BOOST_LOG_TRIVIAL(trace) << format("atom %d: (%3.3f, %3.3f, %3.3f)") % _atoms.size() % newAtom.r[0] % newAtom.r[1] % newAtom.r[2];
 					}
 				}

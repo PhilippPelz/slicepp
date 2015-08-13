@@ -24,6 +24,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/filesystem.hpp>
 #include <string>
+#include <locale>
 #include <vector>
 
 #include <boost/property_tree/ptree.hpp>

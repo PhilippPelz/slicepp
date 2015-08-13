@@ -475,6 +475,10 @@ af::array CPotential::GetSubPotential(int startx, int starty, int nx, int ny){
 	return _t_af(af::seq(startx, startx + nx -1), af::seq(starty, starty + ny -1), af::span);
 }
 
+af::array CPotential::GetPotential(){
+	return _t_af;
+}
+
 void CPotential::GetSizePixels(unsigned int &nx, unsigned int &ny) const {
 	nx = _c->Model.nx;
 	ny = _c->Model.ny;

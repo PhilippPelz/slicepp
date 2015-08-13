@@ -50,8 +50,8 @@ __global__ void projectedPotential_d ( cufftComplex* V, int Z, int nx, int ny, f
         iwCoordIp ( i1, m1 );
         iwCoordIp ( i2, m2 );
 
-		const float_tt d1 = 1e10f * dx;
-		const float_tt d2 = 1e10f * dy;
+		const float_tt d1 = dx;
+		const float_tt d2 = dy;
 
 		float_tt qsq = ( (float_tt) i1 ) / ( d1 * ( (float_tt) m1 ) ); //
 		float_tt Vz  = ( (float_tt) i2 ) / ( d2 * ( (float_tt) m2 ) );

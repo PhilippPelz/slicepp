@@ -132,25 +132,39 @@ void PersistenceManager::Save2DDataSet(af::array data, string name) {
 void PersistenceManager::InitStorage() {
 	auto e3 = boost::extents[_c->Model.nSlices][_c->Model.nx][_c->Model.ny];
 	auto e2 = boost::extents[_c->Model.nx][_c->Model.ny];
-	_potential.resize(e3);
-	_waveSlicesAfterSlice.resize(e3);
-	_waveSlicesAfterProp.resize(e3);
-	_waveSlicesAfterFT.resize(e3);
-	_waveSlicesAfterTransmit.resize(e3);
-	_probe.resize(e2);
-	_projectedPotential.resize(e2);
+	if (_c->Output.SavePotential)
+		_potential.resize(e3);
+	if (_c-> Output.SaveWaveAfterSlice)
+		_waveSlicesAfterSlice.resize(e3);
+	if (_c-> Output.SaveWaveAfterPropagation)
+		_waveSlicesAfterProp.resize(e3);
+	if (_c-> Output.SaveWaveAfterTransform)
+		_waveSlicesAfterFT.resize(e3);
+	if (_c-> Output.SaveWaveAfterTransmit)
+		_waveSlicesAfterTransmit.resize(e3);
+	if (_c-> Output.saveProbe)
+		_probe.resize(e2);
+	if (_c-> Output.SaveProjectedPotential)
+		_projectedPotential.resize(e2);
 }
 
 void PersistenceManager::ResizeStorage(int xdim, int ydim) {
 	auto e3 = boost::extents[_c->Model.nSlices][xdim][ydim];
 	auto e2 = boost::extents[xdim][ydim];
-	_potential.resize(e3);
-	_waveSlicesAfterSlice.resize(e3);
-	_waveSlicesAfterProp.resize(e3);
-	_waveSlicesAfterFT.resize(e3);
-	_waveSlicesAfterTransmit.resize(e3);
-	_probe.resize(e2);
-	_projectedPotential.resize(e2);
+	if (_c->Output.SavePotential)
+		_potential.resize(e3);
+	if (_c-> Output.SaveWaveAfterSlice)
+		_waveSlicesAfterSlice.resize(e3);
+	if (_c-> Output.SaveWaveAfterPropagation)
+		_waveSlicesAfterProp.resize(e3);
+	if (_c-> Output.SaveWaveAfterTransform)
+		_waveSlicesAfterFT.resize(e3);
+	if (_c-> Output.SaveWaveAfterTransmit)
+		_waveSlicesAfterTransmit.resize(e3);
+	if (_c-> Output.saveProbe)
+		_probe.resize(e2);
+	if (_c-> Output.SaveProjectedPotential)
+		_projectedPotential.resize(e2);
 }
 
 
