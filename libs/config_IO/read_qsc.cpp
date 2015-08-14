@@ -84,6 +84,7 @@ void PotentialConfig::Read(ptree& t){
 	PlotVrr=t.get<bool>("model.potential.plotVr_r");
 	Use3D=t.get<bool>("model.potential.3D");
 	UseFFT=t.get<bool>("model.potential.FFT");
+	PotentialType = t.get<std::string>("model.potential.Type");
 	periodicXY=t.get<bool>("model.potential.periodicXY");
 	periodicZ=t.get<bool>("model.potential.periodicZ");
 	StructureFactorType  = static_cast<QSTEM::StructureFactorType>(t.get<int>("model.potential.structureFactors"));
@@ -149,6 +150,9 @@ void WaveConfig::Read(ptree& t){
 	AISaperture=t.get<float_tt>("wave.AISaperture");
 	tiltX=t.get<float_tt>("wave.tiltX");
 	tiltY=t.get<float_tt>("wave.tiltY");
+	nx = t.get<int>("wave.nx");
+	ny = t.get<int>("wave.ny");
+	imPot = t.get<float>("wave.imaginary potential factor");
 //	posX=t.get<float_tt>("wave.posX");
 //	posY=t.get<float_tt>("wave.posY");
 }
@@ -158,18 +162,27 @@ void BeamConfig::Read(ptree& t){
 	BeamCurrentpA=t.get<float_tt>("beam.beamCurrentpA");
 	DwellTimeMsec=t.get<float_tt>("beam.dwellTimeMsec");
 
-	double w;
-	const double emass=510.99906; /* electron rest mass in keV */
-	const double hc=12.3984244; /* Planck's const x speed of light*/
+	float_tt w;
+	const float_tt emass=510.99906; /* electron rest mass in keV */
+	const float_tt hc=12.3984244; /* Planck's const x speed of light*/
 
 	/* electron wavelength in Angstroms */
 	wavelength = hc/sqrt( EnergykeV * ( 2*emass + EnergykeV ) );
 
-	double s, pi, x;
+	float_tt s, pi, x;
 	x = ( emass + EnergykeV ) / ( 2.0*emass + EnergykeV);
 	pi = 4.0 * atan( 1.0 );
 	sigma = 2.0 * pi * x / (wavelength*EnergykeV);  // 2*pi*kz*(1+kev/emaxx)/(2*emass+kev)
 
+}
+
+void ScanConfig::Read(ptree& t){
+
+	xPos = t.get<int>("scan.x Start Position");
+	yPos = t.get<int>("scan.y Start Position");
+	xStep = t.get<int>("scan.xStep");
+	yStep = t.get<int>("scan.yStep");
+	scanType = t.get<int>("scan.scanType");
 }
 
 Config::Config(ptree& t){
@@ -181,6 +194,7 @@ Config::Config(ptree& t){
 	Output =OutputConfig();
 	Wave =WaveConfig();
 	Beam = BeamConfig();
+	Scan = ScanConfig();
 
 
 	Structure.Read(t);
@@ -189,6 +203,7 @@ Config::Config(ptree& t){
 	Output.Read(t);
 	Wave.Read(t);
 	Beam.Read(t);
+	Scan.Read(t);
 }
 
 

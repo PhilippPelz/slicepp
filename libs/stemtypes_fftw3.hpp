@@ -20,6 +20,40 @@ QSTEM - image simulation for TEM/STEM/CBED
 #ifndef STEMTYPES_H
 #define STEMTYPES_H
 
+#define FLOAT_PRECISION 1
+#define DBL_STD_MAX 1.0e+308
+
+#if(FLOAT_PRECISION == 1)
+
+typedef float float_tt;
+#define armarowvec arma::frowvec
+#define armavec arma::fvec
+#define armamat arma::fmat
+#define afcfloat af::cfloat
+#define STD_MAX 1.0e+38
+#define REAL_MIN FLT_MIN
+#define REAL_MAX FLT_MAX
+#define REAL_EPSILON FLT_EPSILON
+#define REAL_DIG FLT_DIG
+
+#else  // FLOAT_PRECISION
+
+typedef double float_tt;
+#define armarowvec arma::rowvec
+#define armavec arma::vec
+#define armamat arma::mat
+#define afcfloat af::cdouble
+#define STD_MAX DBL_STD_MAX
+#define REAL_MIN DBL_MIN
+#define REAL_MAX DBL_MAX
+#define REAL_EPSILON DBL_EPSILON
+#define REAL_DIG DBL_DIG
+
+#endif  // FLOAT_PRECISION
+
+
+#include "Complex.hpp"
+#include "fftw3.h"
 #include <boost/shared_ptr.hpp>
 #include "boost/multi_array.hpp"
 #include "elTable.hpp"
@@ -33,14 +67,6 @@ QSTEM - image simulation for TEM/STEM/CBED
 #include <boost/rational.hpp>
 using namespace std;
 
-#define FLOAT_PRECISION 0
-#if FLOAT_PRECISION == 1
-#include "fftw3f.h"
-typedef float float_tt;
-#else  // FLOAT_PRECISION
-#include "fftw3.h"
-typedef double float_tt;
-#endif  // FLOAT_PRECISION
 
 namespace QSTEM
 {
@@ -79,17 +105,18 @@ typedef boost::multi_array_ref<complex_tt,2> ComplexArray2DPtr;
 #define ELECTRON_CHARGE (1.6021773e-19)
 #define PICO_AMPERE (1e-12/ELECTRON_CHARGE)
 #define MILLISEC_PICOAMP (1e-3*PICO_AMPERE)
+#define EM_SIGMA 7288400
 
 ////////////////////////////////////////////////////////////////
 
-const float_tt PI = 2*acos(0.0);
+const float_tt PI = 2*acos((float_tt)0.0);
 
 // FFTW constants
 const int k_fftMeasureFlag = FFTW_ESTIMATE;
 
 struct atom {
 public:
-	arma::vec r = arma::vec(3);
+	armavec r = armavec(3);
 	// float dx,dy,dz;  // thermal displacements
 	float_tt dw;      // Debye-Waller factor
 	float_tt occ;     // occupancy
@@ -103,7 +130,7 @@ public:
 		q =a->q;
 		Znum = a->Znum;
 		mass =a->mass;
-		r = arma::vec(a->r);
+		r = armavec(a->r);
 	}
 	atom(const atom& a){
 		dw=a.dw;
@@ -111,7 +138,7 @@ public:
 		q =a.q;
 		Znum = a.Znum;
 		mass =a.mass;
-		r = arma::vec(a.r);
+		r = armavec(a.r);
 	}
 	// constructor (used for testing)
 	atom(float_tt _mass, std::string _symbol,
@@ -126,7 +153,7 @@ inline atom::atom()
 , q(0)
 , Znum(0)
 , mass(0)
-, r(arma::vec(3))
+, r(armavec(3))
 {
 }
 
@@ -145,10 +172,10 @@ inline atom::atom(float_tt _mass, std::string _symbol,
  * a point (point) and 2 vectors (vect1, vect2)
  */
 struct plane {
-	arma::vec v1 = arma::vec(3);
-	arma::vec v2 = arma::vec(3);
-	arma::vec n = arma::vec(3);
-	arma::vec p = arma::vec(3);
+	armavec v1 = armavec(3);
+	armavec v2 = armavec(3);
+	armavec n = armavec(3);
+	armavec p = armavec(3);
 };
 
 struct grainBox {
@@ -169,20 +196,17 @@ struct grainBox {
 	float_tt shiftx=0,shifty=0,shiftz=0;
 	std::vector<plane> planes;   /* pointer to array of bounding planes */
 	float_tt sphereRadius, sphereX,sphereY,sphereZ; /* defines a sphere instead of a grain with straight edges */
-	arma::mat M;
+	armamat M;
 } ;
 
 struct superCellBox {
-	// center of mass coordinates
-	float_tt cmx,cmy,cmz;
-	// supercell size
+	float_tt cmx,cmy,cmz;  /* fractional center of mass coordinates */
 	float_tt ax,by,cz;
-	// all atoms in the supercell
-	std::vector<atom> atoms;
-	// all unique Z numbers
+	std::vector<atom> atoms; /* contains all the atoms within the super cell */
 	std::vector<int> uniqueatoms;
-	// a map of all indices in [atoms] for a specific Znum
-	std::map<unsigned,std::vector<unsigned>> zNumIndices;
+	std::vector<int> znums;
+	std::vector<float_tt> xyzPos;
+	std::vector<float_tt> occupancy;
 };
 
 

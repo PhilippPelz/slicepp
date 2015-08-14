@@ -9,6 +9,7 @@
 #define LIBS_DATA_IO_PERSISTENCEMANAGER_HPP_
 
 #include "HDFFile.hpp"
+#include <arrayfire.h>
 #include <boost/filesystem.hpp>
 #include <boost/shared_ptr.hpp>
 #include "config_IO/read_qsc.hpp"
@@ -23,13 +24,24 @@ public:
 	void SaveWaveAfterTransform(ComplexArray2DPtr a,int slice);
 	void SaveWaveAfterSlice(ComplexArray2DPtr a,int slice);
 	void SaveWaveAfterPropagation(ComplexArray2DPtr a,int slice);
+	void SaveProbe(af::array a);
+	void SaveWaveAfterTransmit(af::array wave, int slice);
+	void SaveWaveAfterTransform(af::array wave, int slice);
+	void SaveWaveAfterSlice(af::array wave, int slice);
+	void SaveWaveAfterPropagation(af::array wave, int slice);
 	void SavePotential(ComplexArray3D a);
+	void SavePotential(af::array data);
 	void SaveProjectedPotential(ComplexArray2DPtr a);
+	void SaveProjectedPotential(af::array data);
 	void Save2DDataSet(ComplexArray2DPtr a, string name);
 	void Save3DDataSet(ComplexArray3DPtr a, string name);
+	void Save2DDataSet(af::array data, string name);
 	void StoreToDisc();
+	void StoreToDiscMP(int pos, int x, int y);
 	void InitStorage();
+	void ResizeStorage(int xdim, int ydim);
 	virtual ~PersistenceManager();
+	bool potSaved;
 protected:
 	HDFFile _file;
 	ConfigPtr _c;

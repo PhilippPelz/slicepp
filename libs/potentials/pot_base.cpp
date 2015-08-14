@@ -41,9 +41,11 @@ CPotential::CPotential(const ConfigPtr& c, const PersistenceManagerPtr& persist)
 CPotential::~CPotential() {
 }
 
+void CPotential::SetStructure(StructurePtr structure) {
+	_sb = structure;
+}
+
 void CPotential::DisplayParams() {
-	BOOST_LOG_TRIVIAL(info)<<
-	"***************************** Potential Parameters ***********************************************";
 	BOOST_LOG_TRIVIAL(info) <<
 	"**************************************************************************************************";
 	BOOST_LOG_TRIVIAL(info)<<format("* Log level:            %d") % _c->Output.LogLevel;
@@ -52,7 +54,6 @@ void CPotential::DisplayParams() {
 	BOOST_LOG_TRIVIAL(info)<<format("* Potential periodic:   (x,y): %s ") %((_c->Potential.periodicXY) ? "yes" : "no");
 	BOOST_LOG_TRIVIAL(info)<<format("* Potential array:      %d x %d")% _c->Model.nx% _c->Model.ny;
 	BOOST_LOG_TRIVIAL(info)<<format("*                       %g x %gA") % (_c->Model.nx * _c->Model.dx)% (_c->Model.ny * _c->Model.dy);
-
 	BOOST_LOG_TRIVIAL(info) <<
 	"**************************************************************************************************";
 }
@@ -60,7 +61,8 @@ void CPotential::DisplayParams() {
 void CPotential::ReadPotential(std::string &fileName, unsigned subSlabIdx) {
 }
 
-void CPotential::ReadSlice(const std::string &fileName, ComplexArray2DView slice, unsigned idx) {
+void CPotential::ReadSlice(const std::string &fileName,
+		ComplexArray2DView slice, unsigned idx) {
 }
 
 void CPotential::SliceSetup() {
@@ -194,16 +196,20 @@ void CPotential::MakeSlices(superCellBoxPtr info) {
 	CleanUp();
 
 	MakePhaseGratings();
-
 	time(&time1);
 	BOOST_LOG_TRIVIAL(info)<< format( "%g sec used for real space potential calculation (%g sec per atom)")
-			% difftime(time1, time0)%( difftime(time1, time0) / info->atoms.size());
+	% difftime(time1, time0)%( difftime(time1, time0) / info->atoms.size());
 
 	if (_c->Output.SavePotential)
-		_persist->SavePotential(_t);
-	if (_c->Output.SaveProjectedPotential)
+		_persist->SavePotential(_t_af);
+	if (_c->Output.SaveProjectedPotential){
+		if(!_persist->potSaved){
+			_t_af.host(_t.data());
+		}
 		WriteProjectedPotential();
+	}
 }
+
 void CPotential::MakePhaseGratings() {
 	float_tt mm0 = 1.0F + _c->Beam.EnergykeV / 511.0F; // relativistic corr. factor gamma
 	float_tt scale = mm0 * _c->Beam.wavelength;
@@ -211,45 +217,17 @@ void CPotential::MakePhaseGratings() {
 	BOOST_LOG_TRIVIAL(info)<<format("Making phase gratings for %d layers (scale=%g rad/VA, gamma=%g, sigma=%g) ... ")
 	%_t.shape()[0]%scale%mm0%_c->Beam.sigma;
 
-	double minph = 1, maxph = 0, minabs = 1, maxabs = 0;
-
-#pragma omp parallel for
-	for (complex_tt* v = _t.data(); v < (_t.data() + _t.num_elements()); v++) {
-		int x = (int) (v - _t.data());
-		int tot = _t.num_elements();
-//		BOOST_LOG_TRIVIAL(info)<<x;
-		if (x % (_t.num_elements() / 20) == 0 && _c->nThreads == 1) {
-			loadbar(x + 1, tot);
-		}
-		float_tt ph = scale * v->real();
-		*v = complex_tt(cos(ph), sin(ph));
-		if (ph > maxph)
-			maxph = ph;
-		if (ph < minph)
-			minph = ph;
-	}
-//		for (int iz = 0; iz < _t.shape()[0]; iz++) {
-//			loadbar(iz,_t.shape()[0],80);
-//			for (int ix = 0; ix < _t.shape()[1]; ix++) {
-//				for (int iy = 0; iy < _t.shape()[2]; iy++) {
-//
-//					complex_tt t = _t[iz][ix][iy];
-//					_t[iz][ix][iy] = complex_tt(cos(scale * t.real()), sin(scale * t.real()));
-//	//				BOOST_LOG_TRIVIAL(trace)<<format("t[%d][%d][%d]: phase = %g") %
-//	//						ix%iy%iz%arg(m_trans1[iz][ix][iy]);
-//					if (arg(_t[iz][ix][iy])>maxph) maxph = arg(_t[iz][ix][iy]);
-//					if (abs(_t[iz][ix][iy])>maxabs) maxabs = abs(_t[iz][ix][iy]);
-//					if (arg(_t[iz][ix][iy])<minph) minph = arg(_t[iz][ix][iy]);
-//					if (abs(_t[iz][ix][iy])<minabs) minabs = abs(_t[iz][ix][iy]);
-//				}
-//			}
-//		}
+	float_tt minph = 3.1, maxph = 0, minabs = 100, maxabs = 0;
+		_t_af = scale * af::real(_t_af);
+		maxph = af::max<float_tt>(_t_af);
+		minph = af::min<float_tt>(_t_af);
+		_t_af = af::complex(af::cos(_t_af), af::sin(_t_af));
 	BOOST_LOG_TRIVIAL(info)<<format("Phase values %g ... %g")%minph%maxph;
 }
 
 void CPotential::WriteSlice(unsigned idx, std::string prefix) {
 	char buf[255];
-	std::map<std::string, double> params;
+	std::map<std::string, float_tt> params;
 	params["Thickness"] = _c->Model.dz;
 	params["dx"] = _c->Model.dx;
 	params["dy"] = _c->Model.dy;
@@ -262,7 +240,7 @@ void CPotential::WriteSlice(unsigned idx, std::string prefix) {
 }
 
 void CPotential::WriteProjectedPotential() {
-	std::map<std::string, double> params;
+	std::map<std::string, float_tt> params;
 	char buf[255];
 	ComplexArray2D sum(extents[_c->Model.nx][_c->Model.ny]);
 	float_tt potVal = 0;
@@ -475,6 +453,14 @@ float_tt CPotential::seval(float_tt *x, float_tt *y, std::vector<float_tt>& b,
 	return (seval1);
 
 } /* end seval() */
+
+af::array CPotential::GetSubPotential(int startx, int starty, int nx, int ny){
+	return _t_af(af::seq(startx, startx + nx -1), af::seq(starty, starty + ny -1), af::span);
+}
+
+af::array CPotential::GetPotential(){
+	return _t_af;
+}
 
 void CPotential::GetSizePixels(unsigned int &nx, unsigned int &ny) const {
 	nx = _c->Model.nx;

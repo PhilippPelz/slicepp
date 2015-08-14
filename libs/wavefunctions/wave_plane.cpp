@@ -55,19 +55,18 @@ void CPlaneWave::DisplayParams()
 void CPlaneWave::FormProbe()
 {
 	CBaseWave::FormProbe();
-	float_tt scale = 1/sqrt((float_tt)_nx*_ny);
+	float_tt scale = 1/sqrt((float_tt)(_nx*_ny));
 	if ((_config->Wave.tiltX == 0) && (_config->Wave.tiltY == 0)) {
-		for (unsigned i=0; i<_nx; i++)
-			for (unsigned j=0; j<_ny; j++)
-			{
-				_wave[i][j]=complex_tt(scale,scale);
-
-			}
+		af::array theta = af::constant(0, _nx, _ny);
+		_wave_af = scale*af::complex(cos(theta), sin(theta));
 	}
 	else {
 		TiltBeam();
 	}
+	_probe = af::array(_wave_af);
 }
+
+
 
 void CPlaneWave::TiltBeam(bool tiltBack)
 {
@@ -80,13 +79,18 @@ void CPlaneWave::TiltBeam(bool tiltBack)
 		float_tt ktx = direction*2.0*M_PI*sin(_config->Wave.tiltX)/GetWavelength();
 		float_tt kty = direction*2.0*M_PI*sin(_config->Wave.tiltY)/GetWavelength();
 		unsigned px=_nx*_ny;
-		for (unsigned i=0; i<_nx; i++)
-			for (unsigned j=0; j<_ny; j++)
-			{
-				float_tt x = m_dx*(i-_nx/2);
-				float_tt y = m_dy*(j-_ny/2);
-				_wave[i][j]=complex_tt((float_tt)cos(ktx*x+kty*y)*scale,(float_tt)sin(ktx*x+kty*y)*scale);
-			}
+		af::array x = m_dx*(af::range(_nx) - _nx/2);
+		af::array y = m_dy*(af::range(_ny) - _ny/2);
+		af::array x2D = af::tile(x.T(), 1, _ny);
+		af::array y2D = af::tile(y, _nx);
+		_wave_af = af::complex(cos(ktx*x2D + kty*y2D)*scale, sin(ktx*x2D + kty*y2D)*scale);
+//		for (unsigned i=0; i<_nx; i++)
+//			for (unsigned j=0; j<_ny; j++)
+//			{
+//				float_tt x = m_dx*(i-_nx/2);
+//				float_tt y = m_dy*(j-_ny/2);
+//				_wave[i][j]=complex_tt((float_tt)cos(ktx*x+kty*y)*scale,(float_tt)sin(ktx*x+kty*y)*scale);
+//			}
 	}
 }
 

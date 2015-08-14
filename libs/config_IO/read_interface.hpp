@@ -24,6 +24,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/filesystem.hpp>
 #include <string>
+#include <locale>
 #include <vector>
 
 #include <boost/property_tree/ptree.hpp>
@@ -32,7 +33,7 @@ using namespace std;
 using boost::property_tree::ptree;
 namespace QSTEM
 {
-	enum class ExperimentType { STEM = 3, CBED = 1, TEM = 4, NBED = 2 };
+	enum class ExperimentType { STEM = 3, CBED = 1, TEM = 4, NBED = 2, PTYC = 5 };
 	enum class SliceThicknessCalculation { Auto = 1, SliceThickness = 2, NumberOfSlices = 3 };
 	enum class StructureFactorType { WeickKohl = 1, Rez = 2 };
 	enum class SaveLevel{ Everything = 1, Something = 2, Results = 3 };

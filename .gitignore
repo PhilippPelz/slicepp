@@ -78,6 +78,8 @@ install_manifest.txt
 # test files
 CTest*
 
+# result files
+validation/si3n4/*.h5
 
 *.img
 *.so

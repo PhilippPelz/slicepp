@@ -38,7 +38,7 @@ void CExperimentSTEM::Run()
 	int ix=0,iy=0,i,pCount,picts,ixa,iya,totalRuns;
 	double timer, total_time=0;
 	float_tt t;
-	double collectedIntensity;
+	float_tt collectedIntensity;
 
 	std::vector<WavePtr> waves;
 	WavePtr wave;
@@ -132,9 +132,9 @@ default(none)
                but we need to define the file name */
 
 				m_iPosX =(int)(ix*(m_scanXStop-m_scanXStart)/
-						((float)m_scanXN*dx));
+						((float_tt)m_scanXN*dx));
 				m_iPosY = (int)(iy*(m_scanYStop-m_scanYStart)/
-						((float)m_scanYN*dy));
+						((float_tt)m_scanYN*dy));
 				if (m_iPosX > potNX-nx)
 				{
 					m_iPosX = potNX-nx;
@@ -146,7 +146,7 @@ default(none)
 
 				// MCS - update the probe wavefunction with its position
 
-				RunMultislice();
+				RunMultislice(_pot->GetSubPotential(0, 0, _c->Wave.nx, _c->Wave.ny));
 
 
 				/***************************************************************

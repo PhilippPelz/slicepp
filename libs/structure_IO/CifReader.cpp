@@ -91,10 +91,10 @@ int CifReader::ReadAtoms(std::vector<atom> &atoms,
 
 				a->Znum = at->GetAtomicNum();
 				a->mass = at->GetAtomicMass();
-				a->dw = 0.45*28.0/(double)(2.0*a->Znum);;
+				a->dw = 0.45*28.0/(float_tt)(2.0*a->Znum);;
 				a->q = at->GetFormalCharge();
 				a->occ = 1;
-				a->r = {v1.x(),v1.y(),v1.z()};
+				a->r = {(float_tt)v1.x(),(float_tt)v1.y(),(float_tt)v1.z()};
 
 				BOOST_LOG_TRIVIAL(trace)<< format("Base atom %d: (%3.3f,%3.3f,%3.3f)") % i % v1.x()%v1.y()%v1.z();
 

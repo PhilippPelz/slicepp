@@ -42,14 +42,12 @@ protected:
 			float_tt atomBoxX, int ix,
 			float_tt atomBoxY, int iy,
 			float_tt atomZ);
-	complex_tt *GetAtomPotential2D(int Znum, double B);
+	complex_tt *GetAtomPotential2D(int Znum, float_tt B);
 	virtual void SliceSetup();
 	virtual void ComputeAtomPotential(int Znum) ;
 	virtual void SaveAtomicPotential(int znum);
 	virtual void CenterAtomZ(std::vector<atom>::iterator &atom, float_tt &z);
 	std::map<int, ComplexArray2D> _atomPot;
-
-	fftwpp::fft2d _forward, _backward;
 
 	friend class CPotFactory;
 	// Create an instance of this class, wrapped in a shared ptr

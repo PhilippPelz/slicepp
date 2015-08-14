@@ -55,7 +55,7 @@ CCfgReader::~CCfgReader()
  ***********************************************************************/
 int CCfgReader::ReadCellParams(FloatArray2D& Mm) {
 	int i;
-	double lengthScale;
+	float_tt lengthScale;
 
 	resetParamFile(m_fp);
 	setComment('#');
@@ -151,7 +151,7 @@ int CCfgReader::ReadNextAtom(atom *newAtom) {
 		m_atomData[j] = atof(str); str=strnext(str," \t");
 	}
 
-	newAtom->r    = arma::vec({m_atomData[0], m_atomData[1],m_atomData[2]});
+	newAtom->r    = armavec({m_atomData[0], m_atomData[1],m_atomData[2]});
 	// Temporary initialization: dw, occ, q are read if they exist
 	newAtom->dw   = 0.45*28.0/mass;
 	newAtom->occ  = 1.0;
@@ -256,7 +256,7 @@ int CCfgWriter::WriteFractCubic(double *pos,int *Znum,double *dw,int natoms,char
 	FILE *fp;
 	int j;
 	char elem[16];
-	double ax,by,cz;
+	float_tt ax,by,cz;
 
 	if (natoms < 1) {
 		printf("Atom array empty - no file written\n");

@@ -39,12 +39,11 @@ void CoherentSinglePositionExperiment::DisplayParams()
 
 void CoherentSinglePositionExperiment::Run()
 {
+	time_t time0, time1;
 	int ix,iy,i,pCount,result;
 	double timer,timerTot ;
 	float_tt t=0;
 	FloatArray2D avgPendelloesung(boost::extents[_nbout][_c->Model.nSlices]);
-	int nx, ny;
-	_wave->GetSizePixels(nx, ny);
 	std::map<std::string, double> params;
 	std::vector<unsigned> position(1);         // Used to indicate the number of averages
 
@@ -52,22 +51,30 @@ void CoherentSinglePositionExperiment::Run()
 	timerTot = 0; /* cputim();*/
 	DisplayProgress(-1);
 
+	time(&time0);
 	auto box = _structureBuilder->Build();
 
 	SetResolution(box);
 	SetSliceThickness(box);
+	time(&time1);
+	BOOST_LOG_TRIVIAL(info)<< format( "%g sec used for building structure")
+	% difftime(time1, time0);
 
+	time(&time0);
 	_persist->InitStorage();
 	_wave->FormProbe();
 	_wave->InitializePropagators();
 	_wave->DisplayParams();
 	_pot->DisplayParams();
+	time(&time1);
+	BOOST_LOG_TRIVIAL(info)<< format( "%g sec used for initialization")
+	% difftime(time1, time0);
 
 	for (_runCount = 0;_runCount < _c->Model.TDSRuns;_runCount++) {
 		auto box = _structureBuilder->DisplaceAtoms();
 		_pot->MakeSlices(box);
-		if (_c->Output.saveProbe) _persist->SaveProbe(_wave->GetWave());
-		RunMultislice();
+		if (_c->Output.saveProbe) _persist->SaveProbe(_wave->GetProbe());
+		RunMultislice(_pot->GetPotential());
 		if (_runCount == 0) {
 			if (_lbeams) {
 				for (iy=0;iy<_c->Model.nSlices ;iy++) {

@@ -111,8 +111,8 @@ public:
 	int nCellY=8;
 	int nCellZ=8;
 	bool isBoxed,rotateToZoneAxis;
-	float_tt temperatureK, crystalTiltX, crystalTiltY, crystalTiltZ,xOffset=0,
-	yOffset=0,zOffset=0,boxX,boxY,boxZ;
+	float_tt temperatureK, crystalTiltX, crystalTiltY, crystalTiltZ,xOffset,
+	yOffset,zOffset,boxX,boxY,boxZ;
 
 	virtual void Read(ptree& t);
 	bool HasOffset(){return xOffset != 0 || yOffset != 0 || zOffset != 0;};
@@ -140,15 +140,16 @@ public:
 	QSTEM::StructureFactorType StructureFactorType;
 	//atom radius in angstrom
 	float_tt ratom;
+	std::string PotentialType;
 	virtual void Read(ptree& t);
 };
 class DLL_EXPORT WaveConfig : IPropertyTreeReader{
 public:
 	float_tt Cs, C5, Cc, dV_V, alpha, Defocus, Astigmatism, AstigmatismAngle,
 		a_33, a_31, a_44, a_42, a_55, a_53, a_51, a_66, a_64, a_62, phi_33, phi_31, phi_44, phi_42, phi_55, phi_53, phi_51, phi_66, phi_64, phi_62, gaussScale,
-		dI_I, dE_E, AISaperture, tiltX, tiltY, posX,posY;
+		dI_I, dE_E, AISaperture, tiltX, tiltY, posX,posY, imPot;
 	bool Smooth, Gaussian;
-	int type;
+	int type, nx, ny;
 
 	virtual void Read(ptree& t);
 };
@@ -162,6 +163,12 @@ public:
 	QSTEM::SaveLevel SaveLevel = QSTEM::SaveLevel::Results;
 	bool ShowProbe, PendelloesungPlot, readPotential;
 
+	virtual void Read(ptree& t);
+};
+
+class DLL_EXPORT ScanConfig : IPropertyTreeReader{
+public:
+	int xPos, yPos, xStep, yStep, scanType;
 	virtual void Read(ptree& t);
 };
 
@@ -180,6 +187,7 @@ public:
 	OutputConfig Output;
 	WaveConfig Wave;
 	BeamConfig Beam;
+	ScanConfig Scan;
 
 	//virtual ExperimentType ExperimentType() = 0;
 	//virtual PrintLevel PrintLevel() = 0;

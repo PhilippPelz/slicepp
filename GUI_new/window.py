@@ -1,6 +1,6 @@
 
-# https://github.com/MapQuest/avecado/blob/master/src/python_module.cpp
-# http://renatogarcia.blog.br/en/posts/boost-property-tree-extensions.html
+#https://github.com/MapQuest/avecado/blob/master/src/python_module.cpp
+#http://renatogarcia.blog.br/en/posts/boost-property-tree-extensions.html
 
 # https://docs.python.org/2/library/json.html
 # http://www.boost.org/doc/libs/1_46_1/doc/html/boost_propertytree/parsers.html#boost_propertytree.parsers.info_parser
@@ -10,17 +10,18 @@ import pyqtgraph.Qt as Qt
 import numpy as np
 import pyqtgraph.parametertree.parameterTypes as pTypes
 from pyqtgraph.parametertree import Parameter, ParameterTree, ParameterItem, registerParameterType
-from PyQt4.Qt import QTreeWidgetItem, QHBoxLayout
+from PyQt4.Qt import QTreeWidgetItem
+# from pyE17 import io
 from pyE17.io.h5rw import h5read, h5write
 import os
 import json
-projectPath1 = '/home/philiipp/projects/slicepp/'
-projectPath = '/home/philiipp/projects/slicepp/Examples/configs/'
-jsonfile = 'gold.json'
-defaultResultsPath = projectPath + 'gold.h5'
-defaultLoadConfigPath = projectPath + jsonfile
-defaultSaveConfigPath = projectPath + jsonfile
-defaultExePath = projectPath1 + 'build/release/bin/stem3'
+
+projectPath = os.path.dirname(os.path.realpath(__file__)) + '/../'
+projectPath1 = projectPath + '/validation/si3n4/'
+defaultResultsPath= projectPath1 + '7.11.h5'
+defaultLoadConfigPath= projectPath1 + '7.11.json'
+defaultSaveConfigPath= projectPath1 + '7.11.json'
+defaultExePath= projectPath + 'build/release/bin/stem3'
 
 class SliceGUI(QtGui.QMainWindow):
     def __init__(self):
@@ -60,13 +61,13 @@ class SliceGUI(QtGui.QMainWindow):
         pass
     def addResultItems(self):
         d = {
-            'list1': [1, 2, 3, 4, 5, 6, {'nested1': 'aaaaa', 'nested2': 'bbbbb'}, "seven"],
+            'list1': [1,2,3,4,5,6, {'nested1': 'aaaaa', 'nested2': 'bbbbb'}, "seven"],
             'dict1': {
                 'x': 1,
                 'y': 2,
                 'z': 'three'
             },
-            'array1 (20x20)': np.ones((2, 2))
+            'array1 (20x20)': np.ones((2,2))
         }
         resultsViewLayout = QtGui.QVBoxLayout()
         rblayout = QtGui.QHBoxLayout()
@@ -104,12 +105,10 @@ class SliceGUI(QtGui.QMainWindow):
 #         print bytes1
         cursor.insertText(bytes1)
         self.consoleOutput.ensureCursorVisible()
-        
     def runFinished(self):
         self.btnRun.setEnabled(True)
         self.tabs.setCurrentIndex(2)
         self.loadResultFileClicked()
-        
     def addConsoleItems(self):
 
         self.process.started.connect(lambda: self.btnRun.setEnabled(False))
@@ -135,6 +134,7 @@ class SliceGUI(QtGui.QMainWindow):
         self.wavelayout = QtGui.QGridLayout()
 
         self.widg1.setLayout(self.wavelayout)
+
         self.widg3.setLayout(self.consolelayout)
         self.tabs.addTab(self.widg3, 'Console')
         self.tabs.addTab(self.resultssplitter, 'Results')
@@ -142,11 +142,11 @@ class SliceGUI(QtGui.QMainWindow):
         self.vboxwidget.setLayout(self.vbox)
         self.splitter.addWidget(self.vboxwidget)
         self.splitter.addWidget(self.tabs)
-        self.splitter.setSizes([300, 724])
+        self.splitter.setSizes([300,724])
 
-    def jsonDictToParamDict(self, d):
+    def jsonDictToParamDict(self,d):
         params = []
-        # {'name': 'Basic parameter data types', 'type': 'group', 'children': []}
+        #{'name': 'Basic parameter data types', 'type': 'group', 'children': []}
         for key, value in d.iteritems():
             if isinstance(value, dict):
                 children = self.jsonDictToParamDict(value)
@@ -155,13 +155,13 @@ class SliceGUI(QtGui.QMainWindow):
                 params.append({'name': key, 'type':'str', 'value':value })
         return params
 
-    def paramDictToJsonDict(self, d):
+    def paramDictToJsonDict(self,d):
         params = {}
         for entry in d['children'].items():
             if entry[1]['value'] is not None:
-                params[entry[0]] = entry[1]['value']
+                params[entry[0]]=entry[1]['value']
             else:
-                params[entry[0]] = self.paramDictToJsonDict(entry[1])
+                params[entry[0]]=self.paramDictToJsonDict(entry[1])
             pass
         return params
 
@@ -213,7 +213,7 @@ class SliceGUI(QtGui.QMainWindow):
         self.consoleOutput.clear()
         self.tabs.setCurrentIndex(1)
         self.saveConfigFileClicked()
-        self.process.start(command, [self.savePathTb.text()])
+        self.process.start(command,[self.savePathTb.text()])
 
     def loadConfigFileClicked(self):
         fn = self.loadPathTb.text()
@@ -227,7 +227,7 @@ class SliceGUI(QtGui.QMainWindow):
         d = self.paramDictToJsonDict(self.par.saveState())
         fn = self.savePathTb.text()
         with open(fn, 'w') as f:
-            json.dump(d, f)
+            json.dump(d,f)
 
     def loadResultFileClicked(self):
         fn = self.loadResultsPathTb.text()

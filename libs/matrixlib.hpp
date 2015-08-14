@@ -51,7 +51,7 @@ void crossProduct(const float_tt *a, const float_tt *b, float_tt *c);
 float_tt dotProduct(const float_tt *a, const float_tt *b);
 float_tt findLambda(plane *p,const float_tt *point, int revFlag);
 void showMatrix(FloatArray2D M,int Nx, int Ny,char *name);
-void vectDiff_f(float *a, float_tt *b, float_tt *c,int revFlag);
+void vectDiff_f(float_tt *a, float_tt *b, float_tt *c,int revFlag);
 float_tt vectLength(float_tt *vect);
 void makeCellVect(grainBox& grain, std::vector<float_tt>& vax, std::vector<float_tt>& vby, std::vector<float_tt>& vcz);
 //void makeCellVectMuls(MULS *muls, float_tt *vax, float_tt *vby, float_tt *vcz);
