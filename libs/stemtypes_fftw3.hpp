@@ -207,6 +207,7 @@ struct superCellBox {
 	std::vector<int> znums;
 	std::vector<float_tt> xyzPos;
 	std::vector<float_tt> occupancy;
+	std::map<int,std::vector<int>> zNums;
 };
 
 

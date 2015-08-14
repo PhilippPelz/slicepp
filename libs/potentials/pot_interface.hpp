@@ -47,7 +47,7 @@ class IPotential
 public:
 	IPotential(const ConfigPtr& c,const PersistenceManagerPtr& persist) : _c(c), _persist(persist){} ;
 	virtual void DisplayParams(){};
-	virtual void MakeSlices(superCellBoxPtr info){};
+	virtual void MakeSlices(superCellBoxPtr info)=0;
 	virtual void ReadPotential(std::string &fileName, unsigned subSlabIdx){};
 
 	virtual void GetSizePixels(unsigned &nx, unsigned &ny) const =0;

@@ -145,10 +145,8 @@ void C2DFFTPotential::AddAtomPeriodic(atom& atom, float_tt atomBoxX, int iAtomX,
 void C2DFFTPotential::SliceSetup() {
 	CPotential::SliceSetup();
 	if (_atomPot.size() == 0) {
-		_nx = 2 * OVERSAMPLING
-				* (int) ceil(_c->Potential.AtomRadiusAngstrom / _c->Model.dx);
-		_ny = 2 * OVERSAMPLING
-				* (int) ceil(_c->Potential.AtomRadiusAngstrom / _c->Model.dy);
+		_nx = 2 * OVERSAMPLING * (int) ceil(_c->Potential.ratom / _c->Model.dx);
+		_ny = 2 * OVERSAMPLING * (int) ceil(_c->Potential.ratom / _c->Model.dy);
 		_dkx = 0.5 * OVERSAMPLING / ((_nx) * _c->Model.dx);
 		_dky = 0.5 * OVERSAMPLING / ((_ny) * _c->Model.dy);
 		_kmax2 = 0.5 * _nx * _dkx / (float_tt) OVERSAMPLING; // largest k that we'll admit

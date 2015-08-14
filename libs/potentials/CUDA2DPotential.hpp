@@ -32,16 +32,7 @@ public:
 	CUDA2DPotential();
 	CUDA2DPotential(const ConfigPtr& c,const PersistenceManagerPtr& persist);
 	virtual ~CUDA2DPotential();
-//	virtual void CenterAtomZ(atom& atom, float_tt &z);
-//	virtual void DisplayParams();
 	virtual void MakeSlices(superCellBoxPtr info);
-//	virtual void Refresh();
-//	virtual void ReadPotential(std::string &fileName, unsigned subSlabIdx);
-//	virtual void SetStructure(StructurePtr structure);
-
-//	inline ComplexArray2DView GetSlice(unsigned idx){return _t[boost::indices[idx][range(0,_c->Model.nx)][range(0,_c->Model.ny)]];}
-//	virtual af::array GetSlice(unsigned idx);
-//	virtual af::array GetSubPotential(int startx, int starty, int nx, int ny);
 
 protected:
 //	virtual void SliceSetup();
@@ -51,7 +42,7 @@ protected:
 	virtual void ComputeAtomPotential(int znum){};
 	virtual void SaveAtomicPotential(int znum);
 	void progressCounter(int j, int jTot);
-	friend class CPotFactory;
+	ComplexArray3D _t;
 };
 } /* namespace QSTEM */
 

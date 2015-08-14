@@ -53,7 +53,9 @@ public:
 	virtual void MakeSlices(superCellBoxPtr info);
 	virtual void ReadPotential(std::string &fileName, unsigned subSlabIdx);
 
-	inline ComplexArray2DView GetSlice(unsigned idx){return _t[boost::indices[idx][range(0,_c->Model.nx)][range(0,_c->Model.ny)]];}
+	virtual af::array GetSlice(unsigned idx);
+	virtual af::array GetSubPotential(int startx, int starty, int nx, int ny);
+	virtual af::array GetPotential();
 protected:
 	CPotential();
 
@@ -63,15 +65,16 @@ protected:
 	void SetScatteringFactors(float_tt kmax);
 
 	virtual void SliceSetup();
-	virtual void AddAtomToSlices(atom& atom)=0;
-	virtual void ComputeAtomPotential(int znum)=0;
-	virtual void SaveAtomicPotential(int znum)=0;
+	virtual void AddAtomToSlices(atom& atom){};
+	virtual void ComputeAtomPotential(int znum){};
+	virtual void SaveAtomicPotential(int znum){};
 	virtual void CleanUp(){};
 
 	StructureBuilderPtr _sb;
 	ComplexArray3D _t;
 	af::array _t_af;
 
+	int _nx,_ny;
 	// oversampled resolutions
 	float_tt _ddx, _ddy;
 	float_tt _dkx,_dky, _dkz,_kmax,_kmax2;

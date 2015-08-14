@@ -25,7 +25,6 @@
 #include "cuda_assert.hpp"
 #include "cublas_assert.hpp"
 #include "cufft_assert.hpp"
-#include "complexMath.hpp"
 #include "projectedPotential.hpp"
 #include "arrayfire.h"
 

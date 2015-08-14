@@ -41,10 +41,6 @@ CPotential::CPotential(const ConfigPtr& c, const PersistenceManagerPtr& persist)
 CPotential::~CPotential() {
 }
 
-void CPotential::SetStructure(StructurePtr structure) {
-	_sb = structure;
-}
-
 void CPotential::DisplayParams() {
 	BOOST_LOG_TRIVIAL(info) <<
 	"**************************************************************************************************";
@@ -164,34 +160,19 @@ void CPotential::MakeSlices(superCellBoxPtr info) {
 
 	BOOST_LOG_TRIVIAL(info)<< "Adding atoms to slices ...";
 
-
-	for (std::map<unsigned,std::vector<unsigned>>::iterator i = info->zNumIndices.begin(); i != info->zNumIndices.end(); i++){
-		unsigned znum = i->first;
-		auto ilist = i->second;
 #pragma omp parallel for shared(atomsAdded,info)
-		for(std::vector<unsigned>::iterator ind = ilist.begin(); ind < ilist.end(); ind = ind + 1){
-			BOOST_LOG_TRIVIAL(trace)<< format("Adding atom : (%3.3f, %3.3f, %3.3f) Z=%d") %
-					info->atoms[*ind].r[0] % info->atoms[*ind].r[1] % info->atoms[*ind].r[2] % info->atoms[*ind].Znum;
-			AddAtomToSlices(info->atoms[*ind]);
-			atomsAdded++;
-			int interval = (info->atoms.size() / 20) == 0 ? 1 : (info->atoms.size() / 20);
-			if ((atomsAdded % interval) == 0 && _c->nThreads == 1)
-				loadbar(atomsAdded + 1, info->atoms.size());
-		}
+	for (std::vector<atom>::iterator a = info->atoms.begin(); a < info->atoms.end(); a = a + 1) {
+		atom atom(a);
+		if (atom.Znum == 0) continue;
+		AddAtomToSlices(atom);
+		BOOST_LOG_TRIVIAL(trace)<< format("Adding atom : (%3.3f, %3.3f, %3.3f) Z=%d") % atom.r[0] % atom.r[1] % atom.r[2] % atom.Znum;
+
+		atomsAdded++;
+
+		int interval = (info->atoms.size() / 20) == 0 ? 1 : (info->atoms.size() / 20);
+		if ((atomsAdded % interval) == 0 && _c->nThreads == 1)
+			loadbar(atomsAdded + 1, info->atoms.size());
 	}
-//#pragma omp parallel for shared(atomsAdded,info)
-//	for (std::vector<atom>::iterator a = info->atoms.begin(); a < info->atoms.end(); a = a + 1) {
-//		atom atom(a);
-//		if (atom.Znum == 0) continue;
-//		AddAtomToSlices(atom);
-//		BOOST_LOG_TRIVIAL(trace)<< format("Adding atom : (%3.3f, %3.3f, %3.3f) Z=%d") % atom.r[0] % atom.r[1] % atom.r[2] % atom.Znum;
-//
-//		atomsAdded++;
-//
-//		int interval = (info->atoms.size() / 20) == 0 ? 1 : (info->atoms.size() / 20);
-//		if ((atomsAdded % interval) == 0 && _c->nThreads == 1)
-//			loadbar(atomsAdded + 1, info->atoms.size());
-//	}
 
 	CleanUp();
 
@@ -465,6 +446,10 @@ af::array CPotential::GetPotential(){
 void CPotential::GetSizePixels(unsigned int &nx, unsigned int &ny) const {
 	nx = _c->Model.nx;
 	ny = _c->Model.ny;
+}
+
+af:: array CPotential::GetSlice(unsigned idx){
+	return _t_af(af::span, af::span, idx);
 }
 
 void CPotential::ResizeSlices() {

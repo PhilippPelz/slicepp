@@ -20,7 +20,6 @@ CUDA2DPotential::~CUDA2DPotential() {
 
 void CUDA2DPotential::MakeSlices(superCellBoxPtr info){
 	time_t time0, time1;
-	SliceSetup();
 	cufftComplex *potential;
 	float_tt *xyzPos_d, *occupancy_d;
 	int *znums_d, *uniqueatoms_d;
@@ -84,7 +83,6 @@ void CUDA2DPotential::MakeSlices(superCellBoxPtr info){
 	occupancy.unlock();
 	znums.unlock();
 }
-
 void CUDA2DPotential::copyToDeviceInt(int *devdst, std::vector<int> src, int size){
 	for (int i = 0 ; i < size; i++){
 		cuda_assert(cudaMemcpy (&devdst[i], &src[i], sizeof(int), cudaMemcpyHostToDevice ));
