@@ -1,2 +1,0 @@
-tests/libs/config_IO/CMakeLists.txt
-tests/libs/config_IO/test_config_qsc.cpp
