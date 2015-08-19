@@ -26,7 +26,7 @@ using boost::format;
 namespace QSTEM
 {
 
-BaseExperiment::BaseExperiment(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers)
+BaseExperiment::BaseExperiment(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p, const DetPtr& d, const PersistenceManagerPtr& pers)
 : IExperiment()
 {
 	_c = c;
@@ -34,6 +34,7 @@ BaseExperiment::BaseExperiment(const ConfigPtr& c,const StructureBuilderPtr& s,c
 	_structureBuilder = s;
 	_wave = w;
 	_pot = p;
+	_det = d;
 	m_equalDivs = true;
 	m_avgArray = RealVector();
 	m_saveLevel = static_cast<unsigned>(c->Output.SaveLevel);
@@ -270,7 +271,7 @@ int BaseExperiment::RunMultislice(af::array t_af )
 	time(&time0);
 	for(islice = 0; islice < _c->Model.nSlices; islice++) {
 
-		_wave->Transmit(t_af.slice(islice));
+		_wave->Transmit(_pot->GetSlice(t_af, islice));
 //		Transmit(wave, islice);
 		if(_c->Output.SaveWaveAfterTransmit) _persist->SaveWaveAfterTransmit(_wave->GetWaveAF(), islice);
 
@@ -367,6 +368,10 @@ void BaseExperiment::fft_normalize(WavePtr wave)
 		for(unsigned j = 0; j < ny; j++) {
 			w[i][j] = complex_tt(w[i][j].real() * fftScale, w[i][j].imag() * fftScale);
 		}
+}
+
+void BaseExperiment::PostSpecimenProcess(){
+	_det->RecordImage(_wave);
 }
 
 } // end namespace QSTEM

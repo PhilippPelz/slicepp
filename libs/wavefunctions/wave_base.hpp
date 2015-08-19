@@ -54,6 +54,7 @@ public:
 	inline float_tt GetWavelength()  const {return m_wavlen;}
 	inline float_tt GetPixelIntensity(int i) const { return abs2(_wave.data()[i]); }
 	inline float_tt GetPixelIntensity(int x, int y) const  {return GetPixelIntensity(x+_nx*y);}
+	inline float_tt GetPixelDose() const {return _pixelDose; }
 	inline ComplexArray2D GetWave() const {return  _wave;}
 
 	inline af::array GetPixelIntensity() const {return af::real(_wave_af)*af::real(_wave_af) + af::imag(_wave_af)*af::imag(_wave_af);}
@@ -75,6 +76,7 @@ public:
 	virtual af::array fftShift(af::array _wave);
 	virtual af::array ifftShift(af::array _wave);
 	virtual void ApplyTransferFunction();
+
 protected:
 	ComplexArray2D _wave;
 	af::array _prop, _wave_af, _probe;
@@ -90,6 +92,7 @@ protected:
 	float_tt m_k2max;
 	float_tt m_v0;
 	float_tt m_wavlen;
+	float_tt _pixelDose;
 
 	std::vector<int> m_position;
 	af::array m_kx2, m_ky2, m_kx, m_ky, m_k2, _k2max;

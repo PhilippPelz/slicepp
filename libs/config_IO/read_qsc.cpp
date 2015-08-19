@@ -84,7 +84,8 @@ void PotentialConfig::Read(ptree& t){
 	PlotVrr=t.get<bool>("model.potential.plotVr_r");
 	Use3D=t.get<bool>("model.potential.3D");
 	UseFFT=t.get<bool>("model.potential.FFT");
-	PotentialType = t.get<std::string>("model.potential.Type");
+	CUDAOnTheFly=t.get<bool>("model.potential.CUDAOnTheFly");
+	PotentialType = t.get<std::string>("model.potential.type");
 	periodicXY=t.get<bool>("model.potential.periodicXY");
 	periodicZ=t.get<bool>("model.potential.periodicZ");
 	StructureFactorType  = static_cast<QSTEM::StructureFactorType>(t.get<int>("model.potential.structureFactors"));
@@ -106,6 +107,7 @@ void OutputConfig::Read(ptree& t){
 	SaveAtomicPotential=t.get<bool>("output.SaveAtomicPotential");
 	SaveProjectedPotential=t.get<bool>("output.saveProjectedPotential");
 	readPotential=t.get<bool>("output.readPotential");
+	ComputeFromProjectedPotential = t.get<bool>("output.ComputeFromProjectedPotential");
 	string p = t.get<string>("output.savePath");
 	savePath = boost::filesystem::path(p);
 	string p1 = t.get<string>("output.logFileName");
@@ -150,11 +152,10 @@ void WaveConfig::Read(ptree& t){
 	AISaperture=t.get<float_tt>("wave.AISaperture");
 	tiltX=t.get<float_tt>("wave.tiltX");
 	tiltY=t.get<float_tt>("wave.tiltY");
+	imPot = t.get<float_tt>("wave.imaginary potential factor");
+	pixelDose = t.get<float_tt>("wave.pixel dose");
 	nx = t.get<int>("wave.nx");
 	ny = t.get<int>("wave.ny");
-	imPot = t.get<float>("wave.imaginary potential factor");
-//	posX=t.get<float_tt>("wave.posX");
-//	posY=t.get<float_tt>("wave.posY");
 }
 void BeamConfig::Read(ptree& t){
 	EnergykeV =t.get<float_tt>("beam.energy_keV");
@@ -185,11 +186,20 @@ void ScanConfig::Read(ptree& t){
 	scanType = t.get<int>("scan.scanType");
 }
 
+void DetectorConfig::Read(ptree& t){
+	type = t.get<int>("detector.type");
+	mtfA = t.get<float_tt>("detector.mtfA");
+	mtfB = t.get<float_tt>("detector.mtfB");
+	mtfC = t.get<float_tt>("detector.mtfC");
+	mtfD = t.get<float_tt>("detector.mtfD");
+}
+
 Config::Config(ptree& t){
 	ExperimentType =static_cast<QSTEM::ExperimentType>(t.get<int>("mode"));
 	nThreads = t.get<int>("nthreads");
 	Structure =StructureConfig();
 	Model =ModelConfig();
+	Detector = DetectorConfig();
 	Potential =PotentialConfig();
 	Output =OutputConfig();
 	Wave =WaveConfig();
@@ -200,6 +210,7 @@ Config::Config(ptree& t){
 	Structure.Read(t);
 	Model.Read(t);
 	Potential.Read(t);
+	Detector.Read(t);
 	Output.Read(t);
 	Wave.Read(t);
 	Beam.Read(t);

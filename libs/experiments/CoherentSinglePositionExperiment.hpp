@@ -28,7 +28,7 @@ namespace QSTEM
 class CoherentSinglePositionExperiment : public BaseExperiment
 {
 public:
-    CoherentSinglePositionExperiment(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers);
+    CoherentSinglePositionExperiment(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,  const DetPtr& d, const PersistenceManagerPtr& pers);
 
     void Run();
 
@@ -37,7 +37,6 @@ public:
     virtual ~CoherentSinglePositionExperiment(){};
 
 protected:
-    virtual void PostSpecimenProcess()=0;
     void PostSliceProcess();
     void CollectIntensity(unsigned absoluteSlice);
     void SaveImages();

@@ -175,20 +175,13 @@ void CPotential::MakeSlices(superCellBoxPtr info) {
 	}
 
 	CleanUp();
-
+	_t_af = af::array(_c->Model.nx, _c->Model.ny, _c->Model.nSlices, (afcfloat *)_t.data());
 	MakePhaseGratings();
 	time(&time1);
 	BOOST_LOG_TRIVIAL(info)<< format( "%g sec used for real space potential calculation (%g sec per atom)")
 	% difftime(time1, time0)%( difftime(time1, time0) / info->atoms.size());
 
-	if (_c->Output.SavePotential)
-		_persist->SavePotential(_t_af);
-	if (_c->Output.SaveProjectedPotential){
-		if(!_persist->potSaved){
-			_t_af.host(_t.data());
-		}
-		WriteProjectedPotential();
-	}
+	SavePotential();
 }
 
 void CPotential::MakePhaseGratings() {
@@ -226,13 +219,18 @@ void CPotential::WriteProjectedPotential() {
 	ComplexArray2D sum(extents[_c->Model.nx][_c->Model.ny]);
 	float_tt potVal = 0;
 
-	for (unsigned iz = 0; iz < _c->Model.nSlices; iz++)
+	for (unsigned iz = 0; iz < _c->Model.nSlices; iz++){
 		for (unsigned ix = 0; ix < _c->Model.nx; ix++) {
 			for (unsigned iy = 0; iy < _c->Model.ny; iy++) {
 				sum[ix][iy] += _t[iz][ix][iy];
 			}
 		}
+	}
 	_persist->SaveProjectedPotential(sum);
+	if (_c->Output.ComputeFromProjectedPotential && (!_c->Potential.CUDAOnTheFly)){
+		_t_af = af::sum(_t_af, 2);
+		_c->Model.nSlices = 1;
+	}
 }
 
 /*
@@ -448,10 +446,26 @@ void CPotential::GetSizePixels(unsigned int &nx, unsigned int &ny) const {
 	ny = _c->Model.ny;
 }
 
-af:: array CPotential::GetSlice(unsigned idx){
-	return _t_af(af::span, af::span, idx);
+af:: array CPotential::GetSlice(af::array t, unsigned idx){
+	return t(af::span, af::span, idx);
 }
 
+void CPotential::SavePotential(){
+	if (_c->Output.SavePotential || _c->Output.ComputeFromProjectedPotential){
+		_t.resize(boost::extents[_t_af.dims(2)][_t_af.dims(0)][_t_af.dims(1)]);
+		_t_af.host(_t.data());
+		_persist->SavePotential(_t);
+
+	}
+	if (_c->Output.SaveProjectedPotential || _c->Output.ComputeFromProjectedPotential){
+		if(!_persist->_potSaved){
+			_t.resize(boost::extents[_t_af.dims(2)][_t_af.dims(0)][_t_af.dims(1)]);
+			_t_af.host(_t.data());
+		}
+		WriteProjectedPotential();
+	}
+
+}
 void CPotential::ResizeSlices() {
 }
 

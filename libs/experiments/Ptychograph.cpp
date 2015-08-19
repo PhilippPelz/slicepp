@@ -34,7 +34,7 @@ using boost::format;
 namespace QSTEM
 {
 
-Ptychograph::Ptychograph(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers):BaseExperiment(c,s,w,p,pers)
+Ptychograph::Ptychograph(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p, const DetPtr& d, const PersistenceManagerPtr& pers):BaseExperiment(c,s,w,p,d,pers)
 {
 	m_mode=ExperimentType::PTYC;
 	_scan = ScanPtr(new Scan(c));
@@ -108,8 +108,9 @@ void Ptychograph::Run()
 					WriteAvgArray(_runCount+1, "Averaged Diffraction pattern, unit: 1/A", params);
 				}
 			}
-			_wave->ResetProbe();
+			PostSpecimenProcess();
 			_persist->StoreToDiscMP(i + 1, xp, yp);
+			_wave->ResetProbe();
 		}
 	DisplayProgress(1);
 	BOOST_LOG_TRIVIAL(info) << "Saving to disc...";

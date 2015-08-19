@@ -21,6 +21,7 @@
 #define EXPERIMENT_BASE_H
 
 #include "experiment_interface.hpp"
+#include "detectors/detector_interface.hpp"
 #include "wavefunctions/wave_interface.hpp"
 #include "structure_IO/crystal.hpp"
 #include "data_IO/PersistenceManager.hpp"
@@ -32,7 +33,7 @@ namespace QSTEM
 class DLL_EXPORT BaseExperiment : public IExperiment
 {
 public:
-    BaseExperiment(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers);
+    BaseExperiment(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p, const DetPtr& d, const PersistenceManagerPtr& pers);
     virtual ~BaseExperiment(){};
     virtual void DisplayProgress(int flag);
     virtual void DisplayParams();
@@ -44,6 +45,7 @@ public:
 protected:
     virtual void PostSliceProcess(unsigned absoluteSlice) {}; // Called in RunMuls after a slice is transmitted/propagated through.  Override as desired.
     virtual void CollectIntensity(unsigned absoluteSlice)=0;
+    virtual void PostSpecimenProcess();
     virtual int RunMultislice(af::array t_af);
     virtual void AddDPToAvgArray(const WavePtr &wave);
 
@@ -83,6 +85,8 @@ protected:
     StructureBuilderPtr _structureBuilder;
     // saving stuff
     PersistenceManagerPtr _persist;
+    // detector
+    DetPtr _det;
 
     float_tt m_intIntensity;  // Integrated intensity from experiment - if too low,
     // your wave array is too small, and the beam is being scattered beyond it.
@@ -101,7 +105,7 @@ protected:
     std::vector<float_tt> m_propxr, m_propxi, m_propyr, m_propyi;
 };
 
-typedef boost::function<BaseExperiment*(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers)> experimentCreator;
+typedef boost::function<BaseExperiment*(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const DetPtr& d, const PersistenceManagerPtr& pers)> experimentCreator;
 typedef std::map<ExperimentType,experimentCreator> ExperimentFactory;
 
 }

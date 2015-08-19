@@ -37,7 +37,6 @@ namespace bpt = boost::property_tree;
 #include <wavefunctions/wave_convergent.hpp>
 #include <wavefunctions/wave_plane.hpp>
 #include "experiments/base.hpp"
-#include "experiments/stem.hpp"
 #include "experiments/CoherentCBED.hpp"
 #include "experiments/CoherentTEM.hpp"
 #include "experiments/Ptychograph.hpp"
@@ -47,6 +46,8 @@ namespace bpt = boost::property_tree;
 #include "potentials/pot_3d.hpp"
 #include "potentials/pot_3d_fft.hpp"
 #include "potentials/CUDA2DPotential.hpp"
+#include "detectors/detector_interface.hpp"
+#include "detectors/FlatAreaDetector.hpp"
 #include "stemtypes_fftw3.hpp"
 #include "structure_IO/structureInterface.hpp"
 #include "structure_IO/IStructureBuilder.hpp"
@@ -71,11 +72,13 @@ protected:
 	void RegisterWaveTypes();
 	void RegisterExperimentTypes();
 	void RegisterPotentialTypes();
+	void RegisterDetectorTypes();
 	void RegisterStructureTypes();
 	void RegisterStructureBuilders();
 	void RegisterStructureReaders();
 	void SetSliceThickness(StructurePtr s);
 	void SetResolution(StructurePtr s);
+	DetectorFactory _detectorFactory;
 	WaveFactory _waveFactory;
 	ExperimentFactory _experimentFactory;
 	PotentialFactory _potentialFactory;

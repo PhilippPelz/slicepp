@@ -41,7 +41,7 @@ public:
 	void InitStorage();
 	void ResizeStorage(int xdim, int ydim);
 	virtual ~PersistenceManager();
-	bool potSaved;
+	bool _potSaved;
 protected:
 	HDFFile _file;
 	ConfigPtr _c;

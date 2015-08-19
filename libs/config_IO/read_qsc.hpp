@@ -136,7 +136,7 @@ public:
 };
 class DLL_EXPORT PotentialConfig : IPropertyTreeReader{
 public:
-	bool Use3D, UseFFT,    PlotVrr,periodicXY,periodicZ,DoZInterpolation,UseQPotentialOffsets;
+	bool Use3D, UseFFT, CUDAOnTheFly, PlotVrr,periodicXY,periodicZ,DoZInterpolation,UseQPotentialOffsets;
 	QSTEM::StructureFactorType StructureFactorType;
 	//atom radius in angstrom
 	float_tt ratom;
@@ -147,7 +147,7 @@ class DLL_EXPORT WaveConfig : IPropertyTreeReader{
 public:
 	float_tt Cs, C5, Cc, dV_V, alpha, Defocus, Astigmatism, AstigmatismAngle,
 		a_33, a_31, a_44, a_42, a_55, a_53, a_51, a_66, a_64, a_62, phi_33, phi_31, phi_44, phi_42, phi_55, phi_53, phi_51, phi_66, phi_64, phi_62, gaussScale,
-		dI_I, dE_E, AISaperture, tiltX, tiltY, posX,posY, imPot;
+		dI_I, dE_E, AISaperture, tiltX, tiltY, posX,posY, imPot, pixelDose;
 	bool Smooth, Gaussian;
 	int type, nx, ny;
 
@@ -157,7 +157,7 @@ class DLL_EXPORT OutputConfig : IPropertyTreeReader{
 public:
 	int LogLevel, SaveWaveIterations;
 	bool SavePotential,	SaveProjectedPotential,WriteLogFile,saveProbe,SaveWaveAfterTransmit,
-		SaveWaveAfterTransform,	SaveWaveAfterPropagation,SaveWaveAfterSlice,SaveAtomicPotential;
+		SaveWaveAfterTransform,	SaveWaveAfterPropagation,SaveWaveAfterSlice,SaveAtomicPotential,ComputeFromProjectedPotential;
 	boost::filesystem::path savePath, LogFileName;
 	// TODO: deprecated
 	QSTEM::SaveLevel SaveLevel = QSTEM::SaveLevel::Results;
@@ -169,6 +169,13 @@ public:
 class DLL_EXPORT ScanConfig : IPropertyTreeReader{
 public:
 	int xPos, yPos, xStep, yStep, scanType;
+	virtual void Read(ptree& t);
+};
+
+class DLL_EXPORT DetectorConfig : IPropertyTreeReader{
+public:
+	float_tt mtfA, mtfB, mtfC, mtfD;
+	int type;
 	virtual void Read(ptree& t);
 };
 
@@ -188,6 +195,7 @@ public:
 	WaveConfig Wave;
 	BeamConfig Beam;
 	ScanConfig Scan;
+	DetectorConfig Detector;
 
 	//virtual ExperimentType ExperimentType() = 0;
 	//virtual PrintLevel PrintLevel() = 0;

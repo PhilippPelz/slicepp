@@ -15,7 +15,7 @@ PersistenceManager::PersistenceManager() :
 				ComplexArray3D(boost::extents[1][1][1])), _waveSlicesAfterSlice(
 				ComplexArray3D(boost::extents[1][1][1])), _probe(
 				ComplexArray2D(boost::extents[1][1])), _projectedPotential(
-				ComplexArray2D(boost::extents[1][1])), _info(NULL), potSaved(false){
+				ComplexArray2D(boost::extents[1][1])), _info(NULL), _potSaved(false){
 }
 PersistenceManager::PersistenceManager(const ConfigPtr c) :
 		PersistenceManager() {
@@ -96,11 +96,11 @@ void PersistenceManager::SaveWaveAfterSlice(af::array wave, int slice) {
 	SaveWaveAfterSlice(a, slice);
 }
 void PersistenceManager::SavePotential(ComplexArray3D a) {
+	_potSaved = true;
 	_potential = a;
 }
 
 void PersistenceManager::SavePotential(af::array data) {
-	potSaved = true;
 	ComplexArray3D a(boost::extents[data.dims(2)][data.dims(0)][data.dims(1)]);
 	data.host(a.data());
 	SavePotential(a);
@@ -132,7 +132,7 @@ void PersistenceManager::Save2DDataSet(af::array data, string name) {
 void PersistenceManager::InitStorage() {
 	auto e3 = boost::extents[_c->Model.nSlices][_c->Model.nx][_c->Model.ny];
 	auto e2 = boost::extents[_c->Model.nx][_c->Model.ny];
-	if (_c->Output.SavePotential)
+	if (_c->Output.SavePotential || _c->Output.ComputeFromProjectedPotential)
 		_potential.resize(e3);
 	if (_c-> Output.SaveWaveAfterSlice)
 		_waveSlicesAfterSlice.resize(e3);
@@ -144,15 +144,15 @@ void PersistenceManager::InitStorage() {
 		_waveSlicesAfterTransmit.resize(e3);
 	if (_c-> Output.saveProbe)
 		_probe.resize(e2);
-	if (_c-> Output.SaveProjectedPotential)
+	if (_c-> Output.SaveProjectedPotential || _c->Output.ComputeFromProjectedPotential)
 		_projectedPotential.resize(e2);
 }
 
 void PersistenceManager::ResizeStorage(int xdim, int ydim) {
 	auto e3 = boost::extents[_c->Model.nSlices][xdim][ydim];
 	auto e2 = boost::extents[xdim][ydim];
-	if (_c->Output.SavePotential)
-		_potential.resize(e3);
+	if (_c->Output.SavePotential  || _c->Output.ComputeFromProjectedPotential)
+		_potential.resize(boost::extents[_c->Model.nSlices][_c->Model.nx][_c->Model.ny]);
 	if (_c-> Output.SaveWaveAfterSlice)
 		_waveSlicesAfterSlice.resize(e3);
 	if (_c-> Output.SaveWaveAfterPropagation)
@@ -163,8 +163,8 @@ void PersistenceManager::ResizeStorage(int xdim, int ydim) {
 		_waveSlicesAfterTransmit.resize(e3);
 	if (_c-> Output.saveProbe)
 		_probe.resize(e2);
-	if (_c-> Output.SaveProjectedPotential)
-		_projectedPotential.resize(e2);
+	if (_c-> Output.SaveProjectedPotential || _c->Output.ComputeFromProjectedPotential)
+		_projectedPotential.resize(boost::extents[_c->Model.nx][_c->Model.ny]);
 }
 
 

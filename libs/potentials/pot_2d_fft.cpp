@@ -129,7 +129,7 @@ void C2DFFTPotential::AddAtomPeriodic(atom& atom, float_tt atomBoxX, int iAtomX,
 	float_tt s11 = ddx * ddy;
 
 	ComplexArray2DPtr pot = _atomPot[atom.Znum];
-
+	complex_tt added = complex_tt(0,0);
 	for (int iax = iax0; iax < iax1; iax++) { // TODO: should use ix += OVERSAMPLING
 		for (int iay = iay0; iay < iay1; iay++) {
 			int xindex = (iOffsX + OVERSAMPLING * (iax - iax0));
@@ -139,6 +139,7 @@ void C2DFFTPotential::AddAtomPeriodic(atom& atom, float_tt atomBoxX, int iAtomX,
 						+ s21 * pot[xindex][yindex+1]
 						+ s22 * pot[xindex+1][yindex+1]).real();
 			_t[iAtomZ][iax % _c->Model.nx][iay %_c->Model.ny] += complex_tt(vz,0);
+			added += vz;
 		}
 	}
 }

@@ -48,7 +48,7 @@ void  CUDAFunctions::phaseGrating(cufftComplex* V_d, int nAt, int nZ, float_tt* 
 		V1 = af::fft(V1);
 		V1 *= V2;
 		V1 = af::ifft(V1);
-		V1 *= slicePixels;
+		V1 *= sqrtf(slicePixels);
 		V3 = V1 + V3;
 		af::sync();
 		V1_d = (cufftComplex *)V1.device<af::af_cfloat>();
@@ -102,10 +102,10 @@ void CUDAFunctions::initPotArrays(int slicePixels){
 	V1 = af::array(slicePixels, c32);
 	V2 = af::array(slicePixels, c32);
 	V3 = af::array(slicePixels, c32);
+	af::sync();
 	V1_d = (cufftComplex *)V1.device<af::af_cfloat>();
 	V2_d = (cufftComplex *)V2.device<af::af_cfloat>();
 	V3_d = (cufftComplex *)V3.device<af::af_cfloat>();
-	af::sync();
 }
 void CUDAFunctions::unlockArrays(){
 	V1.unlock();

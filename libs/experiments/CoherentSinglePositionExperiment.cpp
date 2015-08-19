@@ -27,7 +27,7 @@ using boost::format;
 namespace QSTEM
 {
 
-CoherentSinglePositionExperiment::CoherentSinglePositionExperiment(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers) : BaseExperiment(c,s,w,p,pers)
+CoherentSinglePositionExperiment::CoherentSinglePositionExperiment(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p, const DetPtr& d, const PersistenceManagerPtr& pers) : BaseExperiment(c,s,w,p,d,pers)
 {
 	m_mode=ExperimentType::CBED;
 	_lbeams = false;
@@ -130,9 +130,13 @@ void CoherentSinglePositionExperiment::Run()
 //				BOOST_LOG_TRIVIAL(error) << "Could not open file for pendelloesung plot";
 //			}
 		}
-		DisplayProgress(1);
 	}
+	time(&time0);
 	PostSpecimenProcess();
+	time(&time1);
+	BOOST_LOG_TRIVIAL(info)<< format( "%g sec used for post specimen process")
+	% difftime(time1, time0);
+	DisplayProgress(1);
 	BOOST_LOG_TRIVIAL(info) << "Saving to disc...";
 	_persist->StoreToDisc();
 	BOOST_LOG_TRIVIAL(info) << "Finished saving...";
@@ -234,7 +238,7 @@ void CoherentSinglePositionExperiment::WriteBeams(unsigned int absoluteSlice)
 	 */
 }
 
-void CoherentSinglePositionExperiment::PostSliceProcess( )
+void CoherentSinglePositionExperiment::PostSliceProcess()
 {
 	//	InterimWave(absoluteSlice);
 	//	if (_c->Output.LogLevel < 2) {

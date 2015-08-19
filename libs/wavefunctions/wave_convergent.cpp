@@ -169,10 +169,9 @@ void CConvergentWave::ConstructWave(){
 
 	float_tt sum = 0.0;
 	bool condition;
-	af::array kx, ky, kx2, ky2, k2, k2max_af, ktheta, ktheta2, phi, chi, real, imag, scale;
-	//af::array x, y, pixel, rx, ry, rx2, ry2;
-	af::array x, y;
-	af::array delta;
+	af::array kx(_nx, _ny), ky(_nx, _ny), kx2(_nx, _ny), ky2(_nx, _ny), k2(_nx, _ny), k2max_af(_nx, _ny), ktheta(_nx, _ny), ktheta2(_nx, _ny), phi(_nx, _ny), chi(_nx, _ny), real(_nx, _ny), imag(_nx, _ny), scale(_nx, _ny);
+	af::array x(_nx, _ny), y(_nx, _ny);
+	af::array delta(_nx, _ny);
 	/********************************************************
 	 * formulas from:
 	 * http://cimesg1.epfl.ch/CIOL/asu94/ICT_8.html
@@ -194,10 +193,7 @@ void CConvergentWave::ConstructWave(){
 	float_tt rx2 = rx * rx;
 	float_tt ry = 1.0/by;
 	float_tt ry2 = ry * ry;
-//	rx = af::constant(1.0/ax, _nx, _ny);
-//	rx2 = rx*rx;
-//	ry = af::constant(1.0/by, _nx, _ny);
-//	ry2 = ry*ry;
+
 
 	ixmid = _nx/2;
 	iymid = _ny/2;
@@ -235,21 +231,21 @@ void CConvergentWave::ConstructWave(){
 	phi = af::atan2(ry*ky, rx*kx);
 	chi = ktheta2*(m_df0 +delta + m_astigMag*af::cos(2.0*(phi-m_astigAngle)))/2.0;
 
-	ktheta2 *= ktheta;  //ktheta^3
+	  //ktheta^3
 	if ((m_a33 > 0) || (m_a31 > 0))
-		chi += ktheta2*(m_a33*af::cos(3.0*(phi-m_phi33)) + m_a31*af::cos(phi-m_phi31))/3.0;
+		chi += af::pow(ktheta, 3)*(m_a33*af::cos(3.0*(phi-m_phi33)) + m_a31*af::cos(phi-m_phi31))/3.0;
 
-	ktheta2 *= ktheta;  //ktheta^4
+	 //ktheta^4
 	if ((m_a44 > 0) || (m_a42 > 0) || (m_Cs != 0))
-		chi += ktheta2*(m_a44*af::cos(4.0*(phi-m_phi44)) + m_a42*af::cos(2.0*(phi-m_phi42)) + m_Cs)/4.0;
+		chi += af::pow(ktheta, 4)*(m_a44*af::cos(4.0*(phi-m_phi44)) + m_a42*af::cos(2.0*(phi-m_phi42)) + m_Cs)/4.0;
 
-	ktheta2 *= ktheta;  //ktheta^5
+	 //ktheta^5
 	if ((m_a55 > 0) || (m_a53 > 0) || (m_a51 > 0))
-		chi += ktheta2*(m_a55*af::cos(5.0*(phi-m_phi55)) + m_a53*af::cos(3.0*(phi-m_phi53)) + m_a51*af::cos(phi-m_phi51))/5.0;
+		chi += af::pow(ktheta, 5)*(m_a55*af::cos(5.0*(phi-m_phi55)) + m_a53*af::cos(3.0*(phi-m_phi53)) + m_a51*af::cos(phi-m_phi51))/5.0;
 
-	ktheta2 *= ktheta;  //ktheta^6
+	//ktheta^6
 	if ((m_a66 > 0) || (m_a64 > 0) || (m_a62 = 0) || (m_C5 != 0))
-		chi += ktheta2*(m_a66*af::cos(6.0*(phi-m_phi66))+m_a64*af::cos(4.0*(phi-m_phi64))+m_a62*af::cos(2.0*(phi-m_phi62))+m_C5)/6.0;
+		chi += af::pow(ktheta, 6)*(m_a66*af::cos(6.0*(phi-m_phi66))+m_a64*af::cos(4.0*(phi-m_phi64))+m_a62*af::cos(2.0*(phi-m_phi62))+m_C5)/6.0;
 
 	af::array condition2;
 
