@@ -1,2 +1,0 @@
-tests/libs/data_IO/CMakeLists.txt
-tests/libs/data_IO/test_data_img.cpp
