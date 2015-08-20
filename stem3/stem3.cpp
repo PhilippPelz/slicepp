@@ -16,13 +16,9 @@ QSTEM - image simulation for TEM/STEM/CBED
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#define VIB_IMAGE_TEST
-
 #ifndef _WIN32
 #define UNIX
 #endif
-/* #define USE_FFT_POT */
-// for memory leak checking in windows.  Should not affect speed of release builds.
 #define _CRTDBG_MAP_ALLOC
 #include <stdio.h>	/* ANSI C libraries */
 #include <stdlib.h>
@@ -33,27 +29,16 @@ QSTEM - image simulation for TEM/STEM/CBED
 #endif
 #endif
 
+#include "Bootstrapper.hpp"
+
 #include <string.h>
 #include <omp.h>
 #include <time.h>
-
-#include "Bootstrapper.hpp"
-#include "config_IO/read_qsc.hpp"
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/info_parser.hpp>
-
 #include <iostream>
 
 using boost::property_tree::ptree;
 using namespace QSTEM;
 using boost::property_tree::info_parser::read_info;
-
-void usage()
-{
-	printf("usage: stem [input file='stem.dat']\n\n");
-}
-
-
 
 int main(int argc, char *argv[])
 {
@@ -61,10 +46,6 @@ int main(int argc, char *argv[])
 	b.Initialize();
 	auto expt = b.GetExperiment();
 	expt->Run();
-
-//	std::cout << "Press key to finish";
-//	char name[256];
-//	std::cin.getline (name,256);
 
 #if _DEBUG
 	_CrtDumpMemoryLeaks();

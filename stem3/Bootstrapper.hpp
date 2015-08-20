@@ -8,7 +8,7 @@
 #ifndef STEM3_BOOTSTRAPPER_H_
 #define STEM3_BOOTSTRAPPER_H_
 
-#include "config_IO/read_qsc.hpp"
+#include "config_IO/configs.hpp"
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
@@ -57,8 +57,6 @@ namespace bpt = boost::property_tree;
 
 namespace QSTEM {
 
-
-
 class Bootstrapper {
 public:
 	Bootstrapper(int argc, char *argv[]);
@@ -81,6 +79,8 @@ protected:
 	PotentialFactory _potentialFactory;
 	StructureReaderFactory _structureReaderFactory;
 	StructureBuilderFactory _structureBuilderFactory;
+	std::string _configFile;
+	boost::filesystem::path _configPath;
 };
 
 } /* namespace QSTEM */

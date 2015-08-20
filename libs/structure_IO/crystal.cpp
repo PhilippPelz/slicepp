@@ -17,18 +17,19 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <iostream>
 #include "crystal.hpp"
 #include "stemtypes_fftw3.hpp"
-#include "random.hpp"
 #include "structure_factories.hpp"
+#include "matrixlib.hpp"
+
+#include "random.hpp"
+#include <stdlib.h>
+#include <iostream>
 #include <string>
 #include <nlopt.hpp>
 #include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/array.hpp>
-#include "matrixlib.hpp"
 
 using boost::format;
 using namespace nlopt;
@@ -389,11 +390,6 @@ superCellBoxPtr CrystalBuilder::Build() {
 			_atoms[j].r[1] += _c->Structure.yOffset;
 			_atoms[j].r[2] += _c->Structure.zOffset;
 		}
-		// make sure all atoms live within the slices
-		if (_c->Potential.Use3D) {
-			_atoms[j].r[2] += _c->Potential.ratom;
-		}
-
 	}
 
 	for (int j = 0; j < _atoms.size(); j++) {

@@ -159,21 +159,6 @@ default(none)
 #pragma omp atomic
 				collectedIntensity += wave->GetIntegratedIntensity();
 
-				if (pCount == picts-1)  /* if this is the last slice ... */
-				{
-					if (m_saveLevel > 0)
-					{
-						ReadAvgArray(ix, iy);
-						AddDPToAvgArray(_wave);
-						// Write the array to a file, resize and crop it,
-						WriteAvgArray(ix, iy);
-					}
-					else {
-						if (_runCount > 0)	m_chisq[_runCount-1] = 0.0;
-					}
-				} /* end of if pCount == picts, i.e. conditional code, if this
-				 * was the last slice
-				 */
 
 #pragma omp atomic
 				++m_completePixels;

@@ -9,10 +9,12 @@
 #define LIBS_DATA_IO_PERSISTENCEMANAGER_HPP_
 
 #include "HDFFile.hpp"
-#include <arrayfire.h>
 #include <boost/filesystem.hpp>
 #include <boost/shared_ptr.hpp>
-#include "config_IO/read_qsc.hpp"
+#include "config_IO/configs.hpp"
+
+#include <arrayfire.h>
+
 namespace QSTEM {
 
 class PersistenceManager {
@@ -20,10 +22,10 @@ public:
 	PersistenceManager();
 	PersistenceManager(const ConfigPtr c);
 	void SaveProbe(ComplexArray2DPtr a);
-	void SaveWaveAfterTransmit(ComplexArray2DPtr a,int slice);
-	void SaveWaveAfterTransform(ComplexArray2DPtr a,int slice);
-	void SaveWaveAfterSlice(ComplexArray2DPtr a,int slice);
-	void SaveWaveAfterPropagation(ComplexArray2DPtr a,int slice);
+	void SaveWaveAfterTransmit(ComplexArray2DPtr a, int slice);
+	void SaveWaveAfterTransform(ComplexArray2DPtr a, int slice);
+	void SaveWaveAfterSlice(ComplexArray2DPtr a, int slice);
+	void SaveWaveAfterPropagation(ComplexArray2DPtr a, int slice);
 	void SaveProbe(af::array a);
 	void SaveWaveAfterTransmit(af::array wave, int slice);
 	void SaveWaveAfterTransform(af::array wave, int slice);
@@ -48,14 +50,12 @@ protected:
 	H5::Group* _info;
 	ComplexArray3D _waveSlicesAfterTransmit;
 	ComplexArray3D _waveSlicesAfterFT;
-	ComplexArray3D _waveSlicesAfterProp,_waveSlicesAfterSlice;
+	ComplexArray3D _waveSlicesAfterProp, _waveSlicesAfterSlice;
 	ComplexArray3D _potential;
 	ComplexArray2D _projectedPotential;
 	ComplexArray2D _probe;
 };
 typedef boost::shared_ptr<PersistenceManager> PersistenceManagerPtr;
 } /* namespace QSTEM */
-
-
 
 #endif /* LIBS_DATA_IO_PERSISTENCEMANAGER_HPP_ */

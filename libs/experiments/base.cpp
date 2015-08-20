@@ -36,7 +36,6 @@ BaseExperiment::BaseExperiment(const ConfigPtr& c,const StructureBuilderPtr& s,c
 	_pot = p;
 	m_equalDivs = true;
 	m_avgArray = RealVector();
-	m_saveLevel = static_cast<unsigned>(c->Output.SaveLevel);
 
 	DisplayParams();
 }

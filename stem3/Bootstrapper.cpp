@@ -23,15 +23,25 @@ namespace QSTEM {
 //the ADF-STEM detector (for STEM)
 
 Bootstrapper::Bootstrapper(int argc, char *argv[]) {
-	std::string fileName;
-	if (argc < 2)   fileName = "config.json";
-	else    fileName=argv[1];
+	if (argc < 2)   _configFile = "config.json";
+	else    _configFile=argv[1];
+
+	_configPath = boost::filesystem::path(_configFile).parent_path();
 
 	ptree pt;
-	bpt::json_parser::read_json(fileName,pt);
-//	read_info(fileName,pt);
-//	bpt::json_parser::write_json(std::string("config.json"),pt);
-	_c = ConfigPtr(new Config(pt));
+	bpt::json_parser::read_json(_configFile.c_str(),pt);
+
+	_c = ConfigPtr(new Config(pt,_configPath));
+
+	if(_c->Output.savePath.has_relative_path()){
+		_c->Output.savePath = _configPath / _c->Output.savePath;
+	}
+	if(_c->Output.LogFileName.has_relative_path()){
+		_c->Output.LogFileName = _configPath / _c->Output.LogFileName;
+	}
+	if(_c->Structure.structureFilename.has_relative_path()){
+		_c->Structure.structureFilename = _configPath / _c->Structure.structureFilename;
+	}
 
 	logging::core::get()->set_filter
 	(
@@ -77,14 +87,10 @@ void Bootstrapper::Initialize(){
 	auto structureBuilder = StructureBuilderPtr(_structureBuilderFactory[p.extension().string()](sreader,_c));
 	auto persist = PersistenceManagerPtr(new PersistenceManager(_c));
 
-//	std::stringstream str;
-//	str << (_c->Potential.Use3D ? "3D" : "2D");
-//	str << (_c->Potential.UseFFT ? "FFT" : "");
-
-	std::string str = _c->Potential.PotentialType;
-	std::transform(str.begin(), str.end(),str.begin(), ::toupper);
+	std::string potType = _c->Potential.PotentialType;
+	std::transform(potType.begin(), potType.end(),potType.begin(), ::toupper);
 	auto wave = WavePtr(_waveFactory[_c->Wave.type](_c,persist));
-	auto potential = PotPtr(_potentialFactory[str](_c,persist));
+	auto potential = PotPtr(_potentialFactory[potType](_c,persist));
 	_e = ExperimentPtr( _experimentFactory[_c->ExperimentType](_c,structureBuilder,wave,potential,persist));
 }
 ExperimentPtr Bootstrapper::GetExperiment(){

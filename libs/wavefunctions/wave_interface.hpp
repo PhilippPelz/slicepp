@@ -20,13 +20,14 @@
 #ifndef WAVE_INTERFACE_H
 #define WAVE_INTERFACE_H
 
+#include <data_IO/PersistenceManager.hpp>
+#include "config_IO/configs.hpp"
+#include "stemtypes_fftw3.hpp"
+
 #include <map>
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
-#include <data_IO/PersistenceManager.hpp>
-#include "config_IO/read_qsc.hpp"
-#include "stemtypes_fftw3.hpp"
 #include <boost/function.hpp>
 #include <arrayfire.h>
 

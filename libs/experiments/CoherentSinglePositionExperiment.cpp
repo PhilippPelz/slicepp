@@ -75,32 +75,6 @@ void CoherentSinglePositionExperiment::Run()
 		_pot->MakeSlices(box);
 		if (_c->Output.saveProbe) _persist->SaveProbe(_wave->GetProbe());
 		RunMultislice(_pot->GetPotential());
-		if (_runCount == 0) {
-			if (_lbeams) {
-				for (iy=0;iy<_c->Model.nSlices ;iy++) {
-					for (ix=0;ix<_nbout;ix++) {
-						avgPendelloesung[ix][iy] = _pendelloesung[ix][iy];
-					}
-				}
-			}
-		}
-		else {
-			m_storeSeries = 1;
-			if (m_saveLevel == 0)	m_storeSeries = 0;
-			else if (_runCount % m_saveLevel != 0) m_storeSeries = 0;
-			if (m_storeSeries)
-			{
-				params["1/Wavelength"] = 1.0/_wave->GetWavelength();
-				WriteAvgArray(_runCount+1, "Averaged Diffraction pattern, unit: 1/A", params);
-			}
-			if (_lbeams) {
-				for (iy=0;iy<_c->Model.nSlices ;iy++) {
-					for (ix=0;ix<_nbout;ix++) {
-						avgPendelloesung[ix][iy] =((float_tt)_runCount*avgPendelloesung[ix][iy]+_pendelloesung[ix][iy])/(float_tt)(_runCount+1);
-					}
-				}
-			}
-		}
 
 		if (_lbeams) {
 			/**************************************************************

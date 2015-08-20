@@ -89,25 +89,6 @@ void Ptychograph::Run()
 			BOOST_LOG_TRIVIAL(info) << format("\n==== Position %.lf (%.lf, %.lf) ====") % (i + 1) % xp % yp;
 			//RunMultislice(p->GetSubPotential(xp,yp,size));
 			RunMultislice(_pot->GetSubPotential(xp, yp, _c->Wave.nx, _c->Wave.ny));
-			if (_runCount == 0) {
-				if (_lbeams) {
-					for (iy=0;iy<_c->Model.nSlices ;iy++) {
-						for (ix=0;ix<_nbout;ix++) {
-							avgPendelloesung[ix][iy] = _pendelloesung[ix][iy];
-						}
-					}
-				}
-			}
-			else {
-				m_storeSeries = 1;
-				if (m_saveLevel == 0)	m_storeSeries = 0;
-				else if (_runCount % m_saveLevel != 0) m_storeSeries = 0;
-				if (m_storeSeries)
-				{
-					params["1/Wavelength"] = 1.0/_wave->GetWavelength();
-					WriteAvgArray(_runCount+1, "Averaged Diffraction pattern, unit: 1/A", params);
-				}
-			}
 			_wave->ResetProbe();
 			_persist->StoreToDiscMP(i + 1, xp, yp);
 		}

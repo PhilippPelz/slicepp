@@ -17,6 +17,12 @@ endfunction(add_lib_dir)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC " )
 SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -lz -ldl")
 
+if(CLUSTER)
+
+else(CLUSTER)
+
+endif(CLUSTER)
+
 add_definitions(${HDF5_DEFINITIONS})
 
 file(GLOB LIBS_FILES "*.?pp" "*.cu")

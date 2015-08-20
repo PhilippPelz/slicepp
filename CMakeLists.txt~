@@ -42,7 +42,7 @@ set(CLUSTER ON)
 
 #only for cluster
 if(CLUSTER)
-	SET(ArrayFire_DIR "$ENV{HOME}/projects/arrayfire/build")
+	SET(ArrayFire_DIR "ENV{HOME}/projects/arrayfire/build")
 	SET(BOOST_ROOT "/data/netapp/boost_1_58_0")
 	SET(BOOST_INCLUDEDIR "/data/netapp/boost_1_58_0/boost")
 	SET(BOOST_LIBRARYDIR "/data/netapp/boost_1_58_0/stage/lib")

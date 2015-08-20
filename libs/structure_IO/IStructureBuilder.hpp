@@ -8,7 +8,7 @@
 #ifndef LIBS_STRUCTURE_IO_ISTRUCTUREBUILDER_HPP_
 #define LIBS_STRUCTURE_IO_ISTRUCTUREBUILDER_HPP_
 
-#include "config_IO/read_qsc.hpp"
+#include "config_IO/configs.hpp"
 #include "structureInterface.hpp"
 
 #include<list>
@@ -32,11 +32,12 @@ protected:
 	IStructureBuilder(){};
 	StructureReaderPtr _r;
 	ConfigPtr _c;
-	std::list<boost::function<void(const atom& a)>> _atomVisitors;
 };
+
 typedef boost::shared_ptr<IStructureBuilder> StructureBuilderPtr;
 typedef boost::function<IStructureBuilder*(StructureReaderPtr& r,const ConfigPtr& c) > structureBuilderCreator;
 typedef std::map<string,structureBuilderCreator> StructureBuilderFactory;
+
 } /* namespace QSTEM */
 
 #endif /* LIBS_STRUCTURE_IO_ISTRUCTUREBUILDER_HPP_ */
