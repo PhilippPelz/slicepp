@@ -23,15 +23,17 @@ file(GLOB LIBS_FILES "*.?pp" "*.cu")
 
 add_lib_dir(config_IO)
 add_lib_dir(data_IO)
+add_lib_dir(detectors)
+add_lib_dir(experiments)
+add_lib_dir(potentials)
 add_lib_dir(structure_IO)
 add_lib_dir(wavefunctions)
-add_lib_dir(potentials)
-add_lib_dir(experiments)
 
 include_directories(
   ${PROJECT_SOURCE_DIR}
   config_IO
   data_IO
+  detectors
   structure_IO
   wavefunctions
   potentials

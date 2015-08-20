@@ -36,13 +36,23 @@ public:
 
 protected:
 //	virtual void SliceSetup();
+	void progressCounter(int j, int jTot);
 	void copyToDeviceInt(int *devdst, std::vector<int> src, int size);
 	void copyToDeviceFloat(float_tt *devdst, std::vector<float_tt> src, int size);
+	void copyDataToGPU(superCellBoxPtr info);
 	virtual void AddAtomToSlices(atom& atom, float_tt atomX, float_tt atomY, float_tt atomZ);
 	virtual void ComputeAtomPotential(int znum){};
 	virtual void SaveAtomicPotential(int znum);
-	void progressCounter(int j, int jTot);
+	virtual af::array GetSlice(af::array t, unsigned idx);
 	ComplexArray3D _t;
+	CUDAFunctions *cf;
+	cufftComplex *potential;
+	float_tt *xyzPos_d, *occupancy_d;
+	int *znums_d, *uniqueatoms;
+	afcfloat *tafPtr;
+	int slicePixels, numAtoms, numAtUnique;
+	float_tt imPot;
+	af::array xyzPos, occupancy, znums;
 };
 } /* namespace QSTEM */
 

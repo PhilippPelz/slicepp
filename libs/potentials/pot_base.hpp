@@ -53,7 +53,7 @@ public:
 	virtual void MakeSlices(superCellBoxPtr info);
 	virtual void ReadPotential(std::string &fileName, unsigned subSlabIdx);
 
-	virtual af::array GetSlice(unsigned idx);
+	virtual af::array GetSlice(af::array t, unsigned idx);
 	virtual af::array GetSubPotential(int startx, int starty, int nx, int ny);
 	virtual af::array GetPotential();
 protected:
@@ -64,6 +64,7 @@ protected:
 	void ReadSlice(const std::string &fileName, ComplexArray2DView slice, unsigned idx);
 	void SetScatteringFactors(float_tt kmax);
 
+	virtual void SavePotential();
 	virtual void SliceSetup();
 	virtual void AddAtomToSlices(atom& atom){};
 	virtual void ComputeAtomPotential(int znum){};

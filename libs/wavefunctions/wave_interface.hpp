@@ -68,6 +68,7 @@ public:
 	virtual float_tt GetWavelength()  const =0;
 	virtual float_tt GetPixelIntensity(int i) const =0;
 	virtual float_tt GetPixelIntensity(int x, int y) const =0;
+	virtual float_tt GetPixelDose() const =0;
 //	virtual void ApplyTransferFunction(boost::shared_array<complex_tt> &wave)=0;
 	virtual float_tt GetIntegratedIntensity() const =0;
 	virtual void Transmit(af::array t)=0;

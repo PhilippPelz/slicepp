@@ -34,7 +34,7 @@ using boost::format;
 namespace QSTEM
 {
 
-Ptychograph::Ptychograph(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers):BaseExperiment(c,s,w,p,pers)
+Ptychograph::Ptychograph(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p, const DetPtr& d, const PersistenceManagerPtr& pers):BaseExperiment(c,s,w,p,d,pers)
 {
 	m_mode=ExperimentType::PTYC;
 	_scan = ScanPtr(new Scan(c));
@@ -89,8 +89,11 @@ void Ptychograph::Run()
 			BOOST_LOG_TRIVIAL(info) << format("\n==== Position %.lf (%.lf, %.lf) ====") % (i + 1) % xp % yp;
 			//RunMultislice(p->GetSubPotential(xp,yp,size));
 			RunMultislice(_pot->GetSubPotential(xp, yp, _c->Wave.nx, _c->Wave.ny));
-			_wave->ResetProbe();
+
+			PostSpecimenProcess();
+
 			_persist->StoreToDiscMP(i + 1, xp, yp);
+			_wave->ResetProbe();
 		}
 	DisplayProgress(1);
 	BOOST_LOG_TRIVIAL(info) << "Saving to disc...";

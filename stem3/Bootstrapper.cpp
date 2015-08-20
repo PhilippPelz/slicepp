@@ -80,6 +80,7 @@ void Bootstrapper::Initialize(){
 	RegisterPotentialTypes();
 	RegisterStructureTypes();
 	RegisterExperimentTypes();
+	RegisterDetectorTypes();
 	RegisterStructureReaders();
 	RegisterStructureBuilders();
 	boost::filesystem::path p(_c->Structure.structureFilename);
@@ -90,8 +91,10 @@ void Bootstrapper::Initialize(){
 	std::string potType = _c->Potential.PotentialType;
 	std::transform(potType.begin(), potType.end(),potType.begin(), ::toupper);
 	auto wave = WavePtr(_waveFactory[_c->Wave.type](_c,persist));
-	auto potential = PotPtr(_potentialFactory[potType](_c,persist));
-	_e = ExperimentPtr( _experimentFactory[_c->ExperimentType](_c,structureBuilder,wave,potential,persist));
+	auto detector = DetPtr(_detectorFactory[_c->Detector.type](_c,persist));
+	auto potential = PotPtr(_potentialFactory[str](_c,persist));
+	_e = ExperimentPtr( _experimentFactory[_c->ExperimentType](_c,structureBuilder,wave,potential,detector, persist));
+
 }
 ExperimentPtr Bootstrapper::GetExperiment(){
 	return _e;
@@ -110,7 +113,6 @@ void Bootstrapper::RegisterWaveTypes(){
 }
 void Bootstrapper::RegisterExperimentTypes(){
 	_experimentFactory[ExperimentType::CBED] = boost::factory<CoherentCBED*>();
-	_experimentFactory[ExperimentType::STEM] = boost::factory<CExperimentSTEM*>();
 	_experimentFactory[ExperimentType::TEM] = boost::factory<CoherentTEM*>();
 	_experimentFactory[ExperimentType::PTYC] = boost::factory<Ptychograph*>();
 }
@@ -121,6 +123,11 @@ void Bootstrapper::RegisterPotentialTypes(){
 	_potentialFactory["2D"]= boost::factory<C2DPotential*>();
 	_potentialFactory["CUDA"]= boost::factory<CUDA2DPotential*>();
 }
+
+void Bootstrapper::RegisterDetectorTypes(){
+	_detectorFactory[1]= boost::factory<FlatAreaDetector*>();
+}
+
 void Bootstrapper::RegisterStructureTypes(){
 
 }

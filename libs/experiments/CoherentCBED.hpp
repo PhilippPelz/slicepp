@@ -14,9 +14,9 @@ namespace QSTEM {
 
 class CoherentCBED: public CoherentSinglePositionExperiment {
 public:
-	CoherentCBED(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p,const PersistenceManagerPtr& pers);
+	CoherentCBED(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p, const DetPtr& d, const PersistenceManagerPtr& pers);
 	virtual ~CoherentCBED();
-	virtual void PostSpecimenProcess();
+	//virtual void PostSpecimenProcess();
 };
 
 } /* namespace QSTEM */

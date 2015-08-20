@@ -43,6 +43,7 @@ CBaseWave::CBaseWave(const ConfigPtr& c,const PersistenceManagerPtr& p) :  IWave
 	m_realSpace = true;
 	m_detPosX = c->Scan.xPos;
 	m_detPosY = c->Scan.yPos;
+	_pixelDose = c->Wave.pixelDose;
 	// TODO: where does this belong?
 	//m_electronScale = m_beamCurrent*m_dwellTime*MILLISEC_PICOAMP;
 	Initialize(".img", ".img");
