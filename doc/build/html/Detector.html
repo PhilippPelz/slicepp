@@ -1,0 +1,306 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Detector &mdash; Multislice Simulation 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Multislice Simulation 1.0.1 documentation" href="README.html" />
+    <link rel="up" title="API Documentation" href="Functions.html" />
+    <link rel="next" title="Experiment" href="Experiment.html" />
+    <link rel="prev" title="Data" href="Data.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="Experiment.html" title="Experiment"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Data.html" title="Data"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="README.html">Multislice Simulation 1.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="Functions.html" accesskey="U">API Documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="detector">
+<h1>Detector<a class="headerlink" href="#detector" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="idetector">
+<h2>IDetector<a class="headerlink" href="#idetector" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="_CPPv2N5QSTEM9IDetectorE">
+<span id="QSTEM::IDetector"></span><span class="target" id="detectordd/d9b/class_q_s_t_e_m_1_1_i_detector"></span><em class="property">class </em><code class="descclassname">QSTEM::</code><code class="descname">IDetector</code><a class="headerlink" href="#_CPPv2N5QSTEM9IDetectorE" title="Permalink to this definition">¶</a></dt>
+<dd><p>The template for all detector objects </p>
+<div class="breathe-sectiondef container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="function">
+<dt id="_CPPv2N5QSTEM9IDetector9IDetectorERK9ConfigPtrRK21PersistenceManagerPtr">
+<span id="QSTEM::IDetector::IDetector__ConfigPtrCR.PersistenceManagerPtrCR"></span><span class="target" id="detectordd/d9b/class_q_s_t_e_m_1_1_i_detector_1af1f57874a6a1d4c56b5542ee029a593c"></span><code class="descname">IDetector</code><span class="sig-paren">(</span><em class="property">const</em> ConfigPtr &amp;<em>c</em>, <em class="property">const</em> PersistenceManagerPtr &amp;<em>persist</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N5QSTEM9IDetector9IDetectorERK9ConfigPtrRK21PersistenceManagerPtr" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="#detectordd/d9b/class_q_s_t_e_m_1_1_i_detector"><span>IDetector</span></a> constructor <dl class="docutils">
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last">
+<li><code class="first docutils literal"><span class="pre">c</span></code> - <p>- Pointer to Config Settings </p>
+</li>
+<li><code class="first docutils literal"><span class="pre">persist</span></code> - <p>- Pointer to Persistence Manager </p>
+</li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv2N5QSTEM9IDetector11RecordImageE7WavePtr">
+<span id="QSTEM::IDetector::RecordImage__WavePtr"></span>virtual <span class="target" id="detectordd/d9b/class_q_s_t_e_m_1_1_i_detector_1afe3b0b1f47877a33d45642239d54c487"></span>void <code class="descname">RecordImage</code><span class="sig-paren">(</span>WavePtr <em>w</em><span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv2N5QSTEM9IDetector11RecordImageE7WavePtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv2N5QSTEM9IDetector11MultiplyMTFEN2af5arrayE">
+<span id="QSTEM::IDetector::MultiplyMTF__af::array"></span>virtual <span class="target" id="detectordd/d9b/class_q_s_t_e_m_1_1_i_detector_1add10da5ac311043b1485f2a44105574e"></span>void <code class="descname">MultiplyMTF</code><span class="sig-paren">(</span>af::array <em>wave</em><span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv2N5QSTEM9IDetector11MultiplyMTFEN2af5arrayE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv2N5QSTEM9IDetectorD0Ev">
+<span id="QSTEM::IDetector::~IDetector"></span>virtual <span class="target" id="detectordd/d9b/class_q_s_t_e_m_1_1_i_detector_1a2365c1427c08a4f3ae7e8e0c1cefaa5b"></span><code class="descname">~IDetector</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N5QSTEM9IDetectorD0Ev" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="#detectordd/d9b/class_q_s_t_e_m_1_1_i_detector"><span>IDetector</span></a> destructor. </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef container">
+<p class="breathe-sectiondef-title rubric">Protected Functions</p>
+<dl class="function">
+<dt id="_CPPv2N5QSTEM9IDetector9IDetectorEv">
+<span id="QSTEM::IDetector::IDetector"></span><span class="target" id="detectordd/d9b/class_q_s_t_e_m_1_1_i_detector_1a57ee9b107fbf4e79e29d2661f2f707f6"></span><code class="descname">IDetector</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N5QSTEM9IDetector9IDetectorEv" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="#detectordd/d9b/class_q_s_t_e_m_1_1_i_detector"><span>IDetector</span></a> default constructor. </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef container">
+<p class="breathe-sectiondef-title rubric">Protected Attributes</p>
+<dl class="member">
+<dt id="_CPPv2N5QSTEM9IDetector2_cE">
+<span id="QSTEM::IDetector::_c__ConfigPtr"></span><span class="target" id="detectordd/d9b/class_q_s_t_e_m_1_1_i_detector_1a95a78ca79c68445d18cce74d0a9f24ca"></span>ConfigPtr <code class="descname">_c</code><a class="headerlink" href="#_CPPv2N5QSTEM9IDetector2_cE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pointer to Config settings. </p>
+</dd></dl>
+
+<dl class="member">
+<dt id="_CPPv2N5QSTEM9IDetector8_persistE">
+<span id="QSTEM::IDetector::_persist__PersistenceManagerPtr"></span><span class="target" id="detectordd/d9b/class_q_s_t_e_m_1_1_i_detector_1a571dcc5688886b1feecaa250e3d955e3"></span>PersistenceManagerPtr <code class="descname">_persist</code><a class="headerlink" href="#_CPPv2N5QSTEM9IDetector8_persistE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pointer to Persistence Manager for saving outputs. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="flatareadetector">
+<h2>FlatAreaDetector<a class="headerlink" href="#flatareadetector" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="_CPPv2N5QSTEM16FlatAreaDetectorE">
+<span id="QSTEM::FlatAreaDetector"></span><span class="target" id="detectord4/d7f/class_q_s_t_e_m_1_1_flat_area_detector"></span><em class="property">class </em><code class="descclassname">QSTEM::</code><code class="descname">FlatAreaDetector</code><a class="headerlink" href="#_CPPv2N5QSTEM16FlatAreaDetectorE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Basic flat area detector </p>
+<div class="breathe-sectiondef container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="function">
+<dt id="_CPPv2N5QSTEM16FlatAreaDetector16FlatAreaDetectorERK9ConfigPtrRK21PersistenceManagerPtr">
+<span id="QSTEM::FlatAreaDetector::FlatAreaDetector__ConfigPtrCR.PersistenceManagerPtrCR"></span><span class="target" id="detectord4/d7f/class_q_s_t_e_m_1_1_flat_area_detector_1a37fd7d5d88d613162907de7018383b7f"></span><code class="descname">FlatAreaDetector</code><span class="sig-paren">(</span><em class="property">const</em> ConfigPtr &amp;<em>c</em>, <em class="property">const</em> PersistenceManagerPtr &amp;<em>persist</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N5QSTEM16FlatAreaDetector16FlatAreaDetectorERK9ConfigPtrRK21PersistenceManagerPtr" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="#detectord4/d7f/class_q_s_t_e_m_1_1_flat_area_detector"><span>FlatAreaDetector</span></a> constructor <dl class="docutils">
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last">
+<li><code class="first docutils literal"><span class="pre">c</span></code> - <p>- Pointer to Config Settings </p>
+</li>
+<li><code class="first docutils literal"><span class="pre">persist</span></code> - <p>- Pointer to Persistence Manager </p>
+</li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv2N5QSTEM16FlatAreaDetector11RecordImageE7WavePtr">
+<span id="QSTEM::FlatAreaDetector::RecordImage__WavePtr"></span>virtual <span class="target" id="detectord4/d7f/class_q_s_t_e_m_1_1_flat_area_detector_1a7bc5a0c1297075a94570b39aa772160e"></span>void <code class="descname">RecordImage</code><span class="sig-paren">(</span>WavePtr <em>w</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N5QSTEM16FlatAreaDetector11RecordImageE7WavePtr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Record the wave after performing anscombe and mtf transformations <dl class="docutils">
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last">
+<li><code class="first docutils literal"><span class="pre">w</span></code> - <p>- Pointer to wave </p>
+</li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv2N5QSTEM16FlatAreaDetector11MultiplyMTFEN2af5arrayE">
+<span id="QSTEM::FlatAreaDetector::MultiplyMTF__af::array"></span>virtual <span class="target" id="detectord4/d7f/class_q_s_t_e_m_1_1_flat_area_detector_1acfe09d65edea1024cc3a6091116595fa"></span>void <code class="descname">MultiplyMTF</code><span class="sig-paren">(</span>af::array <em>wave</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N5QSTEM16FlatAreaDetector11MultiplyMTFEN2af5arrayE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multiply by MTF <dl class="docutils">
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last">
+<li><code class="first docutils literal"><span class="pre">wave</span></code> - <p>- wave to be multiplied </p>
+</li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv2N5QSTEM16FlatAreaDetectorD0Ev">
+<span id="QSTEM::FlatAreaDetector::~FlatAreaDetector"></span>virtual <span class="target" id="detectord4/d7f/class_q_s_t_e_m_1_1_flat_area_detector_1a2c14eaf0a8d8d7197b36584f8916b8ad"></span><code class="descname">~FlatAreaDetector</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N5QSTEM16FlatAreaDetectorD0Ev" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="#detectord4/d7f/class_q_s_t_e_m_1_1_flat_area_detector"><span>FlatAreaDetector</span></a> destructor. </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef container">
+<p class="breathe-sectiondef-title rubric">Protected Functions</p>
+<dl class="function">
+<dt id="_CPPv2N5QSTEM16FlatAreaDetector16FlatAreaDetectorEv">
+<span id="QSTEM::FlatAreaDetector::FlatAreaDetector"></span><span class="target" id="detectord4/d7f/class_q_s_t_e_m_1_1_flat_area_detector_1a03a4f54252a958462add0569a9895fb4"></span><code class="descname">FlatAreaDetector</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N5QSTEM16FlatAreaDetector16FlatAreaDetectorEv" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="#detectord4/d7f/class_q_s_t_e_m_1_1_flat_area_detector"><span>FlatAreaDetector</span></a> Default constructor. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv2N5QSTEM16FlatAreaDetector13anscombeNoiseEN2af5arrayE8float_tt">
+<span id="QSTEM::FlatAreaDetector::anscombeNoise__af::array.float_tt"></span><span class="target" id="detectord4/d7f/class_q_s_t_e_m_1_1_flat_area_detector_1a23e6c3300a5ac7bfdc9a462882752e81"></span>void <code class="descname">anscombeNoise</code><span class="sig-paren">(</span>af::array <em>slice</em>, float_tt <em>dose</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N5QSTEM16FlatAreaDetector13anscombeNoiseEN2af5arrayE8float_tt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform Anscombe Transform on the exiting wave <dl class="docutils">
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last">
+<li><code class="first docutils literal"><span class="pre">slice</span></code> - <p>- exiting wave </p>
+</li>
+<li><code class="first docutils literal"><span class="pre">dose</span></code> - <p>- Mean number of electrons per pixel </p>
+</li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef container">
+<p class="breathe-sectiondef-title rubric">Protected Attributes</p>
+<dl class="member">
+<dt id="_CPPv2N5QSTEM16FlatAreaDetector3_nxE">
+<span id="QSTEM::FlatAreaDetector::_nx__i"></span><span class="target" id="detectord4/d7f/class_q_s_t_e_m_1_1_flat_area_detector_1a6f2aabf6ce2c48377dd887234cfb92cf"></span>int <code class="descname">_nx</code><a class="headerlink" href="#_CPPv2N5QSTEM16FlatAreaDetector3_nxE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dimension 1 of the image. </p>
+</dd></dl>
+
+<dl class="member">
+<dt id="_CPPv2N5QSTEM16FlatAreaDetector3_nyE">
+<span id="QSTEM::FlatAreaDetector::_ny__i"></span><span class="target" id="detectord4/d7f/class_q_s_t_e_m_1_1_flat_area_detector_1a005c5c0d26dc980dfbd4f084bd00d761"></span>int <code class="descname">_ny</code><a class="headerlink" href="#_CPPv2N5QSTEM16FlatAreaDetector3_nyE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dimension 2 of the image. </p>
+</dd></dl>
+
+<dl class="member">
+<dt id="_CPPv2N5QSTEM16FlatAreaDetector9_numSavedE">
+<span id="QSTEM::FlatAreaDetector::_numSaved__i"></span><span class="target" id="detectord4/d7f/class_q_s_t_e_m_1_1_flat_area_detector_1a568066dfe2734a13e08d156e3eb7a4e8"></span>int <code class="descname">_numSaved</code><a class="headerlink" href="#_CPPv2N5QSTEM16FlatAreaDetector9_numSavedE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of images saved. </p>
+</dd></dl>
+
+<dl class="member">
+<dt id="_CPPv2N5QSTEM16FlatAreaDetector6_imageE">
+<span id="QSTEM::FlatAreaDetector::_image__af::array"></span><span class="target" id="detectord4/d7f/class_q_s_t_e_m_1_1_flat_area_detector_1a3ec330abcfe11275ba91cf160568b28f"></span>af::array <code class="descname">_image</code><a class="headerlink" href="#_CPPv2N5QSTEM16FlatAreaDetector6_imageE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Detected wave. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="README.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Detector</a><ul>
+<li><a class="reference internal" href="#idetector">IDetector</a></li>
+<li><a class="reference internal" href="#flatareadetector">FlatAreaDetector</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Data.html"
+                        title="previous chapter">Data</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Experiment.html"
+                        title="next chapter">Experiment</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Detector.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="Experiment.html" title="Experiment"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Data.html" title="Data"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="README.html">Multislice Simulation 1.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="Functions.html" >API Documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Philipp Pelz, Wenxuan Qiu.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

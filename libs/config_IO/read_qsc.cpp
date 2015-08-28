@@ -61,6 +61,7 @@ void StructureConfig::Read(ptree& t){
 	xOffset=t.get<float_tt>("structure.xOffset");
 	yOffset=t.get<float_tt>("structure.yOffset");
 	zOffset=t.get<float_tt>("structure.zOffset");
+	structureFilenameCopy = t.get<string>("structure.structure_filename");
 }
 void ModelConfig::Read(ptree& t){
 	UseTDS=t.get<bool>("model.tds");
@@ -188,10 +189,10 @@ void ScanConfig::Read(ptree& t){
 
 void DetectorConfig::Read(ptree& t){
 	type = t.get<int>("detector.type");
-	mtfA = t.get<float_tt>("detector.mtfA");
-	mtfB = t.get<float_tt>("detector.mtfB");
-	mtfC = t.get<float_tt>("detector.mtfC");
-	mtfD = t.get<float_tt>("detector.mtfD");
+	mtfA = ReadParam(t, "detector.mtfA");
+	mtfB = ReadParam(t, "detector.mtfB");
+	mtfC = ReadParam(t, "detector.mtfC");
+	mtfD = ReadParam(t, "detector.mtfD");
 }
 
 Config::Config(ptree& t){
@@ -207,6 +208,7 @@ Config::Config(ptree& t){
 	Scan = ScanConfig();
 
 
+
 	Structure.Read(t);
 	Model.Read(t);
 	Potential.Read(t);
@@ -215,6 +217,101 @@ Config::Config(ptree& t){
 	Wave.Read(t);
 	Beam.Read(t);
 	Scan.Read(t);
+
+	scanPara.push_back(Detector.mtfA);
+	scanPara.push_back(Detector.mtfB);
+	scanPara.push_back(Detector.mtfC);
+	scanPara.push_back(Detector.mtfD);
+}
+
+bool Config::HasNextPermutation(){
+	Structure.structureFilename=boost::filesystem::path(Structure.structureFilenameCopy);
+	  bool flag = false;
+	  for (int it = 0; it < scanPara.size(); it++){
+		  if (!(scanPara[it].maxValue())){
+			  scanPara[it].Next();
+			  flag = true;
+			  for (int it2 = 0; it2 < it; it2++){
+				  scanPara[it2].Reset();
+			  	 }
+			  break;
+		  }
+	  }
+	  return flag;
+}
+
+void Config::Reset(){
+	for (std::vector<ScannedParameter>::iterator it = scanPara.begin(); it != scanPara.end(); ++it){
+		it->Reset();
+	 }
+}
+
+void Config::EstimatedGPUMemoryUsage(){
+	float_tt potential, wave, structure, total;
+
+	// complex floats
+	potential = Model.nx * Model.ny * Model.nSlices * sizeof(float_tt) * 2 / 1000000;
+	if (Potential.PotentialType == "CUDA"){
+		potential += Model.nx * Model.ny * 3 * sizeof(float_tt) * 2 / 1000000;
+	}
+
+	// wave and propagator
+	wave =  2 * Model.nx * Model.ny * sizeof(float_tt) * 2 /1000000;
+	if (Wave.type == 2){
+		// convergent wave needs 16 additional af::arrays of size nx by ny
+		wave += 16 * Model.nx * Model.ny * sizeof(float_tt) * 2 /1000000;
+	}
+
+	structure = 0;
+	if (Potential.PotentialType == "CUDA"){
+		// znum, occupancy, xyzpos (3x)
+		structure = Model.nSlices * 5000 * sizeof(float_tt) * 5 / 1000000;
+	}
+	total = potential + wave + structure;
+	BOOST_LOG_TRIVIAL(info)<< format( "Estimated GPU Memory Usage");
+	BOOST_LOG_TRIVIAL(info)<< format( "Potential: %g MB, Wave: %g MB, Structure: %g MB, Total: %g MB") %potential %wave %structure %total;
+}
+
+void Config::EstimatedCPUMemoryUsage(){
+	float_tt potential, wave, structure, total;
+
+	potential = 0;
+	if (Output.SavePotential){
+		potential += Model.nx * Model.ny * Model.nSlices * sizeof(float_tt) * 2 / 1000000;
+	}
+
+	if (Output.SaveProjectedPotential){
+		potential += Model.nx * Model.ny * sizeof(float_tt) * 2 / 1000000;
+	}
+
+	// wave and propagator
+	wave =  2 * Model.nx * Model.ny * sizeof(float_tt) * 2 /1000000;
+	if (Output.SaveWaveAfterTransmit){
+		// convergent wave needs 16 additional af::arrays of size nx by ny
+		wave += Model.nx * Model.ny * Model.nSlices * sizeof(float_tt) * 2 / 1000000;
+	}
+
+	if (Output.SaveWaveAfterTransform){
+		// convergent wave needs 16 additional af::arrays of size nx by ny
+		wave += Model.nx * Model.ny * Model.nSlices * sizeof(float_tt) * 2 / 1000000;
+	}
+
+	if (Output.SaveWaveAfterPropagation){
+		// convergent wave needs 16 additional af::arrays of size nx by ny
+		wave += Model.nx * Model.ny * Model.nSlices * sizeof(float_tt) * 2 / 1000000;
+	}
+
+	if (Output.SaveWaveAfterSlice){
+		// convergent wave needs 16 additional af::arrays of size nx by ny
+		wave += Model.nx * Model.ny * Model.nSlices * sizeof(float_tt) * 2 / 1000000;
+	}
+
+	// znum, occupancy, xyzpos (3x), unfortunately stored twice
+	structure = structure = Model.nSlices * 5000 * sizeof(float_tt) * 10 / 1000000;
+
+	total = potential + wave + structure;
+	BOOST_LOG_TRIVIAL(info)<< format( "Estimated CPU Memory Usage");
+	BOOST_LOG_TRIVIAL(info)<< format( "Potential: %g MB, Wave: %g MB, Structure: %g MB, Total: %g MB") %potential %wave %structure %total;
 }
 
 

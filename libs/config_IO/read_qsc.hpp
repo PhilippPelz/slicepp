@@ -106,6 +106,7 @@ private:
 class DLL_EXPORT StructureConfig : IPropertyTreeReader{
 public:
 	boost::filesystem::path structureFilename;
+	std::string structureFilenameCopy;
 	std::vector<int> zoneAxis;
 	int nCellX=8;
 	int nCellY=8;
@@ -113,6 +114,7 @@ public:
 	bool isBoxed,rotateToZoneAxis;
 	float_tt temperatureK, crystalTiltX, crystalTiltY, crystalTiltZ,xOffset,
 	yOffset,zOffset,boxX,boxY,boxZ;
+	std::vector<ScannedParameter> scanPara;
 
 	virtual void Read(ptree& t);
 	bool HasOffset(){return xOffset != 0 || yOffset != 0 || zOffset != 0;};
@@ -150,6 +152,7 @@ public:
 		dI_I, dE_E, AISaperture, tiltX, tiltY, posX,posY, imPot, pixelDose;
 	bool Smooth, Gaussian;
 	int type, nx, ny;
+	std::vector<ScannedParameter> scanPara;
 
 	virtual void Read(ptree& t);
 };
@@ -174,7 +177,7 @@ public:
 
 class DLL_EXPORT DetectorConfig : IPropertyTreeReader{
 public:
-	float_tt mtfA, mtfB, mtfC, mtfD;
+	ScannedParameter mtfA, mtfB, mtfC, mtfD;
 	int type;
 	virtual void Read(ptree& t);
 };
@@ -196,6 +199,12 @@ public:
 	BeamConfig Beam;
 	ScanConfig Scan;
 	DetectorConfig Detector;
+	std::vector<ScannedParameter> scanPara;
+	bool HasNextPermutation();
+	void Reset();
+	void EstimatedCPUMemoryUsage();
+	void EstimatedGPUMemoryUsage();
+
 
 	//virtual ExperimentType ExperimentType() = 0;
 	//virtual PrintLevel PrintLevel() = 0;

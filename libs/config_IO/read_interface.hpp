@@ -23,6 +23,8 @@
 #include "stemtypes_fftw3.hpp"
 #include <boost/shared_ptr.hpp>
 #include <boost/filesystem.hpp>
+#include "config_IO/ScannedParameter.hpp"
+#include <stdlib.h>
 #include <string>
 #include <locale>
 #include <vector>
@@ -46,6 +48,23 @@ class IConfigReader;
 class IPropertyTreeReader{
 public:
 	virtual void Read(ptree& t) = 0;
+	  inline ScannedParameter ReadParam(ptree& t, string paramName){
+		  ScannedParameter param;
+		  try{
+			  float_tt value = t.get<float_tt>(paramName);
+			  param =  ScannedParameter(value);
+		  }
+		  catch(...){
+			  std::string str = t.get<string>(paramName);
+			  std::size_t end1;
+			  float_tt start = std::stof(str, &end1);
+			  str = str.substr(end1 + 1);
+			  float_tt stop = std::stof(str, &end1);
+			  int nSteps = std::stof(str.substr(end1 + 1), NULL);
+			  param = ScannedParameter(start, stop, nSteps);
+		  }
+		  return param;
+	  }
 protected:
 	virtual ~IPropertyTreeReader(){};
 };
@@ -56,7 +75,6 @@ class IConfigReader
 public:
   // Any ConfigReader class should define this as a private static member.  See read_qsc.hpp for example.
   // virtual ConfigReaderPtr Create()=0;
-
 
   virtual void ReadMode(std::string &mode)=0;
   virtual void ReadPrintLevel(unsigned &printLevel)=0;
@@ -125,6 +143,7 @@ public:
                        float_tt &phi55, float_tt &phi53, float_tt &phi51,
                        float_tt &phi66, float_tt &phi64, float_tt &phi62)=0;
   inline bool IsValid() {return m_isValid;}
+
 protected:
   bool m_isValid;
 };
