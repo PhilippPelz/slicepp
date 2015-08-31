@@ -48,12 +48,5 @@ namespace QSTEM {
 	__device__ void parametersKirkland_d ( float* a, float* b, float* c, float* d, int Z, int i );
 	void normalizeProjectedPotential ( cufftComplex* V, int size, int gS, int bS );
 
-
-//void writeCode ();
-
-//void writeMATLABCode();
-
-//void writeDeviceCode();
-
 }
 #endif

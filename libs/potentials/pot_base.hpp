@@ -73,7 +73,7 @@ protected:
 
 	StructureBuilderPtr _sb;
 	ComplexArray3D _t;
-	af::array _t_af;
+	af::array _t_device;
 
 	int _nx,_ny;
 	// oversampled resolutions

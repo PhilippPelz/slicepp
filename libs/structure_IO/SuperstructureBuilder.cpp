@@ -344,6 +344,11 @@ int SuperstructureBuilder::readParams(const char *datFileName){
 
 			grains[gCount].planes.clear();
 			boost::filesystem::path p(unitCellFile);
+			BOOST_LOG_TRIVIAL(info) << "before replace " << p;
+			if(p.has_relative_path()){
+				BOOST_LOG_TRIVIAL(info) << "in replace " << _c->configPath << p;
+				p = _c->configPath / p;
+			}
 			_c->Structure.structureFilename = p;
 			CrystalBuilder cryst(_r,_c);
 			cryst.ReadFromFile();
@@ -392,6 +397,11 @@ int SuperstructureBuilder::readParams(const char *datFileName){
 			grains[gCount].planes.clear();
 
 			boost::filesystem::path p(unitCellFile);
+			BOOST_LOG_TRIVIAL(info) << "before replace " << p;
+			if(p.has_relative_path()){
+				BOOST_LOG_TRIVIAL(info) << "in replace " << _c->configPath << p;
+				p = _c->configPath / p;
+			}
 			_c->Structure.structureFilename = p;
 			CrystalBuilder cryst(_r,_c);
 			cryst.SetFillUnitCell(true);

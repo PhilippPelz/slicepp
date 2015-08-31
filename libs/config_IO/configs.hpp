@@ -65,8 +65,7 @@ public:
 
 class DLL_EXPORT PotentialConfig: IPropertyTreeReader {
 public:
-	bool PlotVrr, periodicXY, periodicZ, DoZInterpolation,
-			UseQPotentialOffsets;
+	bool Use3D, UseFFT, CUDAOnTheFly, PlotVrr,periodicXY,periodicZ,DoZInterpolation,UseQPotentialOffsets;
 	QSTEM::StructureFactorType StructureFactorType;
 	//atom radius in angstrom
 	float_tt ratom;
@@ -80,7 +79,7 @@ public:
 			a_33, a_31, a_44, a_42, a_55, a_53, a_51, a_66, a_64, a_62, phi_33,
 			phi_31, phi_44, phi_42, phi_55, phi_53, phi_51, phi_66, phi_64,
 			phi_62, gaussScale, dI_I, dE_E, AISaperture, tiltX, tiltY, posX,
-			posY, imPot;
+			posY, imPot, pixelDose;
 	bool Smooth, Gaussian;
 	int type, nx, ny;
 
@@ -92,7 +91,7 @@ public:
 	int LogLevel, SaveWaveIterations;
 	bool SavePotential, SaveProjectedPotential, WriteLogFile, saveProbe,
 			SaveWaveAfterTransmit, SaveWaveAfterTransform,
-			SaveWaveAfterPropagation, SaveWaveAfterSlice, SaveAtomicPotential;
+			SaveWaveAfterPropagation, SaveWaveAfterSlice, SaveAtomicPotential, ComputeFromProjectedPotential;
 	boost::filesystem::path savePath, LogFileName;
 
 	// TODO: deprecated
@@ -100,7 +99,12 @@ public:
 
 	virtual void Read(ptree& t);
 };
-
+class DLL_EXPORT DetectorConfig : IPropertyTreeReader{
+public:
+	float_tt mtfA, mtfB, mtfC, mtfD;
+	int type;
+	virtual void Read(ptree& t);
+};
 class DLL_EXPORT ScanConfig: IPropertyTreeReader {
 public:
 	int xPos, yPos, xStep, yStep, scanType;
@@ -115,8 +119,10 @@ public:
 	;
 	Config(ptree& t, boost::filesystem::path configPath);
 	int nThreads;
-	boost::filesystem::path _configPath;
+
+	boost::filesystem::path configPath;
 	QSTEM::ExperimentType ExperimentType;
+
 	StructureConfig Structure;
 	ModelConfig Model;
 	PotentialConfig Potential;
@@ -124,6 +130,7 @@ public:
 	WaveConfig Wave;
 	BeamConfig Beam;
 	ScanConfig Scan;
+  DetectorConfig Detector;
 };
 typedef boost::shared_ptr<Config> ConfigPtr;
 } // end namespace QSTEM

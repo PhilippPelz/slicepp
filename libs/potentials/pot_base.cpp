@@ -175,7 +175,7 @@ void CPotential::MakeSlices(superCellBoxPtr info) {
 	}
 
 	CleanUp();
-	_t_af = af::array(_c->Model.nx, _c->Model.ny, _c->Model.nSlices, (afcfloat *)_t.data());
+	_t_device = af::array(_c->Model.nx, _c->Model.ny, _c->Model.nSlices, (afcfloat *)_t.data());
 	MakePhaseGratings();
 	time(&time1);
 	BOOST_LOG_TRIVIAL(info)<< format( "%g sec used for real space potential calculation (%g sec per atom)")
@@ -192,10 +192,10 @@ void CPotential::MakePhaseGratings() {
 	%_t.shape()[0]%scale%mm0%_c->Beam.sigma;
 
 	float_tt minph = 3.1, maxph = 0, minabs = 100, maxabs = 0;
-		_t_af = scale * af::real(_t_af);
-		maxph = af::max<float_tt>(_t_af);
-		minph = af::min<float_tt>(_t_af);
-		_t_af = af::complex(af::cos(_t_af), af::sin(_t_af));
+		_t_device = scale * af::real(_t_device);
+		maxph = af::max<float_tt>(_t_device);
+		minph = af::min<float_tt>(_t_device);
+		_t_device = af::complex(af::cos(_t_device), af::sin(_t_device));
 	BOOST_LOG_TRIVIAL(info)<<format("Phase values %g ... %g")%minph%maxph;
 }
 
@@ -228,7 +228,7 @@ void CPotential::WriteProjectedPotential() {
 	}
 	_persist->SaveProjectedPotential(sum);
 	if (_c->Output.ComputeFromProjectedPotential && (!_c->Potential.CUDAOnTheFly)){
-		_t_af = af::sum(_t_af, 2);
+		_t_device = af::sum(_t_device, 2);
 		_c->Model.nSlices = 1;
 	}
 }
@@ -434,11 +434,11 @@ float_tt CPotential::seval(float_tt *x, float_tt *y, std::vector<float_tt>& b,
 } /* end seval() */
 
 af::array CPotential::GetSubPotential(int startx, int starty, int nx, int ny){
-	return _t_af(af::seq(startx, startx + nx -1), af::seq(starty, starty + ny -1), af::span);
+	return _t_device(af::seq(startx, startx + nx -1), af::seq(starty, starty + ny -1), af::span);
 }
 
 af::array CPotential::GetPotential(){
-	return _t_af;
+	return _t_device;
 }
 
 void CPotential::GetSizePixels(unsigned int &nx, unsigned int &ny) const {
@@ -452,15 +452,14 @@ af:: array CPotential::GetSlice(af::array t, unsigned idx){
 
 void CPotential::SavePotential(){
 	if (_c->Output.SavePotential || _c->Output.ComputeFromProjectedPotential){
-		_t.resize(boost::extents[_t_af.dims(2)][_t_af.dims(0)][_t_af.dims(1)]);
-		_t_af.host(_t.data());
+		_t.resize(boost::extents[_t_device.dims(2)][_t_device.dims(0)][_t_device.dims(1)]);
+		_t_device.host(_t.data());
 		_persist->SavePotential(_t);
-
 	}
 	if (_c->Output.SaveProjectedPotential || _c->Output.ComputeFromProjectedPotential){
 		if(!_persist->_potSaved){
-			_t.resize(boost::extents[_t_af.dims(2)][_t_af.dims(0)][_t_af.dims(1)]);
-			_t_af.host(_t.data());
+			_t.resize(boost::extents[_t_device.dims(2)][_t_device.dims(0)][_t_device.dims(1)]);
+			_t_device.host(_t.data());
 		}
 		WriteProjectedPotential();
 	}

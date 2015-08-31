@@ -32,7 +32,7 @@ Bootstrapper::Bootstrapper(int argc, char *argv[]) {
 	bpt::json_parser::read_json(_configFile.c_str(),pt);
 
 	_c = ConfigPtr(new Config(pt,_configPath));
-
+	
 	if(_c->Output.savePath.has_relative_path()){
 		_c->Output.savePath = _configPath / _c->Output.savePath;
 	}
@@ -73,29 +73,30 @@ Bootstrapper::~Bootstrapper() {
 void Bootstrapper::Initialize(){
 	fftw_init_threads();
 	fftw_plan_with_nthreads(_c->nThreads);
-	fftwpp::fftw::maxthreads = _c->nThreads;
 	omp_set_num_threads(_c->nThreads);
 
 	RegisterWaveTypes();
 	RegisterPotentialTypes();
 	RegisterStructureTypes();
 	RegisterExperimentTypes();
-	RegisterDetectorTypes();
 	RegisterStructureReaders();
 	RegisterStructureBuilders();
+	RegisterDetectorTypes();
+
 	boost::filesystem::path p(_c->Structure.structureFilename);
+	std::string str = _c->Potential.PotentialType;
+ 	std::transform(str.begin(), str.end(),str.begin(), ::toupper);
+
 	auto sreader = StructureReaderPtr(_structureReaderFactory[".cif"](p));
 	auto structureBuilder = StructureBuilderPtr(_structureBuilderFactory[p.extension().string()](sreader,_c));
 	auto persist = PersistenceManagerPtr(new PersistenceManager(_c));
-
-	std::string potType = _c->Potential.PotentialType;
-	std::transform(potType.begin(), potType.end(),potType.begin(), ::toupper);
 	auto wave = WavePtr(_waveFactory[_c->Wave.type](_c,persist));
 	auto detector = DetPtr(_detectorFactory[_c->Detector.type](_c,persist));
 	auto potential = PotPtr(_potentialFactory[str](_c,persist));
 	_e = ExperimentPtr( _experimentFactory[_c->ExperimentType](_c,structureBuilder,wave,potential,detector, persist));
 
 }
+
 ExperimentPtr Bootstrapper::GetExperiment(){
 	return _e;
 }

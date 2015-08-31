@@ -20,7 +20,6 @@
 #include "base.hpp"
 #include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
-#include "fftw++.hpp"
 using boost::format;
 
 namespace QSTEM
@@ -243,7 +242,6 @@ int BaseExperiment::RunMultislice(af::array t_af )
 	char outStr[64];
 	double fftScale;
 	int nx, ny, xpos,ypos;
-	time_t time0, time1;
 
 	_wave->GetSizePixels(nx, ny);
 
@@ -267,20 +265,16 @@ int BaseExperiment::RunMultislice(af::array t_af )
 	}
 
 	BOOST_LOG_TRIVIAL(info) << "Propagating through slices ...";
-	time(&time0);
+	af::timer time = af::timer::start();
 	for(islice = 0; islice < _c->Model.nSlices; islice++) {
 
 		_wave->Transmit(_pot->GetSlice(t_af, islice));
-//		Transmit(wave, islice);
 		if(_c->Output.SaveWaveAfterTransmit) _persist->SaveWaveAfterTransmit(_wave->GetWaveAF(), islice);
 
 		_wave->ToFourierSpace();
-
 		if(_c->Output.SaveWaveAfterTransform) _persist->SaveWaveAfterTransform(_wave->GetWaveAF(), islice);
 
 		_wave->PropagateToNextSlice();
-//		Propagate(wave, islice);
-
 		if(_c->Output.SaveWaveAfterPropagation) _persist->SaveWaveAfterPropagation(_wave->GetWaveAF(), islice);
 
 		CollectIntensity(islice);
@@ -290,12 +284,13 @@ int BaseExperiment::RunMultislice(af::array t_af )
 		if(_c->Output.SaveWaveAfterSlice && islice % _c->Output.SaveWaveIterations == 0) _persist->SaveWaveAfterSlice(_wave->GetWaveAF(),islice);
 		PostSliceProcess(islice);
 
-		if(islice % (int)ceil(_c->Model.nSlices / 10.0) == 0)
-			loadbar(islice + 1, _c->Model.nSlices);
+		if(_c->Output.LogLevel <= 2){ ///info
+			if(islice % (int)ceil(_c->Model.nSlices / 10.0) == 0)
+				loadbar(islice + 1, _c->Model.nSlices);
+		}
 	} /* end for(islice...) */
-	time(&time1);
-	BOOST_LOG_TRIVIAL(info)<< format( "%g sec used for wave propagation (%g sec per slice)")
-	% difftime(time1, time0)%( difftime(time1, time0) / _c->Model.nSlices);
+	BOOST_LOG_TRIVIAL(info)<< format( "%g ms used for wave propagation (%g us per slice)")
+			% (af::timer::stop(time)*1000) %( af::timer::stop(time)*1e6 / _c->Model.nSlices);
 	return 0;
 } // end of runMulsSTEM
 

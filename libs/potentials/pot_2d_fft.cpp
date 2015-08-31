@@ -18,8 +18,11 @@
  */
 
 #include "pot_2d_fft.hpp"
+
 #include <boost/format.hpp>
+
 using boost::format;
+
 namespace QSTEM {
 
 C2DFFTPotential::C2DFFTPotential(const ConfigPtr& c,

@@ -19,7 +19,6 @@
 
 #include "crystal.hpp"
 #include "stemtypes_fftw3.hpp"
-#include "structure_factories.hpp"
 #include "matrixlib.hpp"
 
 #include "random.hpp"
@@ -55,8 +54,6 @@ CrystalBuilder::CrystalBuilder(StructureReaderPtr& r, const ConfigPtr& c) :
 				std::vector<atom>()), _Mm(FloatArray2D(boost::extents[3][3])), m_MmInv(
 				FloatArray2D(boost::extents[3][3])), IStructureBuilder(r, c) {
 	m_wobble_temp_scale = sqrt(_c->Structure.temperatureK / 300.0);
-	_structureWriter = CStructureWriterFactory::Get()->GetWriter(
-			c->Structure.structureFilename.string(), m_ax, m_by, m_cz);
 }
 //(const std::vector<float_tt> &x, std::vector<float_tt> &grad, void* f_data)
 double rotationCostFunc(const std::vector<double>& rotAngles,
@@ -1230,20 +1227,6 @@ int CrystalBuilder::AtomCompareZYX(const void *atPtr1, const void *atPtr2) {
 }
 
 void CrystalBuilder::WriteStructure(unsigned run_number) {
-	// to_string is C++0x - may not work on older compilers
-	_structureWriter->Write(_atoms, std::to_string(run_number));
-	/*
-	 if (m_cfgFile != NULL) {
-	 sprintf(buf,"%s/%s",m_folder,m_cfgFile);
-	 // append the TDS run number
-	 if (strcmp(buf+strlen(buf)-4,".cfg") == 0) *(buf+strlen(buf)-4) = '\0';
-	 if (_c->Model.UseTDS) sprintf(buf+strlen(buf),"_%d.cfg",m_avgCount);
-	 else sprintf(buf+strlen(buf),".cfg");
-
-	 // printf("Will write CFG file <%s> (%d)\n",buf,_c->Model.UseTDS)
-	 writeCFG(atoms,natom,buf,muls);
-	 }
-	 */
 }
 
 void CrystalBuilder::GetCrystalBoundaries(float_tt &min_x, float_tt &max_x,

@@ -17,32 +17,33 @@ CUDA2DPotential::CUDA2DPotential(const ConfigPtr& c,
 }
 
 CUDA2DPotential::~CUDA2DPotential() {
-	// TODO Auto-generated destructor stub
 }
 
 void CUDA2DPotential::MakeSlices(superCellBoxPtr info) {
 	copyDataToGPU(info);
 	if ((_c->Potential.CUDAOnTheFly == false) || (_c->ExperimentType == ExperimentType::PTYC)) {
-		time_t time0, time1;
+
+		af::timer time = af::timer::start();
 		cf->initPotArrays(slicePixels);
 		BOOST_LOG_TRIVIAL(info)<< "Calculating potential ...";
-		time(&time0);
 		for (int islice = 0; islice < _c->Model.nSlices; islice++) {
+
 			progressCounter(islice, _c->Model.nSlices);
-			//cf->phaseGrating(cublasHandle, &potential[islice * slicePixels], numAtoms, numAtUnique, info->xyzPos, imPot, info->znums, info->uniqueatoms, info->occupancy, cufftPlanBatch, islice, _c->Model.nx, _c->Model.ny, _c->Model.nSlices, _c->Model.dx, _c->Model.dy, _c->Model.dz);
-			cf->phaseGrating(&potential[islice * slicePixels], numAtoms,
-					numAtUnique, xyzPos_d, imPot, znums_d, info->uniqueatoms.data(), occupancy_d, islice, _c->Model.nx, _c->Model.ny, _c->Model.nSlices, _c->Model.dx, _c->Model.dy, _c->Model.dz);
-			_t_af.unlock();
+			cf->phaseGrating(&potential[islice * slicePixels], numAtoms, numAtUnique, xyzPos_d, imPot, znums_d,
+							info->uniqueatoms.data(), occupancy_d, islice, _c->Model.nx, _c->Model.ny, _c->Model.nSlices,
+							_c->Model.dx, _c->Model.dy, _c->Model.dz);
+			_t_device.unlock();
 			af::sync();
-			tafPtr = _t_af.device<afcfloat>();
+			tafPtr = _t_device.device<afcfloat>();
 			potential = (cufftComplex *) tafPtr;
+
 		}
 		cf->unlockArrays();
-		time(&time1);
-		BOOST_LOG_TRIVIAL(info)<< format( "%g sec used for real space potential calculation (%g sec per atom)")
-		% difftime(time1, time0)%( difftime(time1, time0) / info->atoms.size());
-		_t_af.unlock();
-		_t_af = af::moddims(_t_af, _c->Model.nx, _c->Model.ny, _c->Model.nSlices);
+
+		BOOST_LOG_TRIVIAL(info)<< format( "%g msec used for real space potential calculation (%g msec per atom)")
+				% (af::timer::stop(time)*1000) % ( (af::timer::stop(time)*1000) / info->atoms.size());
+		_t_device.unlock();
+		_t_device = af::moddims(_t_device, _c->Model.nx, _c->Model.ny, _c->Model.nSlices);
 
 		SavePotential();
 
@@ -51,11 +52,10 @@ void CUDA2DPotential::MakeSlices(superCellBoxPtr info) {
 		znums.unlock();
 	}
 	else{
-		_t_af.unlock();
+		_t_device.unlock();
 	}
 }
 void CUDA2DPotential::copyDataToGPU(superCellBoxPtr info) {
-	time_t time0, time1;
 	imPot = _c->Wave.imPot;
 	cf = new CUDAFunctions();
 
@@ -63,12 +63,14 @@ void CUDA2DPotential::copyDataToGPU(superCellBoxPtr info) {
 	numAtoms = info->atoms.size();
 	numAtUnique = info->uniqueatoms.size();
 
-	_t_af = af::array(_c->Model.nx * _c->Model.ny * _c->Model.nSlices, c32);
+	_t_device = af::array(_c->Model.nx * _c->Model.ny * _c->Model.nSlices, c32);
 	af::sync();
-	tafPtr = _t_af.device<afcfloat>();
+	tafPtr = _t_device.device<afcfloat>();
 	potential = (cufftComplex *) tafPtr;
 
-	time(&time0);
+	af::timer time = af::timer::start();
+
+	// create the needed arrays on the gpu, with a few workarounds to get arrayfire working with cuda kernels
 	xyzPos = af::array(info->xyzPos.size(), (float_tt *) info->xyzPos.data(), afHost);
 	xyzPos *= 1;
 	xyzPos_d = xyzPos.device<float_tt>();
@@ -80,63 +82,60 @@ void CUDA2DPotential::copyDataToGPU(superCellBoxPtr info) {
 	znums_d = znums.device<int>();
 	af::sync();
 	uniqueatoms = info->uniqueatoms.data();
-	time(&time1);
-	BOOST_LOG_TRIVIAL(info)<< format( "%g sec used copying data to gpu")
-	% difftime(time1, time0);
+
+	BOOST_LOG_TRIVIAL(info)<< format( "%g msec used copying data to gpu") % (af::timer::stop(time)*1000);
+
 	if (_c->Output.SavePotential || _c->Output.ComputeFromProjectedPotential){
-		_t.resize(boost::extents[_c->Model.nSlices][_c->Model.nx][_c->Model.ny]);
+		_t_host.resize(boost::extents[_c->Model.nSlices][_c->Model.nx][_c->Model.ny]);
 	}
 }
 void CUDA2DPotential::copyToDeviceInt(int *devdst, std::vector<int> src,
 		int size) {
 	for (int i = 0; i < size; i++) {
-		cuda_assert(
-				cudaMemcpy(&devdst[i], &src[i], sizeof(int),
-						cudaMemcpyHostToDevice));
+		cuda_assert( cudaMemcpy(&devdst[i], &src[i], sizeof(int), cudaMemcpyHostToDevice));
 	}
 }
 
 void CUDA2DPotential::copyToDeviceFloat(float_tt *devdst,
 		std::vector<float_tt> src, int size) {
 	for (int i = 0; i < size; i++) {
-		cuda_assert(
-				cudaMemcpy(&devdst[i], &src.data()[i], sizeof(float_tt),
-						cudaMemcpyHostToDevice));
+		cuda_assert( cudaMemcpy(&devdst[i], &src.data()[i], sizeof(float_tt), cudaMemcpyHostToDevice));
 	}
 }
 
 af::array CUDA2DPotential::GetSlice(af::array t, unsigned idx) {
 	if ((_c->Potential.CUDAOnTheFly == false) || (_c->ExperimentType == ExperimentType::PTYC)) {
+
 		return t(af::span, af::span, idx);
-	}
-	af::array slicepot = af::array(_c->Model.nx, _c->Model.ny, c32);
-	af::sync();
-	tafPtr = slicepot.device<afcfloat>();
-	potential = (cufftComplex *) tafPtr;
 
-	cf->initPotArrays(slicePixels);
-	cf->phaseGrating(potential, numAtoms, numAtUnique, xyzPos_d, imPot, znums_d, uniqueatoms, occupancy_d, idx, _c->Model.nx,_c->Model.ny, _c->Model.nSlices, _c->Model.dx, _c->Model.dy,_c->Model.dz);
-	cf->unlockArrays();
+	} else {
 
-	af::sync();
-	slicepot.unlock();
-	if (_c->Output.SavePotential){
-		_t_af(af::seq(idx * slicePixels, (idx + 1) * slicePixels - 1)) = slicepot(af::span);
+		af::array slicepot = af::array(_c->Model.nx, _c->Model.ny, c32);
+		af::sync();
+		tafPtr = slicepot.device<afcfloat>();
+		potential = (cufftComplex *) tafPtr;
+
+		cf->initPotArrays(slicePixels);
+		cf->phaseGrating(potential, numAtoms, numAtUnique, xyzPos_d, imPot, znums_d, uniqueatoms, occupancy_d, idx, _c->Model.nx,_c->Model.ny, _c->Model.nSlices, _c->Model.dx, _c->Model.dy,_c->Model.dz);
+		cf->unlockArrays();
+
+		af::sync();
+		slicepot.unlock();
+
+		if (_c->Output.SavePotential){
+			_t_device(af::seq(idx * slicePixels, (idx + 1) * slicePixels - 1)) = slicepot(af::span);
+		}
+
+		if(idx == _c->Model.nSlices - 1){
+			xyzPos.unlock();
+			occupancy.unlock();
+			znums.unlock();
+			_t_device = af::moddims(_t_device, _c->Model.nx, _c->Model.ny, _c->Model.nSlices);
+			SavePotential();
+		}
+		return slicepot;
+
 	}
-	if(idx == _c->Model.nSlices - 1){
-		xyzPos.unlock();
-		occupancy.unlock();
-		znums.unlock();
-		_t_af = af::moddims(_t_af, _c->Model.nx, _c->Model.ny, _c->Model.nSlices);
-		SavePotential();
-//		if (_c->Output.SavePotential){
-//			_persist->SavePotential(_t);
-//		}
-//		if (_c->Output.SaveProjectedPotential) {
-//			WriteProjectedPotential();
-//		}
-	}
-	return slicepot;
 }
 
 void CUDA2DPotential::AddAtomToSlices(atom& atom, float_tt atomX,

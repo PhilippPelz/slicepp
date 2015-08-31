@@ -26,7 +26,6 @@
 #include "structure_IO/crystal.hpp"
 #include "data_IO/PersistenceManager.hpp"
 #include "potentials/pot_interface.hpp"
-#include "fftw++.hpp"
 
 namespace QSTEM
 {

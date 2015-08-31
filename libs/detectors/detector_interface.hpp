@@ -10,8 +10,8 @@
 
 #include "float.h"
 #include "stemtypes_fftw3.hpp"
-#include "config_IO/read_interface.hpp"
-#include "config_IO/read_qsc.hpp"
+#include "config_IO/config_interface.hpp"
+#include "config_IO/configs.hpp"
 #include "data_IO/PersistenceManager.hpp"
 #include "wavefunctions/wave_interface.hpp"
 #include "arrayfire.h"

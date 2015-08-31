@@ -45,10 +45,11 @@ void  CUDAFunctions::phaseGrating(cufftComplex* V_d, int nAt, int nZ, float_tt* 
 		V1.unlock();
 		V2.unlock();
 		V3.unlock();
-		V1 = af::fft(V1);
+		af::fftInPlace(V1,1);
 		V1 *= V2;
-		V1 = af::ifft(V1);
-		V1 *= sqrtf(slicePixels);
+		af_ifft_inplace(V1.get(),1);// normalization is done in projectedPotential_d
+		//af::ifft2InPlace(V1,1);
+		// V1 *= sqrtf(slicePixels);
 		V3 = V1 + V3;
 		af::sync();
 		V1_d = (cufftComplex *)V1.device<af::af_cfloat>();

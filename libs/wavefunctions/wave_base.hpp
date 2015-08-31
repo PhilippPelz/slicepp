@@ -28,7 +28,6 @@
 #include "boost/format.hpp"
 #include <boost/log/trivial.hpp>
 #include "data_IO/PersistenceManager.hpp"
-#include "fftw++.hpp"
 #include <arrayfire.h>
 #include <af/util.h>
 

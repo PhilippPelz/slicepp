@@ -82,10 +82,11 @@ void ModelConfig::Read(ptree& t){
 }
 void PotentialConfig::Read(ptree& t){
 	PlotVrr=t.get<bool>("model.potential.plotVr_r");
-	PotentialType = t.get<std::string>("model.potential.Type");
 	periodicXY=t.get<bool>("model.potential.periodicXY");
 	periodicZ=t.get<bool>("model.potential.periodicZ");
 	StructureFactorType  = static_cast<QSTEM::StructureFactorType>(t.get<int>("model.potential.structureFactors"));
+        CUDAOnTheFly=t.get<bool>("model.potential.CUDAOnTheFly");
+        PotentialType = t.get<std::string>("model.potential.type");
 	ratom=t.get<float_tt>("model.potential.atomRadiusAngstrom");
 	DoZInterpolation = t.get<bool>("model.potential.DoZInterpolation");
 	UseQPotentialOffsets = t.get<bool>("model.potential.UseQPotentialOffsets");
@@ -108,6 +109,7 @@ void OutputConfig::Read(ptree& t){
 	string p1 = t.get<string>("output.logFileName");
 	LogFileName = boost::filesystem::path(p1);
 	WriteLogFile = t.get<bool>("output.writeLogFile");
+        ComputeFromProjectedPotential = t.get<bool>("output.ComputeFromProjectedPotential");
 }
 void WaveConfig::Read(ptree& t){
 	type=t.get<int>("wave.type");
@@ -150,6 +152,7 @@ void WaveConfig::Read(ptree& t){
 	nx = t.get<int>("wave.nx");
 	ny = t.get<int>("wave.ny");
 	imPot = t.get<float>("wave.imaginary potential factor");
+        pixelDose = t.get<float_tt>("wave.pixel dose");
 //	posX=t.get<float_tt>("wave.posX");
 //	posY=t.get<float_tt>("wave.posY");
 }
@@ -181,9 +184,15 @@ void ScanConfig::Read(ptree& t){
 	yStep = t.get<int>("scan.yStep");
 	scanType = t.get<int>("scan.scanType");
 }
-
+void DetectorConfig::Read(ptree& t){
+	type = t.get<int>("detector.type");
+	mtfA = t.get<float_tt>("detector.mtfA");
+	mtfB = t.get<float_tt>("detector.mtfB");
+	mtfC = t.get<float_tt>("detector.mtfC");
+	mtfD = t.get<float_tt>("detector.mtfD");
+}
 Config::Config(ptree& t,boost::filesystem::path configPath){
-	_configPath = configPath;
+	this->configPath = configPath;
 	ExperimentType =static_cast<QSTEM::ExperimentType>(t.get<int>("mode"));
 	nThreads = t.get<int>("nthreads");
 
@@ -194,6 +203,7 @@ Config::Config(ptree& t,boost::filesystem::path configPath){
 	Wave =WaveConfig();
 	Beam = BeamConfig();
 	Scan = ScanConfig();
+	Detector = DetectorConfig();
 
 	Structure.Read(t);
 	Model.Read(t);
@@ -202,6 +212,7 @@ Config::Config(ptree& t,boost::filesystem::path configPath){
 	Wave.Read(t);
 	Beam.Read(t);
 	Scan.Read(t);
+	Detector.Read(t);
 }
 
 } // end namespace QSTEM

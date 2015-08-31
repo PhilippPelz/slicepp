@@ -32,7 +32,6 @@ namespace QSTEM
 class IStructureReader;
 
 typedef boost::shared_ptr<IStructureReader> StructureReaderPtr;
-typedef StructureReaderPtr (*CreateStructureReaderFn)(const boost::filesystem::path &filename);
 typedef boost::function<IStructureReader*(const boost::filesystem::path &file)> structureReaderCreator;
 typedef std::map<string,structureReaderCreator> StructureReaderFactory;
 typedef boost::shared_ptr<StructureReaderFactory> StructureReaderFactoryPtr;
@@ -52,7 +51,7 @@ public:
 
 class IStructureWriter;
 typedef boost::shared_ptr<IStructureWriter> StructureWriterPtr;
-typedef StructureWriterPtr (*CreateStructureWriterFn)(const boost::filesystem::path &filename, 
+typedef StructureWriterPtr (*CreateStructureWriterFn)(const boost::filesystem::path &filename,
 		float_tt ax, float_tt by, float_tt cz);
 
 class IStructureWriter
@@ -63,7 +62,7 @@ public:
 
 /*--------------------- ReadLine() -----------------------*/
 /*
-read a full line from a file and 
+read a full line from a file and
 return length of line read
 
 to bad this looks like Pascal but its the easiest

@@ -1,8 +1,8 @@
 box: 50 50 60
 
-crystal: NP /space/projects/slicepp_cuda/Examples/cif/au.cif % name of first cystal
+crystal: NP ../../Examples/cif/au.cif % name of first cystal
 sphere: 20 25 25 20
 
-crystal: substrate /space/projects/slicepp_cuda/Examples/cif/Si3N4-beta.cif
-plane: 0 0 40 0 1 0  1 0 0 
+crystal: substrate ../../Examples/cif/Si3N4-beta.cif
+plane: 0 0 40 0 1 0  1 0 0
 plane: 0 0 60 1 0 0  0 1 0

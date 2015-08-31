@@ -18,7 +18,6 @@
  */
 
 #include "pot_3d_fft.hpp"
-#include "fftw++.hpp"
 
 #include <cstring>
 #include <string>

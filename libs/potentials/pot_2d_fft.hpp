@@ -18,7 +18,6 @@
  */
 
 #include "pot_base.hpp"
-#include "fftw++.hpp"
 
 namespace QSTEM
 {

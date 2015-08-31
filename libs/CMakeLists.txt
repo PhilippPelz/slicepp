@@ -28,6 +28,7 @@ add_lib_dir(experiments)
 add_lib_dir(potentials)
 add_lib_dir(structure_IO)
 add_lib_dir(wavefunctions)
+add_lib_dir(detectors)
 
 include_directories(
   ${PROJECT_SOURCE_DIR}

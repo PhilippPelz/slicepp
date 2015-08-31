@@ -41,6 +41,7 @@ public:
 protected:
 	int myGSize(int size);
 	int myBSize(int size);
+
 	af::array V1, V2, V3;
 	cufftComplex *V1_d, *V2_d, *V3_d;
 };

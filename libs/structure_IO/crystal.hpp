@@ -22,7 +22,6 @@
 
 #include "stemtypes_fftw3.hpp"
 #include "config_IO/configs.hpp"
-#include "structure_readers.hpp"
 #include "structure_IO/IStructureBuilder.hpp"
 
 #include <string>
@@ -72,6 +71,7 @@ public:
 	void GetCellParameters(float_tt &ax, float_tt &by, float_tt &cz);
 	void GetCrystalBoundaries(float_tt &min_x, float_tt &max_x, float_tt &min_y, float_tt &max_y,
 			float_tt &min_z, float_tt &max_z);
+
 	inline armamat GetCellMatrix(){
 		armamat M = {_Mm[0][0],_Mm[1][0],_Mm[2][0],
 			_Mm[0][1],_Mm[1][1],_Mm[2][1],
@@ -107,9 +107,9 @@ public:
 protected:
 	boost::filesystem::path m_structureFile;
 	bool _fillUnitCell;
-	// unit cell matrix multiply by this to go from fractional to cartesian
+	// unit cell matrix; multiply by this to go from fractional to cartesian
 	FloatArray2D _Mm;
-	// inverse of unit cell matrix, got back to fractional coordinates
+	// inverse of unit cell matrix; go back to fractional coordinates
 	FloatArray2D m_MmInv;
 	// lattice parameters
 	float_tt m_ax, m_by, m_cz;
@@ -127,7 +127,6 @@ protected:
 	std::map<unsigned, unsigned> m_u2Count;
 
 	boost::filesystem::path m_phononFile;
-	StructureWriterPtr _structureWriter;
 	superCellBoxPtr _superCellBox;
 
 	void CalculateCellDimensions();
