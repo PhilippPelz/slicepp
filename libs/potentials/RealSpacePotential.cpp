@@ -47,7 +47,7 @@ void RealSpacePotential::AtomBoxLookUp(complex_tt &val, int Znum, float_tt x,
 		if ((fp = fopen(fileName, "r")) == NULL) {
 			sprintf(systStr, "scatpot %s %d %g %d %d %d %g %g %g %d %g",
 					fileName, Znum, B, boxNx, boxNy, boxNz, ddx, ddy, ddz,
-					OVERSAMPLINGZ, _c->Beam.EnergykeV);
+					OVERSAMPLINGZ, _c->Wave->EnergykeV);
 			BOOST_LOG_TRIVIAL(info)<<format("Could not find precalculated potential for Z=%d, will calculate now.")% Znum;
 			BOOST_LOG_TRIVIAL(info)<<format("Calling: %s") %systStr;
 			system(systStr);
@@ -69,13 +69,13 @@ void RealSpacePotential::AtomBoxLookUp(complex_tt &val, int Znum, float_tt x,
 				|| (tny != boxNy) || (tnz != boxNz) || (fabs(tdx - ddx) > 1e-5)
 				|| (fabs(tdy - ddy) > 1e-5) || (fabs(tdz - ddz) > 1e-5)
 				|| (tzOversample != OVERSAMPLINGZ)
-				|| (tv0 != _c->Beam.EnergykeV)) {
+				|| (tv0 != _c->Wave->EnergykeV)) {
 			BOOST_LOG_TRIVIAL(info)<<format("Potential input file %s has the wrong parameters") %fileName;
 			BOOST_LOG_TRIVIAL(info) << format( "Parameters:");
 			BOOST_LOG_TRIVIAL(info) << format("file:    Z=%d, B=%.3f A^2 (%d, %d, %d) (%.7f, %.7f %.7f) nsz=%d V=%g")
 					%tZ% tB% tnx% tny% tnz% tdx% tdy% tdz% tzOversample% tv0;
 			BOOST_LOG_TRIVIAL(info) << format("program: Z=%d, B=%.3f A^2 (%d, %d, %d) (%.7f, %.7f %.7f) nsz=%d V=%g")
-					%Znum% B% boxNx% boxNy% boxNz% ddx% ddy% ddz%(OVERSAMPLINGZ)% _c->Beam.EnergykeV;
+					%Znum% B% boxNx% boxNy% boxNz% ddx% ddy% ddz%(OVERSAMPLINGZ)% _c->Wave->EnergykeV;
 			BOOST_LOG_TRIVIAL(info) << format("will create new potential file, please wait ...");
 
 			/* Close the old file, Create a new potential file now
@@ -83,7 +83,7 @@ void RealSpacePotential::AtomBoxLookUp(complex_tt &val, int Znum, float_tt x,
 			fclose(fp);
 			sprintf(systStr, "scatpot %s %d %g %d %d %d %g %g %g %d %g",
 					fileName, Znum, B, boxNx, boxNy, boxNz, ddx, ddy, ddz,
-					OVERSAMPLINGZ, _c->Beam.EnergykeV);
+					OVERSAMPLINGZ, _c->Wave->EnergykeV);
 			system(systStr);
 			if ((fp = fopen(fileName, "r")) == NULL) {
 				BOOST_LOG_TRIVIAL(error)<<format("cannot calculate projected potential using scatpot - exit!");
@@ -128,34 +128,34 @@ void RealSpacePotential::AddAtomRealSpace(atom& atom, float_tt atomX, float_tt a
 
 	/* Warning: will assume constant slice thickness ! */
 	/* do not round here: atomX=0..dx -> iAtomX=0 */
-	unsigned iAtomX = (int) floor(atomX / _c->Model.dx);
-	unsigned iAtomY = (int) floor(atomY / _c->Model.dy);
+	unsigned iAtomX = (int) floor(atomX / _c->Model->dx);
+	unsigned iAtomY = (int) floor(atomY / _c->Model->dy);
 	unsigned iAtomZ = (int) floor(atomZ / _sliceThicknesses[0]);
 
 	for (int iax = -_nRadX; iax <= _nRadX; iax++) {
-		if (!_c->Potential.periodicXY) {
+		if (!_c->Potential->periodicXY) {
 			if (iax + iAtomX < 0) {
 				iax = -iAtomX;
 				if (abs(iax) > _nRadX)
 					break;
 			}
-			if (iax + iAtomX >= _c->Model.nx)
+			if (iax + iAtomX >= _c->Model->nx)
 				break;
 		}
-		float_tt x = (iAtomX + iax) * _c->Model.dx - atomX;
-		unsigned ix = (iax + iAtomX + 16 * _c->Model.nx) % _c->Model.nx; /* shift into the positive range */
+		float_tt x = (iAtomX + iax) * _c->Model->dx - atomX;
+		unsigned ix = (iax + iAtomX + 16 * _c->Model->nx) % _c->Model->nx; /* shift into the positive range */
 		for (int iay = -_nRadY; iay <= _nRadY; iay++) {
-			if (!_c->Potential.periodicXY) {
+			if (!_c->Potential->periodicXY) {
 				if (iay + iAtomY < 0) {
 					iay = -iAtomY;
 					if (abs(iay) > _nRadY)
 						break;
 				}
-				if (iay + iAtomY >= _c->Model.ny)
+				if (iay + iAtomY >= _c->Model->ny)
 					break;
 			}
-			float_tt y = (iAtomY + iay) * _c->Model.dy - atomY;
-			unsigned iy = (iay + iAtomY + 16 * _c->Model.ny) % _c->Model.ny; /* shift into the positive range */
+			float_tt y = (iAtomY + iay) * _c->Model->dy - atomY;
+			unsigned iy = (iay + iAtomY + 16 * _c->Model->ny) % _c->Model->ny; /* shift into the positive range */
 			float_tt r2sqr = x * x + y * y;
 			if (r2sqr <= _atomRadius2) {
 				// This (virtual) method is meant to be implemented by subclasses,

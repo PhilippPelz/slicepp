@@ -28,7 +28,7 @@ namespace QSTEM
 class DLL_EXPORT CPlaneWave : public CBaseWave
 {
 public:
-  CPlaneWave(const ConfigPtr& c,const PersistenceManagerPtr& p);
+  CPlaneWave(const boost::shared_ptr<WaveConfig> wc, const boost::shared_ptr<ModelConfig> mc,const PersistenceManagerPtr& p);
   CPlaneWave(const CPlaneWave& other);
   virtual void FormProbe();
   void TiltBeam(bool tiltBack=false);

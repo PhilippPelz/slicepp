@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
-# Section forces static linking.  Commented because this breaks 
-#   testing, because Boost makes static linking against Boot Test 
+# Section forces static linking.  Commented because this breaks
+#   testing, because Boost makes static linking against Boot Test
 #   libraries difficult, and MCS has better things to do than fight it.
 #set(CMAKE_USER_MAKE_RULES_OVERRIDE
 	#${CMAKE_SOURCE_DIR}/cmake/Modules/c_flag_overrides.cmake)
@@ -12,7 +12,7 @@ project(qstem)
 set (VERSION_MAJOR 3)
 set (VERSION_MINOR 0)
 if (WIN32)
-  
+
 endif(WIN32)
 if(WIN32)
 	# Squelch Visual studio's warnings about insecure functions - will replace these over time, but must maintain Linux compatibility.
@@ -38,28 +38,31 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 set (M_LIB "")
 
-set(CLUSTER ON)
+set(CLUSTER OFF)
 
 #only for cluster
 if(CLUSTER)
-	SET(ArrayFire_DIR "$ENV{HOME}/projects/arrayfire/build20")
-	SET(BOOST_ROOT "/data/netapp/boost_1_58_0")
-	SET(BOOST_INCLUDEDIR "/data/netapp/boost_1_58_0/boost")
-	SET(BOOST_LIBRARYDIR "/data/netapp/boost_1_58_0/stage/lib")
+	SET(ArrayFire_DIR 					"$ENV{HOME}/projects/arrayfire/build20")
+	SET(BOOST_ROOT 							"/data/netapp/boost_1_58_0")
+	SET(BOOST_INCLUDEDIR 				"/data/netapp/boost_1_58_0/boost")
+	SET(BOOST_LIBRARYDIR 				"/data/netapp/boost_1_58_0/stage/lib")
 	SET(Boost_NO_SYSTEM_PATHS ON)
-	set(OPENBABEL_INCLUDE_DIR ~/local/include/openbabel-2.0/)
-	set(OPENBABEL_LIB  $ENV{HOME}/local/lib/libopenbabel.so)
-	set(ARMA_LIB  $ENV{HOME}/local/lib/libarmadillo.so)
-	set(ARMA_INCLUDE_DIR  $ENV{HOME}/local/include)
-	set(NLOPT_LIB ~/local/lib/libnlopt.so)
-	set(NLOPT_INCLUDE_DIR ~/local/include)
+	set(OPENBABEL_INCLUDE_DIR 	$ENV{HOME}/local/include/openbabel-2.0/)
+	set(OPENBABEL_LIB  					$ENV{HOME}/local/lib/libopenbabel.so)
+	set(ARMA_LIB  							$ENV{HOME}/local/lib/libarmadillo.so)
+	set(ARMA_INCLUDE_DIR  			$ENV{HOME}/local/include)
+	set(NLOPT_LIB 							$ENV{HOME}/local/lib/libnlopt.so)
+	set(NLOPT_INCLUDE_DIR 			$ENV{HOME}/local/include)
 else(CLUSTER)
 	set(OPENBABEL_INCLUDE_DIR /usr/local/include/openbabel-2.0/)
-	set(OPENBABEL_LIB /usr/local/lib/libopenbabel.so)
-	set(ARMA_LIB /usr/lib/libarmadillo.so)
-	set(ARMA_INCLUDE_DIR /usr/local/include)
-	set(NLOPT_LIB /usr/local/lib/libnlopt.so)
+	set(OPENBABEL_LIB 		/usr/local/lib/libopenbabel.so)
+	set(ARMA_LIB 					/usr/local/lib/libarmadillo.so)
+	set(ARMA_INCLUDE_DIR 	/usr/local/include)
+	set(NLOPT_LIB 				/usr/local/lib/libnlopt.so)
 	set(NLOPT_INCLUDE_DIR /usr/local/include)
+	#set(CUDA_CUDART_LIBRARY /usr/local/cuda/libcudart.so)
+	#set(CUDA_INCLUDE_DIRS /usr/local/cuda/include)
+  set(BOOST_ROOT "/usr/lib/x86_64-linux-gnu")
 endif(CLUSTER)
 
 if (UNIX)
@@ -67,8 +70,8 @@ if (UNIX)
 endif(UNIX)
 set(HDF5_USE_STATIC_LIBRARIES OFF)
 
-find_package(Boost 1.58 COMPONENTS system filesystem chrono timer log log_setup thread date_time REQUIRED)
-find_package(HDF5 COMPONENTS C CXX HL REQUIRED)					
+find_package(Boost 1.55 COMPONENTS system filesystem chrono timer log log_setup thread date_time REQUIRED)
+find_package(HDF5 COMPONENTS C CXX HL REQUIRED)
 find_package(fftw3 REQUIRED)
 find_package(CUDA REQUIRED)
 find_package(ArrayFire)
@@ -77,7 +80,7 @@ include(CheckComputeCapability)
 string(REPLACE " " ";" CUDA_CAPABILITY_LIST ${CUDA_CAPABILITY_INFO})
 
 include_directories(
-	${Boost_INCLUDE_DIRS} 
+	${Boost_INCLUDE_DIRS}
 	"${FFTW3_INCLUDE_DIRS}"
 	${ArrayFire_INCLUDE_DIRS}
 	${CUDA_TOOLKIT_INCLUDE}
@@ -88,8 +91,6 @@ add_subdirectory(libs)
 add_subdirectory(stem3)
 add_subdirectory(hdf5boost)
 
-#add_subdirectory(gbmaker)
-#add_subdirectory(qscRg12)
 
 OPTION( BUILD_TESTS "Set to ON to enable unit test target generation.  Requires Boost Test binary libraries to be installed." OFF )
 if (BUILD_TESTS)
@@ -101,14 +102,14 @@ if (BUILD_TESTS)
   #add_test (NAME TestGBMaker COMMAND test_gbmaker)
 
   if(WIN32)
-    # helpful custom target for verbose CTest output from: 
+    # helpful custom target for verbose CTest output from:
     # http://stackoverflow.com/questions/16158091/cmake-setting-an-environmental-variable-for-ctest-or-otherwise-getting-failed
     if (CMAKE_CONFIGURATION_TYPES)
-      add_custom_target(run_tests COMMAND ${CMAKE_CTEST_COMMAND} 
-	--force-new-ctest-process --output-on-failure 
+      add_custom_target(run_tests COMMAND ${CMAKE_CTEST_COMMAND}
+	--force-new-ctest-process --output-on-failure
 	--build-config "$<CONFIGURATION>")
     else(CMAKE_CONFIGURATION_TYPES)
-      add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} 
+      add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND}
 	--force-new-ctest-process --output-on-failure)
     endif(CMAKE_CONFIGURATION_TYPES)
   else(WIN32)
@@ -138,14 +139,14 @@ if (CMAKE_BUILD_TYPE MATCHES Release)
         else ()
             list(APPEND CUDA_NVCC_FLAGS -Xcompiler;-O0;)
             list(APPEND CUDA_NVCC_FLAGS -Xcompiler;-pipe;)
-            list(APPEND CUDA_NVCC_FLAGS -Xcompiler;-mtune=generic;)   
-            list(APPEND CUDA_NVCC_FLAGS -Xcompiler;-fstack-protector;) 
-            list(APPEND CUDA_NVCC_FLAGS -Xcompiler;-Wall;) 
-            list(APPEND CUDA_NVCC_FLAGS -Xcompiler;-W;) 
+            list(APPEND CUDA_NVCC_FLAGS -Xcompiler;-mtune=generic;)
+            list(APPEND CUDA_NVCC_FLAGS -Xcompiler;-fstack-protector;)
+            list(APPEND CUDA_NVCC_FLAGS -Xcompiler;-Wall;)
+            list(APPEND CUDA_NVCC_FLAGS -Xcompiler;-W;)
             list(APPEND CUDA_NVCC_FLAGS -Xcompiler;-D_REENTRANT;)
-            list(APPEND CUDA_NVCC_FLAGS -Xcompiler;-fPIE;)          
+            list(APPEND CUDA_NVCC_FLAGS -Xcompiler;-fPIE;)
         endif ()
-else (CMAKE_BUILD_TYPE MATCHES Release)
+else (CMAKE_BUILD_TYPE MATCHES Debug)
         if (MSVC)
             list(APPEND CUDA_NVCC_FLAGS -Xcompiler;/EHsc;)
 	    list(APPEND CUDA_NVCC_FLAGS -Xcompiler;/W3;)
@@ -158,7 +159,7 @@ else (CMAKE_BUILD_TYPE MATCHES Release)
             list(APPEND CUDA_NVCC_FLAGS -Xcompiler;-g;)
         endif ()
 endif ()
-foreach(cuda_gpu ${CUDA_CAPABILITY_LIST}) 
+foreach(cuda_gpu ${CUDA_CAPABILITY_LIST})
 list(APPEND CUDA_NVCC_FLAGS -Xcompiler;-std=c++11)
 list(APPEND CUDA_NVCC_FLAGS "-gencode ${cuda_gpu}")
 endforeach(cuda_gpu)

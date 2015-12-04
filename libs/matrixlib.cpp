@@ -169,25 +169,6 @@ void lubksb(float_tt **a, int n, int *indx, float_tt b[]) {
 	//All done!
 }
 
-
-
-void inverse() {
-	/*
-  // #define N
-  float_tt **a,**y,d,*col; 
-  int i,j,*indx;
-  ludcmp(a,N,indx,&d); // Decompose the matrix just once. 
-  for(j=1;j<=N;j++) { 
-    // Find inverse by columns. 
-    memset(col,0,N*sizeof(float_tt));
-    // for(i=1;i<=N;i++) col[i]=0.0; 
-    col[j]=1.0; 
-    lubksb(a,N,indx,col); 
-    for(i=1;i<=N;i++) y[i][j]=col[i]; 
-  }
-	 */
-}
-
 /******************************************************************************
  Routine:   det_3x3
  Input:     m - matrix (3x3) address
@@ -568,7 +549,7 @@ float_tt fcos(float_tt x)
 
 
 
-void showMatrix(FloatArray2D M,int Nx, int Ny,char *name) {
+void showMatrix(FloatArray2D M,int Nx, int Ny,const char *name) {
 	int i,j;
 
 	printf("%s:\n",name);
@@ -750,35 +731,6 @@ void makeCellVect(grainBox& grain, std::vector<float_tt>& vax, std::vector<float
 		}
 	}
 }
-/* just like the function above, but with angles from the MULS struct */
-/*
-void makeCellVectMuls(MULS *muls, float_tt *vax, float_tt *vby, float_tt *vcz) {
-
-  if ((muls->cAlpha == 90) && (muls->cBeta == 90) && (muls->cGamma == 90)) {
-    printf("Orthogonal unit cell\n");
-    vax[0] = muls->ax; vax[1] = 0; vax[2] = 0;  
-    vby[0] = 0; vby[1] = muls->by;  vby[2] = 0;
-    vcz[0] = 0; vcz[1] = 0; vcz[2] = muls->c; 
-  }
-
-  else {
-
-    vax[0] = muls->ax; vax[1] = 0; vax[2] = 0;
-
-    vby[0] = muls->by*cos(muls->cGamma*PI180); 
-    vby[1] = muls->by*cos(muls->cGamma*PI180);
-    vby[2] = 0;
-
-    vcz[0] = muls->c*cos(muls->cBeta*PI180);
-    vcz[1] = muls->c*(cos(muls->cAlpha*PI180)-cos(muls->cBeta*PI180)*
-		      cos(muls->cGamma*PI180))/sin(muls->cGamma*PI180);
-    vcz[2] = muls->c*(sqrt(1-cos(muls->cAlpha*PI180)*cos(muls->cAlpha*PI180)
-			     -cos(muls->cBeta*PI180)*cos(muls->cBeta*PI180)
-			     +2*cos(muls->cAlpha*PI180)*cos(muls->cBeta*PI180)*
-			   cos(muls->cGamma*PI180))/sin(muls->cGamma*PI180));
-  }
-}
- */
 
 float_tt vectLength(float_tt *vect) {
 	return sqrt(vect[0]*vect[0]+vect[1]*vect[1]+vect[2]*vect[2]);
@@ -792,22 +744,12 @@ void matrixProduct(const FloatArray2D& a,int Nxa, int Nya,const FloatArray2D& b,
 		printf("multiplyMatrix: Inner Matrix dimensions do not agree!\n");
 		return;
 	}
-
-
 	for (i=0;i<Nxa;i++)
 		for (j=0;j<Nyb;j++) {
 			c[i][j] = 0.0;
 			for (k=0;k<Nya;k++)
 				c[i][j] += a[i][k]*b[k][j];
 		}
-
-	//	for (i=0;i<Nxa;i++) {
-	//		for (j=0;j<Nyb;j++) {
-	//			c[0][i*Nyb+j] = 0.0;
-	//			for (k=0;k<Nya;k++)
-	//				c[0][i*Nyb+j] += a[0][i*Nya+k] * b[0][k*Nyb+j];
-	//		}
-	//	}
 }
 
 
@@ -820,14 +762,6 @@ void matrixProductInt(float_tt **a,int Nxa, int Nya, int **b,int Nxb, int Nyb, f
 		return;
 	}
 
-	/*
-  for (i=0;i<Nxa;i++)
-    for (j=0;j<Nyb;j++) {
-      c[i][j] = 0.0;
-      for (k=0;k<Nya;k++)
-	c[i][j] += a[i][k]*b[k][j];
-    }
-	 */
 	for (i=0;i<Nxa;i++) for (j=0;j<Nyb;j++) {
 		c[0][i*Nyb+j] = 0.0;
 		for (k=0;k<Nya;k++) c[0][i*Nyb+j] += a[0][i*Nya+k] * (float_tt)(b[0][k*Nyb+j]);

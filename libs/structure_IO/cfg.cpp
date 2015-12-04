@@ -207,7 +207,7 @@ int CCfgWriter::Write(std::vector<atom> &atoms, std::string run_id) {
 		BOOST_LOG_TRIVIAL(error) << format("Cannot open file %s") % outputFile.c_str();
 	}
 
-	fprintf(fp,"Number of particles = %d\n",atoms.size());
+	fprintf(fp,"Number of particles = %ld\n",atoms.size());
 	fprintf(fp,"A = 1.0 Angstrom (basic length-scale)\n");
 	fprintf(fp,"H0(1,1) = %g A\nH0(1,2) = 0 A\nH0(1,3) = 0 A\n",m_ax);
 	fprintf(fp,"H0(2,1) = 0 A\nH0(2,2) = %g A\nH0(2,3) = 0 A\n",m_by);

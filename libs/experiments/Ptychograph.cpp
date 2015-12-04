@@ -50,12 +50,12 @@ void Ptychograph::Run()
 	int ix,iy,i,pCount,result;
 	double timer,timerTot ;
 	float_tt t=0;
-	FloatArray2D avgPendelloesung(boost::extents[_nbout][_c->Model.nSlices]);
+	FloatArray2D avgPendelloesung(boost::extents[_nbout][_c->Model->nSlices]);
 	std::map<std::string, double> params;
 	std::vector<unsigned> position(1);         // Used to indicate the number of averages
 	std::vector<std::pair<int, int>> scanPositions;
 
-	m_chisq.resize(_c->Model.TDSRuns);
+	m_chisq.resize(_c->Model->TDSRuns);
 	timerTot = 0; /* cputim();*/
 	DisplayProgress(-1);
 
@@ -67,28 +67,24 @@ void Ptychograph::Run()
 	_wave->FormProbe();
 	scanPositions = _scan->GetScanPositions();
 //	_persist->InitStorage();
-	_persist->ResizeStorage(_c->Wave.nx, _c->Wave.ny);
+	_persist->ResizeStorage(_c->Wave->nx, _c->Wave->ny);
 	_wave->InitializePropagators();
 	_wave->DisplayParams();
 	_pot->DisplayParams();
-	for (_runCount = 0;_runCount < _c->Model.TDSRuns;_runCount++) {
+	for (_runCount = 0;_runCount < _c->Model->TDSRuns;_runCount++) {
 		auto box = _structureBuilder->DisplaceAtoms();
 		//PotPtr p  _pot ;
 		//p ->MakeSlices(box);
 
 		_pot->MakeSlices(box);
-		if (_c->Output.saveProbe) _persist->SaveProbe(_wave->GetProbe());
+		if (_c->Output->saveProbe) _persist->SaveProbe(_wave->GetProbe());
 		BOOST_LOG_TRIVIAL(info) << format("Calculating for %.1f position(s)") % scanPositions.size();
-		for(std::vector<std::pair<int, int>>::size_type i = 0; i != scanPositions.size(); i++) {
-			_wave->SetPositionOffset(scanPositions[i].first, scanPositions[i].second);
+		for(auto i = 0; i != scanPositions.size(); i++) {
+//			_wave->SetPositionOffset(scanPositions[i].first, scanPositions[i].second);
 
 			int xp = scanPositions[i].first, yp = scanPositions[i].second;
-			//  _pot = p->GetSubPotential(xp,yp,size)
-			// auto e = CoherentSinglePositionExperiment(p,...);
-			// e.Run();
 			BOOST_LOG_TRIVIAL(info) << format("\n==== Position %.lf (%.lf, %.lf) ====") % (i + 1) % xp % yp;
-			//RunMultislice(p->GetSubPotential(xp,yp,size));
-			RunMultislice(_pot->GetSubPotential(xp, yp, _c->Wave.nx, _c->Wave.ny));
+			RunMultislice(_pot->GetSubPotential(xp, yp, _c->Wave->nx, _c->Wave->ny));
 
 			PostSpecimenProcess();
 

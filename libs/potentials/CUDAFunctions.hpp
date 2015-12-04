@@ -45,11 +45,11 @@ protected:
 	af::array V1, V2, V3;
 	cufftComplex *V1_d, *V2_d, *V3_d;
 };
-__global__ void squareAtoms_d (  cufftComplex* V, int nAt, int *Z, int Z0, float_tt *xyz, float_tt imPot, float_tt *occ, int s, int nx, int ny, int nslice, float_tt dx, float_tt dy, float_tt dz );
+__global__ void putAtomDeltas (  cufftComplex* V, int nAt, int *Z, int Z0, float_tt *xyz, float_tt imPot, float_tt *occ, int s, int nx, int ny, int nslice, float_tt dx, float_tt dy, float_tt dz );
 __global__ void divideBySinc ( cufftComplex* V, int nx, int ny, float_tt PI);
 __global__ void multiplyWithProjectedPotential_d ( cufftComplex* V1, cufftComplex* V2, int nx, int ny);
 __global__ void initialValues ( cuComplex* V, int size, float_tt initRe, float_tt initIm );
 __global__ void potential2Transmission ( cufftComplex* t, cufftComplex* V, int size );
-__device__ int mySignum_d( float x );
+__device__ int sign( float x );
 } /* namespace QSTEM */
 #endif /* CUDAFUNCTIONS_HPP_ */

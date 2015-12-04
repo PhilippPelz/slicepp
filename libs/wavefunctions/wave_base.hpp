@@ -34,10 +34,11 @@
 namespace QSTEM
 {
 
+
 class DLL_EXPORT CBaseWave : public IWave
 {
 public:
-	CBaseWave(const ConfigPtr& c,const PersistenceManagerPtr& p);
+	CBaseWave(const boost::shared_ptr<WaveConfig> wc, const boost::shared_ptr<ModelConfig> mc,const PersistenceManagerPtr p);
 	CBaseWave( const CBaseWave& other );
 	bool IsRealSpace(){return m_realSpace;}
 	int GetTotalPixels() const {return _nx*_ny;}
@@ -46,11 +47,9 @@ public:
 	void ToFourierSpace();
 	void GetSizePixels(int &x, int &y) const ;
 	void GetResolution(float_tt &x, float_tt &y) const ;
-	void GetPositionOffset(int &x, int &y) const;
-	void SetPositionOffset(int x, int y);
 	virtual void GetK2();
-	inline float_tt GetVoltage()  const {return m_v0;}
-	inline float_tt GetWavelength()  const {return m_wavlen;}
+	inline float_tt GetVoltage()  const {return _E;}
+	inline float_tt GetWavelength()  const {return _wavlen;}
 	inline float_tt GetPixelIntensity(int i) const { return abs2(_wave.data()[i]); }
 	inline float_tt GetPixelIntensity(int x, int y) const  {return GetPixelIntensity(x+_nx*y);}
 	inline float_tt GetPixelDose() const {return _pixelDose; }
@@ -71,7 +70,6 @@ public:
 	virtual void Transmit(af::array t);
 	virtual void PropagateToNextSlice();
 	virtual void InitializePropagators();
-	virtual void ShiftTo(float_tt x, float_tt y);
 	virtual af::array fftShift(af::array _wave);
 	virtual af::array ifftShift(af::array _wave);
 	virtual void ApplyTransferFunction();
@@ -83,14 +81,13 @@ protected:
 	std::vector<float_tt> m_propxr, m_propxi, m_propyr, m_propyi;
 	bool m_realSpace;
 	int m_detPosX, m_detPosY;
-	int _nx, _ny;		      /* size of wavefunc and diffpat arrays */
+	int _nx, _ny;
 	int m_Scherzer;
-	int m_printLevel;
 	int slice_c;
-	float_tt m_dx, m_dy;  // physical pixel size of wavefunction array
+	float_tt _dx, _dy;
 	float_tt m_k2max;
-	float_tt m_v0;
-	float_tt m_wavlen;
+	float_tt _E;
+	float_tt _wavlen;
 	float_tt _pixelDose;
 
 	std::vector<int> m_position;
@@ -105,7 +102,6 @@ protected:
 	void Initialize(std::string input_ext, std::string output_ext);
 	void InitializeKVectors();
 	float_tt Wavelength(float_tt keV);
-
 };
 }
 

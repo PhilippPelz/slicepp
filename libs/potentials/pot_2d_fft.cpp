@@ -40,7 +40,7 @@ void C2DFFTPotential::DisplayParams() {
 void C2DFFTPotential::MakeSlices(superCellBoxPtr info) {
 	CPotential::MakeSlices(info);
 	/* check whether we have constant slice thickness */
-	for (unsigned i = 0; i < _c->Model.nSlices; i++) {
+	for (unsigned i = 0; i < _c->Model->nSlices; i++) {
 		if (_sliceThicknesses[0] != _sliceThicknesses[i]) {
 			printf( "Warning: slice thickness not constant, will give wrong results (iz=%d)!\n",
 					i);
@@ -50,10 +50,10 @@ void C2DFFTPotential::MakeSlices(superCellBoxPtr info) {
 }
 
 void C2DFFTPotential::AddAtomToSlices(atom& atom ) {
-	unsigned iAtomX = (int) floor(atom.r[0] / _c->Model.dx);
-	unsigned iAtomY = (int) floor(atom.r[1] / _c->Model.dy);
+	unsigned iAtomX = (int) floor(atom.r[0] / _c->Model->dx);
+	unsigned iAtomY = (int) floor(atom.r[1] / _c->Model->dy);
 
-	if (_c->Potential.periodicXY) {
+	if (_c->Potential->periodicXY) {
 		AddAtomPeriodic(atom, atom.r[0], iAtomX, atom.r[1], iAtomY, atom.r[2]);
 	} else {
 		AddAtomNonPeriodic(atom, atom.r[0], iAtomX, atom.r[1], iAtomY, atom.r[2]);
@@ -63,10 +63,10 @@ void C2DFFTPotential::CenterAtomZ(std::vector<atom>::iterator &atom, float_tt &z
 
 }
 void C2DFFTPotential::AddAtomNonPeriodic(atom& atom,float_tt atomBoxX, int iAtomX, float_tt atomBoxY,int iAtomY, float_tt atomZ) {
-	int iAtomZ = (int) floor(atomZ / _c->Model.dz);
+	int iAtomZ = (int) floor(atomZ / _c->Model->dz);
 	int iax0, iay0, potentialOffsetX =0, potentialOffsetY=0;
-	int iOffsetX = rint(_c->Structure.xOffset/_c->Model.dx);
-	int iOffsetY = rint(_c->Structure.yOffset/_c->Model.dy);
+	int iOffsetX = rint(_c->Structure->xOffset/_c->Model->dx);
+	int iOffsetY = rint(_c->Structure->yOffset/_c->Model->dy);
 	if(iAtomX - _nRadX + iOffsetX < 0 ){
 		iax0 = 0;
 		potentialOffsetX = abs(iAtomX - _nRadX + iOffsetX) * OVERSAMPLING;
@@ -79,10 +79,10 @@ void C2DFFTPotential::AddAtomNonPeriodic(atom& atom,float_tt atomBoxX, int iAtom
 	} else {
 		iay0 = iAtomY - _nRadY + iOffsetY;
 	}
-	int iax1 = iAtomX + _nRadX +iOffsetX >= _c->Model.nx ? _c->Model.nx - 1 : iAtomX + _nRadX+iOffsetX;
-	int iay1 = iAtomY + _nRadY +iOffsetY >= _c->Model.ny ? _c->Model.ny - 1 : iAtomY + _nRadY+iOffsetY;
-	float_tt ddx = (atomBoxX/_c->Model.dx - iAtomX);
-	float_tt ddy = (atomBoxY/_c->Model.dy - iAtomY);
+	int iax1 = iAtomX + _nRadX +iOffsetX >= _c->Model->nx ? _c->Model->nx - 1 : iAtomX + _nRadX+iOffsetX;
+	int iay1 = iAtomY + _nRadY +iOffsetY >= _c->Model->ny ? _c->Model->ny - 1 : iAtomY + _nRadY+iOffsetY;
+	float_tt ddx = (atomBoxX/_c->Model->dx - iAtomX);
+	float_tt ddy = (atomBoxY/_c->Model->dy - iAtomY);
 	int iOffsX = (int) floor(ddx);
 	int iOffsY = (int) floor(ddy);
 	ddx -= (float_tt) iOffsX;
@@ -112,15 +112,15 @@ void C2DFFTPotential::AddAtomNonPeriodic(atom& atom,float_tt atomBoxX, int iAtom
 }
 
 void C2DFFTPotential::AddAtomPeriodic(atom& atom, float_tt atomBoxX, int iAtomX, float_tt atomBoxY, int iAtomY, float_tt atomZ) {
-	unsigned iAtomZ = (int) floor(atomZ / _c->Model.dz);
-	unsigned iax0 = iAtomX - _nRadX +  _c->Model.nx;
-	unsigned iax1 = iAtomX + _nRadX +  _c->Model.nx;
-	unsigned iay0 = iAtomY - _nRadY +  _c->Model.ny;
-	unsigned iay1 = iAtomY + _nRadY +  _c->Model.ny;
+	unsigned iAtomZ = (int) floor(atomZ / _c->Model->dz);
+	unsigned iax0 = iAtomX - _nRadX +  _c->Model->nx;
+	unsigned iax1 = iAtomX + _nRadX +  _c->Model->nx;
+	unsigned iay0 = iAtomY - _nRadY +  _c->Model->ny;
+	unsigned iay1 = iAtomY + _nRadY +  _c->Model->ny;
 //	_nx = 2 * OVERSAMPLING * (int) ceil(_config->Potential.AtomRadiusAngstrom / _config->Model.dx);
 //	m_iRadX = (int) ceil( _config->Potential.AtomRadiusAngstrom / _config->Model.dx);
-	float_tt ddx = (atomBoxX/_c->Model.dx - iAtomX);
-	float_tt ddy = (atomBoxY/_c->Model.dy - iAtomY);
+	float_tt ddx = (atomBoxX/_c->Model->dx - iAtomX);
+	float_tt ddy = (atomBoxY/_c->Model->dy - iAtomY);
 	unsigned iOffsX = (int) floor(ddx);
 	unsigned iOffsY = (int) floor(ddy);
 	ddx -= (float_tt) iOffsX;
@@ -141,7 +141,7 @@ void C2DFFTPotential::AddAtomPeriodic(atom& atom, float_tt atomBoxX, int iAtomX,
 						+ s12 * pot[xindex+1][yindex]
 						+ s21 * pot[xindex][yindex+1]
 						+ s22 * pot[xindex+1][yindex+1]).real();
-			_t[iAtomZ][iax % _c->Model.nx][iay %_c->Model.ny] += complex_tt(vz,0);
+			_t[iAtomZ][iax % _c->Model->nx][iay %_c->Model->ny] += complex_tt(vz,0);
 			added += vz;
 		}
 	}
@@ -149,10 +149,10 @@ void C2DFFTPotential::AddAtomPeriodic(atom& atom, float_tt atomBoxX, int iAtomX,
 void C2DFFTPotential::SliceSetup() {
 	CPotential::SliceSetup();
 	if (_atomPot.size() == 0) {
-		_nx = 2 * OVERSAMPLING * (int) ceil(_c->Potential.ratom / _c->Model.dx);
-		_ny = 2 * OVERSAMPLING * (int) ceil(_c->Potential.ratom / _c->Model.dy);
-		_dkx = 0.5 * OVERSAMPLING / ((_nx) * _c->Model.dx);
-		_dky = 0.5 * OVERSAMPLING / ((_ny) * _c->Model.dy);
+		_nx = 2 * OVERSAMPLING * (int) ceil(_c->Potential->ratom / _c->Model->dx);
+		_ny = 2 * OVERSAMPLING * (int) ceil(_c->Potential->ratom / _c->Model->dy);
+		_dkx = 0.5 * OVERSAMPLING / ((_nx) * _c->Model->dx);
+		_dky = 0.5 * OVERSAMPLING / ((_ny) * _c->Model->dy);
 		_kmax2 = 0.5 * _nx * _dkx / (float_tt) OVERSAMPLING; // largest k that we'll admit
 
 		BOOST_LOG_TRIVIAL(info)<< format("Cutoff scattering angle: kmax = %g (1/Å)") % _kmax2;
@@ -174,7 +174,7 @@ void C2DFFTPotential::SliceSetup() {
 				}
 			}
 
-			if (_c->Output.LogLevel < 2)
+			if (_c->Output->LogLevel < 2)
 				BOOST_LOG_TRIVIAL(info)<< format("Reduced angular range of scattering factor to %g/Å!") % scatParOffs[0][N_SF - 4 - ix];
 			}
 		_kmax2 *= _kmax2;
@@ -198,7 +198,7 @@ void  C2DFFTPotential::ComputeAtomPotential(int Znum){
 					// multiply scattering factor with Debye-Waller factor:
 					// printf("k2=%g,B=%g, exp(-k2B)=%g\n",k2,B,exp(-k2*B));
 					float_tt f = seval(scatPar[0], scatPar[Znum], splinb, splinc, splind, N_SF, sqrt(s2))* exp(-s2 * B * 0.25);
-					float_tt phase = PI * (kx * _c->Model.dx * _nx + ky * _c->Model.dy * _ny);
+					float_tt phase = PI * (kx * _c->Model->dx * _nx + ky * _c->Model->dy * _ny);
 					_atomPot[Znum][ix][iy] = complex_tt(f * cos(phase),f * sin(phase));
 				}
 			}

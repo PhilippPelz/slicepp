@@ -24,33 +24,22 @@ using boost::format;
 namespace QSTEM
 {
 
-void CreateWaveFunctionDataSets(int x, int y, std::vector<int> positions, std::string output_ext)
+CBaseWave::CBaseWave(const boost::shared_ptr<WaveConfig> wc, const boost::shared_ptr<ModelConfig> mc,const PersistenceManagerPtr p) :  IWave(wc,mc,p)
 {
-	//TODO user persistence CreateWaveFunctionDataSets
-	//	CImageIO imageIO(x, y, "", output_ext);
-	//	std::string potDataSetLabel = "Potential";
-	//	std::string mulswavDataSetLabel = "mulswav";
-	//	imageIO.CreateComplexDataSet(potDataSetLabel, positions);
-	//	imageIO.CreateComplexDataSet(mulswavDataSetLabel, positions);
-}
-CBaseWave::CBaseWave(const ConfigPtr& c,const PersistenceManagerPtr& p) :  IWave(c,p)
-{
-	_nx = c->Model.nx;
-	_ny = c->Model.ny;
-	m_dx = c->Model.dx;
-	m_dy = c->Model.dy;
-	m_v0 = c->Beam.EnergykeV;
+	_nx = _wc->nx;
+	_ny = _wc->ny;
+	_dx = _mc->dx;
+	_dy = _mc->dy;
+	_E = _wc->EnergykeV;
 	m_realSpace = true;
-	m_detPosX = c->Scan.xPos;
-	m_detPosY = c->Scan.yPos;
-	_pixelDose = c->Wave.pixelDose;
+	_pixelDose = _wc->pixelDose;
 	// TODO: where does this belong?
 	//m_electronScale = m_beamCurrent*m_dwellTime*MILLISEC_PICOAMP;
-	Initialize(".img", ".img");
+	_wavlen = Wavelength(_E);
 }
 void CBaseWave::InitializePropagators()
 {
-	float_tt scale = _config->Model.dz * PI * GetWavelength();
+	float_tt scale = _mc->dz * PI * GetWavelength();
 	//t = exp(-i pi lam k^2 dz)
 	af::array s, kx2D, ky2D;
 // Tile the arrays to create 2D versions of the k vectors
@@ -65,9 +54,6 @@ void CBaseWave::InitializePropagators()
 	//_prop = fftShift(_prop);
 }
 
-void CBaseWave::ShiftTo(float_tt x, float_tt y){
-
-}
 af::array CBaseWave::fftShift(af::array wave){
 	return af::shift(wave, wave.dims(0)/2, wave.dims(1)/2);
 }
@@ -111,13 +97,12 @@ void CBaseWave::Transmit(af::array t_af)
 	_wave_af *= t_af;
 } /* end transmit() */
 /** Copy constructor - make sure arrays are deep-copied */
-CBaseWave::CBaseWave(const CBaseWave &other): CBaseWave(other._config,other._persist)
+CBaseWave::CBaseWave(const CBaseWave &other): CBaseWave(other._wc,other._mc,other._persist)
 {
 	// TODO: make sure arrays are deep copied
 	other.GetSizePixels(_nx, _ny);
-	other.GetResolution(m_dx, m_dy);
-	m_v0=other.GetVoltage();
-	Initialize(".img", ".img");
+	other.GetResolution(_dx, _dy);
+	_E=other.GetVoltage();
 }
 
 
@@ -125,16 +110,10 @@ CBaseWave::~CBaseWave()
 {
 }
 
-
-void CBaseWave::Initialize(std::string input_ext, std::string output_ext)
-{
-	m_wavlen = Wavelength(m_v0);
-}
-
 void CBaseWave::InitializeKVectors()
 {
-	float_tt ax = _config->Model.dx*_nx;
-	float_tt by = _config->Model.dy*_ny;
+	float_tt ax = _mc->dx*_nx;
+	float_tt by = _mc->dy*_ny;
 
 	m_kx = (af::range(_nx) - _nx/2)/ax;
 	m_kx2 = m_kx*m_kx;
@@ -158,8 +137,7 @@ void  CBaseWave::GetExtents(int& nx, int& ny) const{
 	ny = _ny;
 }
 void CBaseWave::FormProbe(){
-	_nx = _config->Wave.nx;
-	_ny = _config->Wave.ny;
+
 	_zero = af::constant(0, _nx, _ny);
 	_wave_af = af::complex(_zero, _zero);
 	_wave.resize(boost::extents[_nx][_ny]);
@@ -178,17 +156,17 @@ void CBaseWave::DisplayParams()
 	BOOST_LOG_TRIVIAL(info) <<
 			"**************************************************************************************************";
 	BOOST_LOG_TRIVIAL(info)<<format("* Real space res.:      %gA (=%gmrad)")%	(1.0/m_k2max)%(GetWavelength()*m_k2max*1000.0);
-	BOOST_LOG_TRIVIAL(info)<<format("* Reciprocal space res: dkx=%g, dky=%g (1/A)")%	(1.0/(_nx*_config->Model.dx))%(1.0/(_ny*_config->Model.dy));
+	BOOST_LOG_TRIVIAL(info)<<format("* Reciprocal space res: dkx=%g, dky=%g (1/A)")%	(1.0/(_nx*_mc->dx))%(1.0/(_ny*_mc->dy));
 
 	BOOST_LOG_TRIVIAL(info)<<format("* Beams:                %d x %d ")%_nx%_ny;
 
-	BOOST_LOG_TRIVIAL(info)<<format("* Acc. voltage:         %g (lambda=%gA)")%m_v0%(Wavelength(m_v0));
+	BOOST_LOG_TRIVIAL(info)<<format("* Acc. voltage:         %g (lambda=%gA)")%_E%(Wavelength(_E));
 
 	if (k_fftMeasureFlag == FFTW_MEASURE)
 		BOOST_LOG_TRIVIAL(info)<<format("* Probe array:          %d x %d pixels (optimized)")%_nx%_ny;
 	else
 		BOOST_LOG_TRIVIAL(info)<<format("* Probe array:          %d x %d pixels (estimated)")%_nx%_ny;
-	BOOST_LOG_TRIVIAL(info)<<format("*                       %g x %gA")%(_nx*_config->Model.dx)%(_ny*_config->Model.dy);
+	BOOST_LOG_TRIVIAL(info)<<format("*                       %g x %gA")%(_nx*_mc->dx)%(_ny*_mc->dy);
 }
 
 /*
@@ -206,22 +184,9 @@ void CBaseWave::GetSizePixels(int &x, int &y) const
 
 void CBaseWave::GetResolution(float_tt &x, float_tt &y) const
 {
-	x=m_dx;
-	y=m_dy;
+	x=_dx;
+	y=_dy;
 }
-
-void CBaseWave::GetPositionOffset(int &x, int &y) const
-{
-	x=m_detPosX;
-	y=m_detPosY;
-}
-
-void CBaseWave::SetPositionOffset(int x, int y)
-{
-	m_detPosX = x;
-	m_detPosY = y;
-}
-
 
 void CBaseWave::GetK2()
 {
@@ -264,23 +229,6 @@ float_tt CBaseWave::Wavelength(float_tt kev)
 	return hc/sqrt( kev * ( 2*emass + kev ) );
 }  /* end wavelength() */
 
-/*
-void CBaseWave:WriteBeams(int absolute_slice) {
-  static char fileAmpl[32];
-  static char filePhase[32];
-  static char fileBeam[32];
-  static FILE *fp1 = NULL,*fpAmpl = NULL,*fpPhase=NULL;
-  int ib;
-  static std::vector<int> hbeam,kbeam;
-  static float_tt zsum = 0.0f,scale;
-  float_tt rPart,iPart,ampl,phase;
-  static char systStr[64];
-  // static int counter=0;
-
-  if (!muls->lbeams)
-    return;  	
-}
- */
 
 // FFT to Fourier space, but only if we're current in real space
 void CBaseWave::ToFourierSpace()

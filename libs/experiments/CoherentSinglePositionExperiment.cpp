@@ -43,11 +43,11 @@ void CoherentSinglePositionExperiment::Run()
 	int ix,iy,i,pCount,result;
 	double timer,timerTot ;
 	float_tt t=0;
-	FloatArray2D avgPendelloesung(boost::extents[_nbout][_c->Model.nSlices]);
+	FloatArray2D avgPendelloesung(boost::extents[_nbout][_c->Model->nSlices]);
 	std::map<std::string, double> params;
 	std::vector<unsigned> position(1);         // Used to indicate the number of averages
 
-	m_chisq.resize(_c->Model.TDSRuns);
+	m_chisq.resize(_c->Model->TDSRuns);
 	timerTot = 0; /* cputim();*/
 	DisplayProgress(-1);
 
@@ -70,10 +70,10 @@ void CoherentSinglePositionExperiment::Run()
 	BOOST_LOG_TRIVIAL(info)<< format( "%g sec used for initialization")
 	% difftime(time1, time0);
 
-	for (_runCount = 0;_runCount < _c->Model.TDSRuns;_runCount++) {
+	for (_runCount = 0;_runCount < _c->Model->TDSRuns;_runCount++) {
 		auto box = _structureBuilder->DisplaceAtoms();
 		_pot->MakeSlices(box);
-		if (_c->Output.saveProbe) _persist->SaveProbe(_wave->GetProbe());
+		if (_c->Output->saveProbe) _persist->SaveProbe(_wave->GetProbe());
 		RunMultislice(_pot->GetPotential());
 
 		if (_lbeams) {
@@ -89,9 +89,9 @@ void CoherentSinglePositionExperiment::Run()
 //			sprintf(systStr,"%s/pendelloesung.dat",m_outputLocation.c_str());
 //			if ((fp=fopen(systStr,"w")) !=NULL) {
 //				BOOST_LOG_TRIVIAL(info) << "Writing Pendelloesung data";
-//				for (iy=0;iy<_c->Model.nSlices ;iy++) {
+//				for (iy=0;iy<_c->Model->nSlices ;iy++) {
 //					/* write the thicknes in the first column of the file */
-//					fprintf(fp,"%g",iy*_c->Model.dz);//((float)(m_potential->GetNSlices()*_c->Potential.NSubSlabs)));
+//					fprintf(fp,"%g",iy*_c->Model->dz);//((float)(m_potential->GetNSlices()*_c->Potential->NSubSlabs)));
 //					/* write the beam intensities in the following columns */
 //					for (ix=0;ix<_nbout;ix++) {
 //						fprintf(fp,"\t%g",avgPendelloesung[ix][iy]);
@@ -215,13 +215,13 @@ void CoherentSinglePositionExperiment::WriteBeams(unsigned int absoluteSlice)
 void CoherentSinglePositionExperiment::PostSliceProcess()
 {
 	//	InterimWave(absoluteSlice);
-	//	if (_c->Output.LogLevel < 2) {
+	//	if (_c->Output->LogLevel < 2) {
 	//		ComplexArray2D w = m_wave->GetWave();
 	//		float_tt potVal = w[0][0].real();
 	//		float_tt ddx = potVal;
 	//		float_tt ddy = potVal;
-	//		for (unsigned ix = 0; ix <  _c->Model.nx; ix++)
-	//			for (unsigned iy = 0; iy < _c->Model.ny ; iy++){
+	//		for (unsigned ix = 0; ix <  _c->Model->nx; ix++)
+	//			for (unsigned iy = 0; iy < _c->Model->ny ; iy++){
 	//				potVal = w[ix][iy].real();
 	//				if (ddy < potVal)
 	//					ddy = potVal;

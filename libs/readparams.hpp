@@ -78,7 +78,7 @@ int readNextLine(FILE *fp, char *buf,int bufLen);
 
 void resetParamFile(FILE *fp);
 
-char *strnext(char *str,char *delim);
+char *strnext(char *str,const char *delim);
 
 
 #endif /* READPARAMS_H */

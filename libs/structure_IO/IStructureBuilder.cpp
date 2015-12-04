@@ -12,7 +12,7 @@ namespace QSTEM {
 IStructureBuilder::IStructureBuilder(StructureReaderPtr& r,const ConfigPtr& c) {
 	_r = r;
 	_c = c;
-	_r->SetFilePath(_c->Structure.structureFilename);
+	_r->SetFilePath(_c->Structure->structureFilename);
 }
 
 IStructureBuilder::~IStructureBuilder() {

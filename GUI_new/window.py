@@ -17,16 +17,16 @@ import os
 import json
 
 projectPath = os.path.dirname(os.path.realpath(__file__)) + '/../'
-projectPath1 = projectPath + '/validation/si3n4/'
+projectPath1 = projectPath + '/Examples/configs/'
 defaultResultsPath= projectPath1 + '7.11.h5'
-defaultLoadConfigPath= projectPath1 + '7.11.json'
-defaultSaveConfigPath= projectPath1 + '7.11.json'
+defaultLoadConfigPath= projectPath1 + 'goldballs.json'
+defaultSaveConfigPath= projectPath1 + 'goldballs.json'
 defaultExePath= projectPath + 'build/release/bin/stem3'
 
 class SliceGUI(QtGui.QMainWindow):
     def __init__(self):
         super(SliceGUI, self).__init__()
-        
+
         self.labelText = [['Abs', 'Phase'], ['Real', 'Imag']]
 
         self.resultsRadio1 = QtGui.QRadioButton()
@@ -37,18 +37,18 @@ class SliceGUI(QtGui.QMainWindow):
         self.v1Label = QtGui.QLabel(self.labelText[0][0])
         self.v2Label = QtGui.QLabel(self.labelText[0][1])
         self.resultssplitter = QtGui.QSplitter(1)
-        self.consolelayout = QtGui.QVBoxLayout()     
-        
+        self.consolelayout = QtGui.QVBoxLayout()
+
         self.btnLoadConfigFile = QtGui.QPushButton('Load')
         self.btnSaveConfigFile = QtGui.QPushButton('Save')
         self.btnLoadResults = QtGui.QPushButton('Load')
-        self.loadFileButton = QtGui.QPushButton('Load Configuration File')   
-        
+        self.loadFileButton = QtGui.QPushButton('Load Configuration File')
+
         self.process = QtCore.QProcess(self)
-        self.consoleOutput = QtGui.QTextEdit()  
-        
+        self.consoleOutput = QtGui.QTextEdit()
+
         self.selected = np.array([1])
-        
+
         self.addTopLevel()
         self.addLeftSide()
         self.addWaveItems()
@@ -87,8 +87,8 @@ class SliceGUI(QtGui.QMainWindow):
 
         self.trResults.setMaximumWidth(800)
         self.trResults.connect(self.trResults, QtCore.SIGNAL('itemClicked(QTreeWidgetItem*, int)'), self.resultsTreeItemClick)
-        
-        
+
+
         resultsViewLayout.addWidget(self.v1Label)
         resultsViewLayout.addWidget(self.view1)
         resultsViewLayout.addWidget(self.v2Label)
@@ -117,7 +117,7 @@ class SliceGUI(QtGui.QMainWindow):
         self.process.setProcessChannelMode(QtCore.QProcess.MergedChannels);
 
         self.consolelayout.addWidget(self.consoleOutput)
-        self.consoleOutput.setFontPointSize(9.0)
+        self.consoleOutput.setFontPointSize(12.0)
         font = QtGui.QFont("Monospace")
         font.setPointSize(6)
         self.consoleOutput.setFont(font)
@@ -231,8 +231,8 @@ class SliceGUI(QtGui.QMainWindow):
 
     def loadResultFileClicked(self):
         fn = self.loadResultsPathTb.text()
-        s = QtCore.QString()
         fn = str(fn)
+        print fn
         with pg.BusyCursor():
             self.data = h5read(fn)
         d = self.data.copy()
@@ -244,7 +244,7 @@ class SliceGUI(QtGui.QMainWindow):
         self.selected = self.data[str(item.text(0))]
         self.updateResultsView()
 
-    def updateResultsView(self):  
+    def updateResultsView(self):
         if self.resultsRadio1.isChecked():
                 self.v1Label.setText(self.labelText[0][0])
                 self.v2Label.setText(self.labelText[0][1])
@@ -256,12 +256,12 @@ class SliceGUI(QtGui.QMainWindow):
                 self.view1.setImage(np.abs(self.selected), autoRange=True, autoLevels=True, levels=None, axes=None, \
                                         xvals=None, pos=None, scale=None, transform=None, autoHistogramRange=True)
                 self.view2.setImage(np.angle(self.selected), autoRange=True, autoLevels=True, levels=None, axes=None, \
-                                        xvals=None, pos=None, scale=None, transform=None, autoHistogramRange=True) 
+                                        xvals=None, pos=None, scale=None, transform=None, autoHistogramRange=True)
             else:
                 self.view1.setImage(np.real(self.selected), autoRange=True, autoLevels=True, levels=None, axes=None, \
                                         xvals=None, pos=None, scale=None, transform=None, autoHistogramRange=True)
                 self.view2.setImage(np.imag(self.selected), autoRange=True, autoLevels=True, levels=None, axes=None, \
-                                        xvals=None, pos=None, scale=None, transform=None, autoHistogramRange=True)  
+                                        xvals=None, pos=None, scale=None, transform=None, autoHistogramRange=True)
 
 if __name__ == '__main__':
 
@@ -272,4 +272,3 @@ if __name__ == '__main__':
     gui.show()
     gui.setWindowTitle('slice++')
     app.exec_()
-

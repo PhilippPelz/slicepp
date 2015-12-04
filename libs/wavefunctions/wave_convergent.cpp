@@ -14,7 +14,7 @@
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  along with this program.  If not, see <http://wwwc->gnu.org/licenses/>.
  */
 
 #include "wave_convergent.hpp"
@@ -24,47 +24,43 @@ using boost::format;
 namespace QSTEM
 {
 
-CConvergentWave::CConvergentWave(const ConfigPtr& c,const PersistenceManagerPtr& p) : CBaseWave(c,p)
+CConvergentWave::CConvergentWave(const boost::shared_ptr<WaveConfig> wc, const boost::shared_ptr<ModelConfig> mc,const PersistenceManagerPtr& p) : CBaseWave(wc,mc,p)
 {
-	// TODO: where does beam current belong?
-	//configReader->ReadDoseParameters(m_beamCurrent, m_dwellTime);
-	const WaveConfig& w = c->Wave;
-	m_Cs = w.Cs;
-	m_C5= w.C5;
-	m_Cc= w.Cc;
-	m_df0= w.Defocus;
+	m_Cs = wc->Cs;
+	m_C5= wc->C5;
+	m_Cc= wc->Cc;
+	m_df0= wc->Defocus;
 	m_Scherzer= "";
-	m_astigMag= w.Astigmatism;
-	m_a33= w.a_33;
-	m_a31= w.a_31;
-	m_a44= w.a_44;
-	m_a42= w.a_42;
-	m_a55= w.a_55;
-	m_a53= w.a_53;
-	m_a51= w.a_51;
-	m_a66= w.a_66;
-	m_a64= w.a_64;
-	m_a62= w.a_62;
-	m_astigAngle= w.AstigmatismAngle;
-	m_phi33= w.phi_33;
-	m_phi31= w.phi_31;
-	m_phi44= w.phi_44;
-	m_phi42= w.phi_42;
-	m_phi55= w.phi_55;
-	m_phi53= w.phi_53;
-	m_phi51= w.phi_51;
-	m_phi66= w.phi_66;
-	m_phi64= w.phi_64;
-	m_phi62= w.phi_62;
-	_smoothen= w.Smooth;
-	_gaussScale= w.gaussScale;
-	_isGaussian= w.Gaussian;
-	m_dE_E= w.dE_E;
-	m_dI_I= w.dI_I;
-	m_dV_V= w.dV_V;
-	m_alpha= w.alpha;
-	_CLA= w.AISaperture;
-	m_printLevel = c->Output.LogLevel;
+	m_astigMag= wc->Astigmatism;
+	m_a33= wc->a_33;
+	m_a31= wc->a_31;
+	m_a44= wc->a_44;
+	m_a42= wc->a_42;
+	m_a55= wc->a_55;
+	m_a53= wc->a_53;
+	m_a51= wc->a_51;
+	m_a66= wc->a_66;
+	m_a64= wc->a_64;
+	m_a62= wc->a_62;
+	m_astigAngle= wc->AstigmatismAngle;
+	m_phi33= wc->phi_33;
+	m_phi31= wc->phi_31;
+	m_phi44= wc->phi_44;
+	m_phi42= wc->phi_42;
+	m_phi55= wc->phi_55;
+	m_phi53= wc->phi_53;
+	m_phi51= wc->phi_51;
+	m_phi66= wc->phi_66;
+	m_phi64= wc->phi_64;
+	m_phi62= wc->phi_62;
+	_smoothen= wc->Smooth;
+	_gaussScale= wc->gaussScale;
+	_isGaussian= wc->Gaussian;
+	m_dE_E= wc->dE_E;
+	m_dI_I= wc->dI_I;
+	m_dV_V= wc->dV_V;
+	m_alpha= wc->alpha;
+	_CLA= wc->AISaperture;
 }
 
 /** Copy constructor - used to copy wave just before dispatching multiple threads for STEM simulations */
@@ -109,7 +105,7 @@ void CConvergentWave::DisplayParams()
 	if (m_C5 != 0)BOOST_LOG_TRIVIAL(info)<< format("* C_5:                  %g mm") % (m_C5*1e-7);
 
 	BOOST_LOG_TRIVIAL(info)<< format("* C_c:                  %g mm") %(m_Cc*1e-7);
-	BOOST_LOG_TRIVIAL(info)<< format("* Damping dE/E: %g / %g ") % (sqrt(m_dE_E*m_dE_E+m_dV_V*m_dV_V+m_dI_I*m_dI_I)*m_v0*1e3) %(m_v0*1e3);
+	BOOST_LOG_TRIVIAL(info)<< format("* Damping dE/E: %g / %g ") % (sqrt(m_dE_E*m_dE_E+m_dV_V*m_dV_V+m_dI_I*m_dI_I)*_E*1e3) %(_E*1e3);
 
 	/*
     // TODO: where does beam current belong?
@@ -160,11 +156,11 @@ void CConvergentWave::ConstructWave(){
 	unsigned iy, ixmid, iymid;
 	float_tt rmin, rmax, aimin, aimax;
 	float_tt k2max, alpha;
-	float_tt ax = _nx*m_dx;
-	float_tt by = _ny*m_dy;
-	float_tt dx = ax-_nx/2*m_dx;
-	float_tt dy = by-_ny/2*m_dy;
-	float_tt avgRes = sqrt(0.5*(m_dx*m_dx+m_dy*m_dy));
+	float_tt ax = _nx*_dx;
+	float_tt by = _ny*_dy;
+	float_tt dx = ax-_nx/2*_dx;
+	float_tt dy = by-_ny/2*_dy;
+	float_tt avgRes = sqrt(0.5*(_dx*_dx+_dy*_dy));
 	float_tt edge = SMOOTH_EDGE*avgRes;
 
 	float_tt sum = 0.0;
@@ -182,7 +178,7 @@ void CConvergentWave::ConstructWave(){
 	 * delta defocus in Angstroem (Cc in A)
 	 *******************************************************/
 	float_tt delta_c = m_Cc*m_dE_E;
-	if (m_printLevel > 2) printf("defocus offset: %g nm (Cc = %g)\n",delta_c,m_Cc);
+//	if (m_printLevel > 2) printf("defocus offset: %g nm (Cc = %g)\n",delta_c,m_Cc);
 	delta = af::constant(delta_c, _nx, _ny);
 
 	/**********************************************************
@@ -202,7 +198,7 @@ void CConvergentWave::ConstructWave(){
 	ToFourierSpace();
 	/* convert convergence angle from mrad to rad */
 	alpha = 0.001*m_alpha;
-	k2max = sin(alpha)/m_wavlen;  /* = K0*sin(alpha) */
+	k2max = sin(alpha)/_wavlen;  /* = K0*sin(alpha) */
 	k2max = k2max * k2max;
 
 	/*   Calculate MTF
@@ -226,7 +222,7 @@ void CConvergentWave::ConstructWave(){
 	ky2 = ky*ky*ry2;
 	kx2 = kx*kx*rx2;
 	k2 = kx2 + ky2;
-	ktheta2 = k2*(m_wavlen*m_wavlen);
+	ktheta2 = k2*(_wavlen*_wavlen);
 	ktheta = af::sqrt(ktheta2);
 	phi = af::atan2(ry*ky, rx*kx);
 	chi = ktheta2*(m_df0 +delta + m_astigMag*af::cos(2.0*(phi-m_astigAngle)))/2.0;
@@ -249,7 +245,7 @@ void CConvergentWave::ConstructWave(){
 
 	af::array condition2;
 
-	chi *= 2*PI/m_wavlen;
+	chi *= 2*PI/_wavlen;
 	chi -= 2.0*PI*( (kx*dx/ax) + (ky*dy/by) );
 	k2max_af = af::constant(k2max, _nx, _ny);
 	real = af::constant(0, _nx, _ny);
@@ -282,8 +278,8 @@ void CConvergentWave::ConstructWave(){
 	/* Apply AIS aperture in Real Space */
 	// printf("center: %g,%g\n",dx,dy);
 	if (_CLA > 0) {
-		x = af::range(_nx)*m_dx-dx;
-		y = af::range(_ny)*m_dy-dy;
+		x = af::range(_nx)*_dx-dx;
+		y = af::range(_ny)*_dy-dy;
 		x = af::tile(x, 1, _ny);
 		y = af::tile(y.T(), _nx);
 		r = af::sqrt(x*x+y*y);

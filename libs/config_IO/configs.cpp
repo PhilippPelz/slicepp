@@ -79,6 +79,8 @@ void ModelConfig::Read(ptree& t){
 	dy=t.get<float_tt>("model.resolutionYAngstrom");
 	beamTiltX=t.get<float_tt>("model.beamTiltX");
 	beamTiltY=t.get<float_tt>("model.beamTiltY");
+	SourceDiameterAngstrom=t.get<float_tt>("beam.sourceDiameterAngstrom");
+	BeamCurrentpA=t.get<float_tt>("beam.beamCurrentpA");
 }
 void PotentialConfig::Read(ptree& t){
 	PlotVrr=t.get<bool>("model.potential.plotVr_r");
@@ -152,16 +154,9 @@ void WaveConfig::Read(ptree& t){
 	nx = t.get<int>("wave.nx");
 	ny = t.get<int>("wave.ny");
 	imPot = t.get<float>("wave.imaginary potential factor");
-        pixelDose = t.get<float_tt>("wave.pixel dose");
-//	posX=t.get<float_tt>("wave.posX");
-//	posY=t.get<float_tt>("wave.posY");
-}
-void BeamConfig::Read(ptree& t){
-	EnergykeV =t.get<float_tt>("beam.energy_keV");
-	SourceDiameterAngstrom=t.get<float_tt>("beam.sourceDiameterAngstrom");
-	BeamCurrentpA=t.get<float_tt>("beam.beamCurrentpA");
-	DwellTimeMsec=t.get<float_tt>("beam.dwellTimeMsec");
+	pixelDose = t.get<float_tt>("wave.pixel dose");
 
+	EnergykeV =t.get<float_tt>("beam.energy_keV");
 	float_tt w;
 	const float_tt emass=510.99906; /* electron rest mass in keV */
 	const float_tt hc=12.3984244; /* Planck's const x speed of light*/
@@ -173,7 +168,6 @@ void BeamConfig::Read(ptree& t){
 	x = ( emass + EnergykeV ) / ( 2.0*emass + EnergykeV);
 	pi = 4.0 * atan( 1.0 );
 	sigma = 2.0 * pi * x / (wavelength*EnergykeV);  // 2*pi*kz*(1+kev/emaxx)/(2*emass+kev)
-
 }
 
 void ScanConfig::Read(ptree& t){
@@ -190,29 +184,28 @@ void DetectorConfig::Read(ptree& t){
 	mtfB = t.get<float_tt>("detector.mtfB");
 	mtfC = t.get<float_tt>("detector.mtfC");
 	mtfD = t.get<float_tt>("detector.mtfD");
+	DwellTimeMsec=t.get<float_tt>("beam.dwellTimeMsec");
 }
 Config::Config(ptree& t,boost::filesystem::path configPath){
 	this->configPath = configPath;
 	ExperimentType =static_cast<QSTEM::ExperimentType>(t.get<int>("mode"));
 	nThreads = t.get<int>("nthreads");
 
-	Structure =StructureConfig();
-	Model =ModelConfig();
-	Potential =PotentialConfig();
-	Output =OutputConfig();
-	Wave =WaveConfig();
-	Beam = BeamConfig();
-	Scan = ScanConfig();
-	Detector = DetectorConfig();
+	Structure = boost::shared_ptr<StructureConfig>(new StructureConfig());
+	Model = boost::shared_ptr<ModelConfig>(new ModelConfig());
+	Potential = boost::shared_ptr<PotentialConfig>(new PotentialConfig());
+	Output = boost::shared_ptr<OutputConfig>(new OutputConfig());
+	Wave = boost::shared_ptr<WaveConfig>(new WaveConfig());
+	Scan = boost::shared_ptr<ScanConfig>(new ScanConfig());
+	Detector = boost::shared_ptr<DetectorConfig>(new DetectorConfig());
 
-	Structure.Read(t);
-	Model.Read(t);
-	Potential.Read(t);
-	Output.Read(t);
-	Wave.Read(t);
-	Beam.Read(t);
-	Scan.Read(t);
-	Detector.Read(t);
+	Structure->Read(t);
+	Model->Read(t);
+	Potential->Read(t);
+	Output->Read(t);
+	Wave->Read(t);
+	Scan->Read(t);
+	Detector->Read(t);
 }
 
 } // end namespace QSTEM

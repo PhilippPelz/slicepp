@@ -16,8 +16,8 @@ FlatAreaDetector::~FlatAreaDetector() {
 }
 
 void FlatAreaDetector::RecordImage(WavePtr w){
-	_nx = _c->Wave.nx;
-	_ny = _c->Wave.ny;
+	_nx = _c->Wave->nx;
+	_ny = _c->Wave->ny;
 	_image = af::array(w->GetWaveAF());
 	float_tt scale = 1/(float_tt)(_nx *_ny);
 	af::fft2(_image);
@@ -54,7 +54,7 @@ void FlatAreaDetector::MultiplyMTF(af::array wave ){
 	ix = af::tile(ix/_nx, 1, _ny);
 	iy = af::tile(iy.T()/_ny, _nx);
 	mtf = af::sqrt(ix *ix + iy*iy);
-	mtf = (_c->Detector.mtfA * af::exp((-1) * _c->Detector.mtfC * mtf) + _c->Detector.mtfB * af::exp((-1) * _c->Detector.mtfC * mtf * mtf));
+	mtf = (_c->Detector->mtfA * af::exp((-1) * _c->Detector->mtfC * mtf) + _c->Detector->mtfB * af::exp((-1) * _c->Detector->mtfC * mtf * mtf));
 	ix *= PI;
 	iy *= PI;
 	mtf *= ((af::sin ( ix ) + FLT_EPSILON ) / ( ix + FLT_EPSILON ) ) * ( (af::sin ( iy ) + FLT_EPSILON ) / ( iy + FLT_EPSILON ) );

@@ -20,7 +20,7 @@ PersistenceManager::PersistenceManager() :
 PersistenceManager::PersistenceManager(const ConfigPtr c) :
 		PersistenceManager() {
 	_c = c;
-	_file = HDFFile(_c->Output.savePath);
+	_file = HDFFile(_c->Output->savePath);
 	_info = _file.CreateGroup("config");
 }
 
@@ -130,41 +130,41 @@ void PersistenceManager::Save2DDataSet(af::array data, string name) {
 }
 
 void PersistenceManager::InitStorage() {
-	auto e3 = boost::extents[_c->Model.nSlices][_c->Model.nx][_c->Model.ny];
-	auto e2 = boost::extents[_c->Model.nx][_c->Model.ny];
-	if (_c->Output.SavePotential || _c->Output.ComputeFromProjectedPotential)
+	auto e3 = boost::extents[_c->Model->nSlices][_c->Model->nx][_c->Model->ny];
+	auto e2 = boost::extents[_c->Model->nx][_c->Model->ny];
+	if (_c->Output->SavePotential || _c->Output->ComputeFromProjectedPotential)
 		_potential.resize(e3);
-	if (_c-> Output.SaveWaveAfterSlice)
+	if (_c->Output->SaveWaveAfterSlice)
 		_waveSlicesAfterSlice.resize(e3);
-	if (_c-> Output.SaveWaveAfterPropagation)
+	if (_c->Output->SaveWaveAfterPropagation)
 		_waveSlicesAfterProp.resize(e3);
-	if (_c-> Output.SaveWaveAfterTransform)
+	if (_c->Output->SaveWaveAfterTransform)
 		_waveSlicesAfterFT.resize(e3);
-	if (_c-> Output.SaveWaveAfterTransmit)
+	if (_c->Output->SaveWaveAfterTransmit)
 		_waveSlicesAfterTransmit.resize(e3);
-	if (_c-> Output.saveProbe)
+	if (_c->Output->saveProbe)
 		_probe.resize(e2);
-	if (_c-> Output.SaveProjectedPotential || _c->Output.ComputeFromProjectedPotential)
+	if (_c->Output->SaveProjectedPotential || _c->Output->ComputeFromProjectedPotential)
 		_projectedPotential.resize(e2);
 }
 
 void PersistenceManager::ResizeStorage(int xdim, int ydim) {
-	auto e3 = boost::extents[_c->Model.nSlices][xdim][ydim];
+	auto e3 = boost::extents[_c->Model->nSlices][xdim][ydim];
 	auto e2 = boost::extents[xdim][ydim];
-	if (_c->Output.SavePotential  || _c->Output.ComputeFromProjectedPotential)
-		_potential.resize(boost::extents[_c->Model.nSlices][_c->Model.nx][_c->Model.ny]);
-	if (_c-> Output.SaveWaveAfterSlice)
+	if (_c->Output->SavePotential  || _c->Output->ComputeFromProjectedPotential)
+		_potential.resize(boost::extents[_c->Model->nSlices][_c->Model->nx][_c->Model->ny]);
+	if (_c->Output->SaveWaveAfterSlice)
 		_waveSlicesAfterSlice.resize(e3);
-	if (_c-> Output.SaveWaveAfterPropagation)
+	if (_c->Output->SaveWaveAfterPropagation)
 		_waveSlicesAfterProp.resize(e3);
-	if (_c-> Output.SaveWaveAfterTransform)
+	if (_c->Output->SaveWaveAfterTransform)
 		_waveSlicesAfterFT.resize(e3);
-	if (_c-> Output.SaveWaveAfterTransmit)
+	if (_c->Output->SaveWaveAfterTransmit)
 		_waveSlicesAfterTransmit.resize(e3);
-	if (_c-> Output.saveProbe)
+	if (_c->Output->saveProbe)
 		_probe.resize(e2);
-	if (_c-> Output.SaveProjectedPotential || _c->Output.ComputeFromProjectedPotential)
-		_projectedPotential.resize(boost::extents[_c->Model.nx][_c->Model.ny]);
+	if (_c->Output->SaveProjectedPotential || _c->Output->ComputeFromProjectedPotential)
+		_projectedPotential.resize(boost::extents[_c->Model->nx][_c->Model->ny]);
 }
 
 

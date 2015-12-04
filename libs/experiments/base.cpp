@@ -60,98 +60,98 @@ void BaseExperiment::DisplayParams()
 			static_cast<int>(_c->ExperimentType);
 	BOOST_LOG_TRIVIAL(info) << format("* Date: %s, Time: %s") % Date % Time;
 	BOOST_LOG_TRIVIAL(info) << format("* Output file/folder:          %s") %
-			_c->Output.savePath.string().c_str();
+			_c->Output->savePath.string().c_str();
 			(m_equalDivs ? "equal" : "non-equal");
-	BOOST_LOG_TRIVIAL(info) << format("* TDS:                         %d runs") % _c->Model.TDSRuns;
+	BOOST_LOG_TRIVIAL(info) << format("* TDS:                         %d runs") % _c->Model->TDSRuns;
 	BOOST_LOG_TRIVIAL(info) <<
 	"**************************************************************************************************\n";
 }
 void BaseExperiment::SetResolution(superCellBoxPtr b){
 	float_tt max_x = b->ax, max_y=b->by, max_z=b->cz, zTotal;
-	ModelConfig& mc = _c->Model;
-	WaveConfig& wc = _c->Wave;
+	auto mc = _c->Model;
+	auto wc = _c->Wave;
 
 	//TODO: nx,ny = integer multiple of # unit cells
 	//TODO: super cell size = N * unit cell size
 
-	switch(mc.ResolutionCalculation) {
+	switch(mc->ResolutionCalculation) {
 	case ResolutionCalculation::FILLN:
-		if(_c->Structure.isBoxed){
+		if(_c->Structure->isBoxed){
 
 		} else {
 
 		}
-		mc.nx = (mc.nx % 2 != 0) ? mc.nx+1 : mc.nx;
-		mc.ny = (mc.ny % 2 != 0) ? mc.ny+1 : mc.ny;
-		mc.dx = (max_x - 0)/mc.nx;
-		mc.dy = (max_y - 0)/mc.ny;
-		_c->Structure.xOffset = 0;
-		_c->Structure.yOffset = 0;
+		mc->nx = (mc->nx % 2 != 0) ? mc->nx+1 : mc->nx;
+		mc->ny = (mc->ny % 2 != 0) ? mc->ny+1 : mc->ny;
+		mc->dx = (max_x - 0)/mc->nx;
+		mc->dy = (max_y - 0)/mc->ny;
+		_c->Structure->xOffset = 0;
+		_c->Structure->yOffset = 0;
 		break;
 	case ResolutionCalculation::FILLRES:
-		mc.nx = ceil((max_x - 0) / mc.dx) ;
-		mc.ny = ceil((max_y - 0) / mc.dy) ;
-		mc.nx = (mc.nx % 2 != 0) ? mc.nx+1 : mc.nx;
-		mc.ny = (mc.ny % 2 != 0) ? mc.ny+1 : mc.ny;
-		mc.dx = (max_x - 0)/mc.nx;
-		mc.dy = (max_y - 0)/mc.ny;
-		_c->Structure.xOffset = 0;
-		_c->Structure.yOffset = 0;
+		mc->nx = ceil((max_x - 0) / mc->dx) ;
+		mc->ny = ceil((max_y - 0) / mc->dy) ;
+		mc->nx = (mc->nx % 2 != 0) ? mc->nx+1 : mc->nx;
+		mc->ny = (mc->ny % 2 != 0) ? mc->ny+1 : mc->ny;
+		mc->dx = (max_x - 0)/mc->nx;
+		mc->dy = (max_y - 0)/mc->ny;
+		_c->Structure->xOffset = 0;
+		_c->Structure->yOffset = 0;
 		break;
 	case ResolutionCalculation::BOXRES:
-		mc.nx =  _c->Structure.boxX / mc.dx ;
-		mc.ny =  _c->Structure.boxY / mc.dy ;
-		mc.nx = (mc.nx % 2 != 0) ? mc.nx+1 : mc.nx;
-		mc.ny = (mc.ny % 2 != 0) ? mc.ny+1 : mc.ny;
-		if(mc.CenterSample) {
-			_c->Structure.xOffset = _c->Structure.boxX/2 - (max_x-0)/2;
-			_c->Structure.yOffset = _c->Structure.boxY/2 - (max_y-0)/2;
+		mc->nx =  _c->Structure->boxX / mc->dx ;
+		mc->ny =  _c->Structure->boxY / mc->dy ;
+		mc->nx = (mc->nx % 2 != 0) ? mc->nx+1 : mc->nx;
+		mc->ny = (mc->ny % 2 != 0) ? mc->ny+1 : mc->ny;
+		if(mc->CenterSample) {
+			_c->Structure->xOffset = _c->Structure->boxX/2 - (max_x-0)/2;
+			_c->Structure->yOffset = _c->Structure->boxY/2 - (max_y-0)/2;
 		} else {
-			_c->Structure.xOffset = 0;
-			_c->Structure.yOffset = 0;
+			_c->Structure->xOffset = 0;
+			_c->Structure->yOffset = 0;
 		}
 		break;
 	case ResolutionCalculation::BOXN:
-		mc.nx = (mc.nx % 2 != 0) ? mc.nx+1 : mc.nx;
-		mc.ny = (mc.ny % 2 != 0) ? mc.ny+1 : mc.ny;
-		mc.dx =  _c->Structure.boxX / mc.nx ;
-		mc.dy =  _c->Structure.boxY / mc.ny ;
-		if(mc.CenterSample) {
-			_c->Structure.xOffset = _c->Structure.boxX/2 - (max_x-0)/2;
-			_c->Structure.yOffset = _c->Structure.boxY/2 - (max_y-0)/2;
+		mc->nx = (mc->nx % 2 != 0) ? mc->nx+1 : mc->nx;
+		mc->ny = (mc->ny % 2 != 0) ? mc->ny+1 : mc->ny;
+		mc->dx =  _c->Structure->boxX / mc->nx ;
+		mc->dy =  _c->Structure->boxY / mc->ny ;
+		if(mc->CenterSample) {
+			_c->Structure->xOffset = _c->Structure->boxX/2 - (max_x-0)/2;
+			_c->Structure->yOffset = _c->Structure->boxY/2 - (max_y-0)/2;
 		} else {
-			_c->Structure.xOffset = 0;
-			_c->Structure.yOffset = 0;
+			_c->Structure->xOffset = 0;
+			_c->Structure->yOffset = 0;
 		}
 		break;
 
 	}
 	if (_c->ExperimentType != ExperimentType::PTYC){
-		wc.nx = mc.nx;
-		wc.ny = mc.ny;
+		wc->nx = mc->nx;
+		wc->ny = mc->ny;
 	}
 }
 void BaseExperiment::SetSliceThickness(superCellBoxPtr b){
 	float_tt max_x = b->ax, max_y=b->by, max_z=b->cz, zTotal=b->cz;
-	ModelConfig& mc = _c->Model;
+	auto mc = _c->Model;
 
-	switch (mc.SliceThicknessCalculation) {
+	switch (mc->SliceThicknessCalculation) {
 	case SliceThicknessCalculation::Auto:
-		mc.dz = (zTotal/((int)zTotal))+0.01*(zTotal/((int)zTotal));
-		mc.nSlices = (int)zTotal+1;
+		mc->dz = (zTotal/((int)zTotal))+0.01*(zTotal/((int)zTotal));
+		mc->nSlices = (int)zTotal+1;
 		break;
 	case SliceThicknessCalculation::NumberOfSlices:
-		mc.dz = (zTotal/mc.nSlices)+0.01*(zTotal/mc.nSlices);
+		mc->dz = (zTotal/mc->nSlices)+0.01*(zTotal/mc->nSlices);
 		break;
 	case SliceThicknessCalculation::SliceThickness:
-		mc.nSlices = (int)(zTotal / mc.dz);
+		mc->nSlices = (int)(zTotal / mc->dz);
 		break;
 	default:
 		break;
 	}
-	int atomRadiusSlices = ceil(_c->Potential.ratom / _c->Model.dz) ;
-	if(_c->Potential.Use3D)
-		_c->Model.nSlices += 2 * atomRadiusSlices + 2;
+	int atomRadiusSlices = ceil(_c->Potential->ratom / _c->Model->dz) ;
+	if(_c->Potential->Use3D)
+		_c->Model->nSlices += 2 * atomRadiusSlices + 2;
 }
 void BaseExperiment::DisplayProgress(int flag)
 {
@@ -174,8 +174,8 @@ void BaseExperiment::DisplayProgress(int flag)
        printf("timer: %g, curr. time: %g, diff: %g\n",timer,cputim(),curTime);
        }
 	 */
-	if(_c->Output.LogLevel > 0) {
-		if(_c->Model.UseTDS) {
+	if(_c->Output->LogLevel > 0) {
+		if(_c->Model->UseTDS) {
 			timeAvg = ((_runCount)*timeAvg + curTime) / (_runCount + 1);
 			intensityAvg = ((_runCount)*intensityAvg + m_intIntensity) / (_runCount + 1);
 			BOOST_LOG_TRIVIAL(info) << format("********************** run %3d ************************") %
@@ -245,7 +245,7 @@ int BaseExperiment::RunMultislice(af::array t_af )
 
 	_wave->GetSizePixels(nx, ny);
 
-	printFlag = (_c->Output.LogLevel > 3);
+	printFlag = (_c->Output->LogLevel > 3);
 	fftScale = 1.0 / (nx * ny);
 
 	wavlen = _wave->GetWavelength();
@@ -258,39 +258,39 @@ int BaseExperiment::RunMultislice(af::array t_af )
 	cztot = 0.0;
 
 	if(printFlag) {
-		for(islice = 0; islice < _c->Model.nSlices; islice++) {
-			cztot += _c->Model.dz;
+		for(islice = 0; islice < _c->Model->nSlices; islice++) {
+			cztot += _c->Model->dz;
 		}
 		BOOST_LOG_TRIVIAL(info) << format("Specimen thickness: %g Angstroms\n") % cztot;
 	}
 
 	BOOST_LOG_TRIVIAL(info) << "Propagating through slices ...";
 	af::timer time = af::timer::start();
-	for(islice = 0; islice < _c->Model.nSlices; islice++) {
+	for(islice = 0; islice < _c->Model->nSlices; islice++) {
 
 		_wave->Transmit(_pot->GetSlice(t_af, islice));
-		if(_c->Output.SaveWaveAfterTransmit) _persist->SaveWaveAfterTransmit(_wave->GetWaveAF(), islice);
+		if(_c->Output->SaveWaveAfterTransmit) _persist->SaveWaveAfterTransmit(_wave->GetWaveAF(), islice);
 
 		_wave->ToFourierSpace();
-		if(_c->Output.SaveWaveAfterTransform) _persist->SaveWaveAfterTransform(_wave->GetWaveAF(), islice);
+		if(_c->Output->SaveWaveAfterTransform) _persist->SaveWaveAfterTransform(_wave->GetWaveAF(), islice);
 
 		_wave->PropagateToNextSlice();
-		if(_c->Output.SaveWaveAfterPropagation) _persist->SaveWaveAfterPropagation(_wave->GetWaveAF(), islice);
+		if(_c->Output->SaveWaveAfterPropagation) _persist->SaveWaveAfterPropagation(_wave->GetWaveAF(), islice);
 
 		CollectIntensity(islice);
 
 		_wave->ToRealSpace();
 
-		if(_c->Output.SaveWaveAfterSlice && islice % _c->Output.SaveWaveIterations == 0) _persist->SaveWaveAfterSlice(_wave->GetWaveAF(),islice);
+		if(_c->Output->SaveWaveAfterSlice && islice % _c->Output->SaveWaveIterations == 0) _persist->SaveWaveAfterSlice(_wave->GetWaveAF(),islice);
 		PostSliceProcess(islice);
 
-		if(_c->Output.LogLevel <= 2){ ///info
-			if(islice % (int)ceil(_c->Model.nSlices / 10.0) == 0)
-				loadbar(islice + 1, _c->Model.nSlices);
+		if(_c->Output->LogLevel <= 2){ ///info
+			if(islice % (int)ceil(_c->Model->nSlices / 10.0) == 0)
+				loadbar(islice + 1, _c->Model->nSlices);
 		}
 	} /* end for(islice...) */
 	BOOST_LOG_TRIVIAL(info)<< format( "%g ms used for wave propagation (%g us per slice)")
-			% (af::timer::stop(time)*1000) %( af::timer::stop(time)*1e6 / _c->Model.nSlices);
+			% (af::timer::stop(time)*1000) %( af::timer::stop(time)*1e6 / _c->Model->nSlices);
 	return 0;
 } // end of runMulsSTEM
 

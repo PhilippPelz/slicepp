@@ -128,7 +128,7 @@ void resetParamFile(FILE *fp) {
  * the characters in delim. (e.g. delim=" \t")
  * returns NULL, if end of string has been found
  */
-char *strnext(char *str,char *delim) {
+char *strnext(char *str,const char *delim) {
   int found=0;
   char *str2;
 

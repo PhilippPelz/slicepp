@@ -25,12 +25,9 @@ using boost::format;
 namespace QSTEM
 {
 
-CPlaneWave::CPlaneWave(const ConfigPtr& c,const PersistenceManagerPtr& p) : CBaseWave(c,p)
+CPlaneWave::CPlaneWave(const boost::shared_ptr<WaveConfig> wc, const boost::shared_ptr<ModelConfig> mc,	const PersistenceManagerPtr& p) : CBaseWave(wc,mc,p)
 {
-	_nx = c->Model.nx;
-	_ny = c->Model.ny;
 }
-
 
 /** Copy constructor - used to copy wave just before dispatching multiple threads for STEM simulations */
 CPlaneWave::CPlaneWave(const CPlaneWave& other) : CBaseWave(other)
@@ -49,14 +46,14 @@ void CPlaneWave::DisplayParams()
 
 	// TODO: transmit tiltBack status somehow (it's an experiment parameter, not a wave parameter.
 	BOOST_LOG_TRIVIAL(info) << format("* Beam tilt:            x=%g deg, y=%g deg")
-			% (_config->Wave.tiltX*RAD2DEG) % (_config->Wave.tiltY *RAD2DEG);
+			% (_wc->tiltX*RAD2DEG) % (_wc->tiltY *RAD2DEG);
 }
 
 void CPlaneWave::FormProbe()
 {
 	CBaseWave::FormProbe();
 	float_tt scale = 1/sqrt((float_tt)(_nx*_ny));
-	if ((_config->Wave.tiltX == 0) && (_config->Wave.tiltY == 0)) {
+	if ((_wc->tiltX == 0) && (_wc->tiltY == 0)) {
 		af::array theta = af::constant(0, _nx, _ny);
 		_wave_af = scale*af::complex(cos(theta), sin(theta));
 	}
@@ -70,17 +67,17 @@ void CPlaneWave::FormProbe()
 
 void CPlaneWave::TiltBeam(bool tiltBack)
 {
-	if ((_config->Wave.tiltX != 0) || (_config->Wave.tiltY != 0))
+	if ((_wc->tiltX != 0) || (_wc->tiltY != 0))
 	{
 		float_tt scale = 1/sqrt(_nx*_ny);
 		int direction = tiltBack ? -1 : 1;
 
 		// produce a tilted wave function (btiltx,btilty):
-		float_tt ktx = direction*2.0*M_PI*sin(_config->Wave.tiltX)/GetWavelength();
-		float_tt kty = direction*2.0*M_PI*sin(_config->Wave.tiltY)/GetWavelength();
+		float_tt ktx = direction*2.0*M_PI*sin(_wc->tiltX)/GetWavelength();
+		float_tt kty = direction*2.0*M_PI*sin(_wc->tiltY)/GetWavelength();
 		unsigned px=_nx*_ny;
-		af::array x = m_dx*(af::range(_nx) - _nx/2);
-		af::array y = m_dy*(af::range(_ny) - _ny/2);
+		af::array x = _dx*(af::range(_nx) - _nx/2);
+		af::array y = _dy*(af::range(_ny) - _ny/2);
 		af::array x2D = af::tile(x.T(), 1, _ny);
 		af::array y2D = af::tile(y, _nx);
 		_wave_af = af::complex(cos(ktx*x2D + kty*y2D)*scale, sin(ktx*x2D + kty*y2D)*scale);

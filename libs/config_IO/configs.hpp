@@ -43,21 +43,13 @@ public:
 	;
 };
 
-class DLL_EXPORT BeamConfig: IPropertyTreeReader {
-public:
-	float_tt EnergykeV, SourceDiameterAngstrom, BeamCurrentpA, DwellTimeMsec,
-			wavelength, sigma;
-
-	virtual void Read(ptree& t);
-};
-
 class DLL_EXPORT ModelConfig: IPropertyTreeReader {
 public:
 	bool UseTDS, TiltBack, CenterSlices, CenterSample, rotateToZoneAxis;
 	int TDSRuns, nx, ny, nSlices;
 	QSTEM::SliceThicknessCalculation SliceThicknessCalculation;
 	QSTEM::ResolutionCalculation ResolutionCalculation;
-	float_tt dz, dx, dy, beamTiltX, beamTiltY;
+	float_tt dz, dx, dy, beamTiltX, beamTiltY,SourceDiameterAngstrom,BeamCurrentpA;
 	std::vector<int> zoneAxis;
 	DisplacementType displacementType;
 	virtual void Read(ptree& t);
@@ -80,6 +72,7 @@ public:
 			phi_31, phi_44, phi_42, phi_55, phi_53, phi_51, phi_66, phi_64,
 			phi_62, gaussScale, dI_I, dE_E, AISaperture, tiltX, tiltY, posX,
 			posY, imPot, pixelDose;
+	float_tt EnergykeV, wavelength, sigma;
 	bool Smooth, Gaussian;
 	int type, nx, ny;
 
@@ -101,7 +94,7 @@ public:
 };
 class DLL_EXPORT DetectorConfig : IPropertyTreeReader{
 public:
-	float_tt mtfA, mtfB, mtfC, mtfD;
+	float_tt mtfA, mtfB, mtfC, mtfD,DwellTimeMsec;
 	int type;
 	virtual void Read(ptree& t);
 };
@@ -123,14 +116,13 @@ public:
 	boost::filesystem::path configPath;
 	QSTEM::ExperimentType ExperimentType;
 
-	StructureConfig Structure;
-	ModelConfig Model;
-	PotentialConfig Potential;
-	OutputConfig Output;
-	WaveConfig Wave;
-	BeamConfig Beam;
-	ScanConfig Scan;
-  DetectorConfig Detector;
+	boost::shared_ptr<StructureConfig> Structure;
+	boost::shared_ptr<ModelConfig> Model;
+	boost::shared_ptr<PotentialConfig> Potential;
+	boost::shared_ptr<OutputConfig> Output;
+	boost::shared_ptr<WaveConfig> Wave;
+	boost::shared_ptr<ScanConfig> Scan;
+	boost::shared_ptr<DetectorConfig> Detector;
 };
 typedef boost::shared_ptr<Config> ConfigPtr;
 } // end namespace QSTEM

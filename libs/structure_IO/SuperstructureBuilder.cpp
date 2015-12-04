@@ -24,7 +24,7 @@ SuperstructureBuilder::SuperstructureBuilder(StructureReaderPtr& r,const ConfigP
 	_atRad.resize(100);
 	_covRad.resize(100);
 	_nGrains = 0;
-	_filePath = c->Structure.structureFilename;
+	_filePath = c->Structure->structureFilename;
 	_superCell = superCellBoxPtr(new superCellBox());
 	/* Let's set the radii of certain elements by hand:*/
 	_atRad[39-1]=2.27; _covRad[39-1]=2.62;  // Y
@@ -56,13 +56,13 @@ superCellBoxPtr SuperstructureBuilder::Build(){
 	int moldyFlag = 0;     // suppress creation of ..._moldy.in file
 	int distPlotFlag = 0;  // suppress creation of disList.dat
 
-	_c->Structure.nCellX = 1;
-	_c->Structure.nCellY = 1;
-	_c->Structure.nCellZ = 1;
+	_c->Structure->nCellX = 1;
+	_c->Structure->nCellY = 1;
+	_c->Structure->nCellZ = 1;
 
 	BOOST_LOG_TRIVIAL(info) << format("Starting to build superstructure...");
 
-	if (!readParams(_c->Structure.structureFilename.string().c_str()))
+	if (!readParams(_c->Structure->structureFilename.string().c_str()))
 		exit(0);
 	if (_nGrains > 0) {
 		// loop, until we find crystalline grains:
@@ -155,8 +155,8 @@ superCellBoxPtr SuperstructureBuilder::Build(){
 	else {
 		for (auto& a : _superCell->atoms) {
 			charge += a.q*a.occ;
-			if(_c->Potential.Use3D){
-				a.r[2] += _c->Potential.ratom;
+			if(_c->Potential->Use3D){
+				a.r[2] += _c->Potential->ratom;
 			}
 		}
 	}
@@ -349,7 +349,7 @@ int SuperstructureBuilder::readParams(const char *datFileName){
 				BOOST_LOG_TRIVIAL(info) << "in replace " << _c->configPath << p;
 				p = _c->configPath / p;
 			}
-			_c->Structure.structureFilename = p;
+			_c->Structure->structureFilename = p;
 			CrystalBuilder cryst(_r,_c);
 			cryst.ReadFromFile();
 			auto atoms = cryst.GetUnitCellAtoms();
@@ -377,7 +377,7 @@ int SuperstructureBuilder::readParams(const char *datFileName){
 			 * unit cell data file from this one line
 			 */
 			grains[gCount].name = string(parStr1);
-			str = strnext(parStr1,reinterpret_cast<const char*>(" \t"));
+			str = strnext(parStr1," \t");
 			if (str != NULL) {
 				// printf("%s, name: %s\n",parStr,grains[gCount].name);
 				//str = strnext(str," \t");
@@ -402,7 +402,7 @@ int SuperstructureBuilder::readParams(const char *datFileName){
 				BOOST_LOG_TRIVIAL(info) << "in replace " << _c->configPath << p;
 				p = _c->configPath / p;
 			}
-			_c->Structure.structureFilename = p;
+			_c->Structure->structureFilename = p;
 			CrystalBuilder cryst(_r,_c);
 			cryst.SetFillUnitCell(true);
 			cryst.ReadFromFile();
@@ -971,7 +971,7 @@ void SuperstructureBuilder::makeSpecial(int distPlotFlag) {
 			printf("%d (%d): %d \n",iatom,Znum,count);
 		} // for iatom = 0..natoms
 		printf("\n%d amorphous atoms, volume: %gA^3 (%g%%), center: %g, width: %g\n",
-				_superCell->atoms.size(),
+				(int)_superCell->atoms.size(),
 				volume,100.0*volume/(_superCell->ax*_superCell->by*_superCell->cz),center[0],
 				grainBound[1]-grainBound[0]);
 		switch (type) {

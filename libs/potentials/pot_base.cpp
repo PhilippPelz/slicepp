@@ -37,6 +37,7 @@ CPotential::CPotential(const ConfigPtr& c, const PersistenceManagerPtr& persist)
 		_nRadY(0), _nRadZ(0), _nRad2Trans(0), _ndiaAtomX(0), _ndiaAtomY(0), _boxNx(0),
 		_boxNy(0), m_boxNz(0),
 		IPotential(c, persist) {
+	af::setDevice(1);
 }
 CPotential::~CPotential() {
 }
@@ -44,12 +45,12 @@ CPotential::~CPotential() {
 void CPotential::DisplayParams() {
 	BOOST_LOG_TRIVIAL(info) <<
 	"**************************************************************************************************";
-	BOOST_LOG_TRIVIAL(info)<<format("* Log level:            %d") % _c->Output.LogLevel;
-	BOOST_LOG_TRIVIAL(info)<<format("* Model Sampling:       %g x %g x %g A") % _c->Model.dx% _c->Model.dy% _c->Model.dz;
-	BOOST_LOG_TRIVIAL(info)<<format("* Pot. array offset:    (%g,%g,%g) A") % _c->Structure.xOffset%_c->Structure.yOffset% _c->Structure.zOffset;
-	BOOST_LOG_TRIVIAL(info)<<format("* Potential periodic:   (x,y): %s ") %((_c->Potential.periodicXY) ? "yes" : "no");
-	BOOST_LOG_TRIVIAL(info)<<format("* Potential array:      %d x %d")% _c->Model.nx% _c->Model.ny;
-	BOOST_LOG_TRIVIAL(info)<<format("*                       %g x %gA") % (_c->Model.nx * _c->Model.dx)% (_c->Model.ny * _c->Model.dy);
+	BOOST_LOG_TRIVIAL(info)<<format("* Log level:            %d") % _c->Output->LogLevel;
+	BOOST_LOG_TRIVIAL(info)<<format("* Model Sampling:       %g x %g x %g A") % _c->Model->dx% _c->Model->dy% _c->Model->dz;
+	BOOST_LOG_TRIVIAL(info)<<format("* Pot. array offset:    (%g,%g,%g) A") % _c->Structure->xOffset%_c->Structure->yOffset% _c->Structure->zOffset;
+	BOOST_LOG_TRIVIAL(info)<<format("* Potential periodic:   (x,y): %s ") %((_c->Potential->periodicXY) ? "yes" : "no");
+	BOOST_LOG_TRIVIAL(info)<<format("* Potential array:      %d x %d")% _c->Model->nx% _c->Model->ny;
+	BOOST_LOG_TRIVIAL(info)<<format("*                       %g x %gA") % (_c->Model->nx * _c->Model->dx)% (_c->Model->ny * _c->Model->dy);
 	BOOST_LOG_TRIVIAL(info) <<
 	"**************************************************************************************************";
 }
@@ -62,47 +63,47 @@ void CPotential::ReadSlice(const std::string &fileName,
 }
 
 void CPotential::SliceSetup() {
-	_offsetY = _c->Structure.yOffset;
-	_ddx = _c->Model.dx / (double) OVERSAMPLING;
-	_ddy = _c->Model.dy / (double) OVERSAMPLING;
+	_offsetY = _c->Structure->yOffset;
+	_ddx = _c->Model->dx / (double) OVERSAMPLING;
+	_ddy = _c->Model->dy / (double) OVERSAMPLING;
 
-	_ndiaAtomX = 2 * OVERSAMPLING * (int) ceil(_c->Potential.ratom / _c->Model.dx );
-	_ndiaAtomY = 2 * OVERSAMPLING * (int) ceil(_c->Potential.ratom / _c->Model.dy );
+	_ndiaAtomX = 2 * OVERSAMPLING * (int) ceil(_c->Potential->ratom / _c->Model->dx );
+	_ndiaAtomY = 2 * OVERSAMPLING * (int) ceil(_c->Potential->ratom / _c->Model->dy );
 
-	_dkx = 0.5 * OVERSAMPLING / ((_ndiaAtomX) * _c->Model.dx);
-	_dky = 0.5 * OVERSAMPLING / ((_ndiaAtomY) * _c->Model.dy);
+	_dkx = 0.5 * OVERSAMPLING / ((_ndiaAtomX) * _c->Model->dx);
+	_dky = 0.5 * OVERSAMPLING / ((_ndiaAtomY) * _c->Model->dy);
 
 	_kmax = 0.5 * _ndiaAtomX * _dkx / (double) OVERSAMPLING; // largest k that we'll admit
 	_kmax2 = _kmax * _kmax;
 
 	/* For now we don't care, if the box has only small prime factors, because we will not fourier transform it  especially not very often. */
-	_boxNx = (int) (_c->Potential.ratom / _ddx + 2.0);
-	_boxNy = (int) (_c->Potential.ratom / _ddy + 2.0);
+	_boxNx = (int) (_c->Potential->ratom / _ddx + 2.0);
+	_boxNy = (int) (_c->Potential->ratom / _ddy + 2.0);
 
-	_totalThickness = _c->Model.dz * _c->Model.nSlices;
-	_dr = min(_c->Model.dx,_c->Model.dy) / OVERSAMPLING;
-	_nrAtomTrans =  (int) ceil(_c->Potential.ratom / _dr + 0.5);
+	_totalThickness = _c->Model->dz * _c->Model->nSlices;
+	_dr = min(_c->Model->dx,_c->Model->dy) / OVERSAMPLING;
+	_nrAtomTrans =  (int) ceil(_c->Potential->ratom / _dr + 0.5);
 
-	_nRadX = (int) ceil(_c->Potential.ratom / _c->Model.dx);
-	_nRadY = (int) ceil(_c->Potential.ratom / _c->Model.dy);
-	_nRadZ = (int) ceil(_c->Potential.ratom / _c->Model.dz) ;
+	_nRadX = (int) ceil(_c->Potential->ratom / _c->Model->dx);
+	_nRadY = (int) ceil(_c->Potential->ratom / _c->Model->dy);
+	_nRadZ = (int) ceil(_c->Potential->ratom / _c->Model->dz) ;
 	_nRad2Trans = _nRadX * _nRadX + _nRadY * _nRadY;
 
-	_atomRadius2 = _c->Potential.ratom * _c->Potential.ratom;
-	_sliceThicknesses.resize(_c->Model.nSlices);
+	_atomRadius2 = _c->Potential->ratom * _c->Potential->ratom;
+	_sliceThicknesses.resize(_c->Model->nSlices);
 
-	_sliceThicknesses[0] = _c->Model.dz;
+	_sliceThicknesses[0] = _c->Model->dz;
 
-	_slicePos.resize(_c->Model.nSlices);
-	_slicePos[0] = _c->Structure.zOffset;
+	_slicePos.resize(_c->Model->nSlices);
+	_slicePos[0] = _c->Structure->zOffset;
 
-	for (unsigned i = 1; i < _c->Model.nSlices; i++) {
+	for (unsigned i = 1; i < _c->Model->nSlices; i++) {
 		_sliceThicknesses[i] = _sliceThicknesses[0];
 		// Slice position is last slice position + half width of last slice + half width of this slice
 		_slicePos[i] = _slicePos[i - 1] + _sliceThicknesses[i - 1] / 2.0
 				+ _sliceThicknesses[i] / 2.0;
 	}
-	_t.resize(boost::extents[_c->Model.nSlices][_c->Model.nx][_c->Model.ny]);
+	_t.resize(boost::extents[_c->Model->nSlices][_c->Model->nx][_c->Model->ny]);
 	std::fill(_t.data(), _t.data() + _t.size(), complex_tt(0, 0));
 }
 
@@ -137,7 +138,7 @@ void CPotential::SetScatteringFactors(float_tt kmax) {
 					scatPar[iy][N_SF - 4 - ix] = scatPar[iy][N_SF - 3];
 			}
 		}
-		if (_c->Output.LogLevel < 2)
+		if (_c->Output->LogLevel < 2)
 				BOOST_LOG_TRIVIAL(info)<< format("* Reduced angular range of scattering factor to %g/Å!") % scatParOffs[0][N_SF - 4 - ix];
 		}
 	}
@@ -151,7 +152,7 @@ void CPotential::MakeSlices(superCellBoxPtr info) {
 
 	for (std::vector<int>::iterator a = info->uniqueatoms.begin(); a < info->uniqueatoms.end(); a = a + 1) {
 		ComputeAtomPotential(*a);
-		if (_c->Output.SaveAtomicPotential)
+		if (_c->Output->SaveAtomicPotential)
 			SaveAtomicPotential(*a);
 	}
 
@@ -175,7 +176,7 @@ void CPotential::MakeSlices(superCellBoxPtr info) {
 	}
 
 	CleanUp();
-	_t_device = af::array(_c->Model.nx, _c->Model.ny, _c->Model.nSlices, (afcfloat *)_t.data());
+	_t_device = af::array(_c->Model->nx, _c->Model->ny, _c->Model->nSlices, (afcfloat *)_t.data());
 	MakePhaseGratings();
 	time(&time1);
 	BOOST_LOG_TRIVIAL(info)<< format( "%g sec used for real space potential calculation (%g sec per atom)")
@@ -185,11 +186,11 @@ void CPotential::MakeSlices(superCellBoxPtr info) {
 }
 
 void CPotential::MakePhaseGratings() {
-	float_tt mm0 = 1.0F + _c->Beam.EnergykeV / 511.0F; // relativistic corr. factor gamma
-	float_tt scale = mm0 * _c->Beam.wavelength;
+	float_tt mm0 = 1.0F + _c->Wave->EnergykeV / 511.0F; // relativistic corr. factor gamma
+	float_tt scale = mm0 * _c->Wave->wavelength;
 
 	BOOST_LOG_TRIVIAL(info)<<format("Making phase gratings for %d layers (scale=%g rad/VA, gamma=%g, sigma=%g) ... ")
-	%_t.shape()[0]%scale%mm0%_c->Beam.sigma;
+	%_t.shape()[0]%scale%mm0%_c->Wave->sigma;
 
 	float_tt minph = 3.1, maxph = 0, minabs = 100, maxabs = 0;
 		_t_device = scale * af::real(_t_device);
@@ -202,9 +203,9 @@ void CPotential::MakePhaseGratings() {
 void CPotential::WriteSlice(unsigned idx, std::string prefix) {
 	char buf[255];
 	std::map<std::string, float_tt> params;
-	params["Thickness"] = _c->Model.dz;
-	params["dx"] = _c->Model.dx;
-	params["dy"] = _c->Model.dy;
+	params["Thickness"] = _c->Model->dz;
+	params["dx"] = _c->Model->dx;
+	params["dy"] = _c->Model->dy;
 	sprintf(buf, "Projected Potential (slice %d)", idx);
 	std::string comment = buf;
 	std::stringstream filename;
@@ -216,20 +217,20 @@ void CPotential::WriteSlice(unsigned idx, std::string prefix) {
 void CPotential::WriteProjectedPotential() {
 	std::map<std::string, float_tt> params;
 	char buf[255];
-	ComplexArray2D sum(extents[_c->Model.nx][_c->Model.ny]);
+	ComplexArray2D sum(extents[_c->Model->nx][_c->Model->ny]);
 	float_tt potVal = 0;
 
-	for (unsigned iz = 0; iz < _c->Model.nSlices; iz++){
-		for (unsigned ix = 0; ix < _c->Model.nx; ix++) {
-			for (unsigned iy = 0; iy < _c->Model.ny; iy++) {
+	for (unsigned iz = 0; iz < _c->Model->nSlices; iz++){
+		for (unsigned ix = 0; ix < _c->Model->nx; ix++) {
+			for (unsigned iy = 0; iy < _c->Model->ny; iy++) {
 				sum[ix][iy] += _t[iz][ix][iy];
 			}
 		}
 	}
 	_persist->SaveProjectedPotential(sum);
-	if (_c->Output.ComputeFromProjectedPotential && (!_c->Potential.CUDAOnTheFly)){
+	if (_c->Output->ComputeFromProjectedPotential && (!_c->Potential->CUDAOnTheFly)){
 		_t_device = af::sum(_t_device, 2);
-		_c->Model.nSlices = 1;
+		_c->Model->nSlices = 1;
 	}
 }
 
@@ -442,8 +443,8 @@ af::array CPotential::GetPotential(){
 }
 
 void CPotential::GetSizePixels(unsigned int &nx, unsigned int &ny) const {
-	nx = _c->Model.nx;
-	ny = _c->Model.ny;
+	nx = _c->Model->nx;
+	ny = _c->Model->ny;
 }
 
 af:: array CPotential::GetSlice(af::array t, unsigned idx){
@@ -451,12 +452,12 @@ af:: array CPotential::GetSlice(af::array t, unsigned idx){
 }
 
 void CPotential::SavePotential(){
-	if (_c->Output.SavePotential || _c->Output.ComputeFromProjectedPotential){
+	if (_c->Output->SavePotential || _c->Output->ComputeFromProjectedPotential){
 		_t.resize(boost::extents[_t_device.dims(2)][_t_device.dims(0)][_t_device.dims(1)]);
 		_t_device.host(_t.data());
 		_persist->SavePotential(_t);
 	}
-	if (_c->Output.SaveProjectedPotential || _c->Output.ComputeFromProjectedPotential){
+	if (_c->Output->SaveProjectedPotential || _c->Output->ComputeFromProjectedPotential){
 		if(!_persist->_potSaved){
 			_t.resize(boost::extents[_t_device.dims(2)][_t_device.dims(0)][_t_device.dims(1)]);
 			_t_device.host(_t.data());

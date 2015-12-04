@@ -53,7 +53,7 @@ CrystalBuilder::CrystalBuilder(StructureReaderPtr& r, const ConfigPtr& c) :
 				new superCellBox()), _baseAtoms(std::vector<atom>()), _atoms(
 				std::vector<atom>()), _Mm(FloatArray2D(boost::extents[3][3])), m_MmInv(
 				FloatArray2D(boost::extents[3][3])), IStructureBuilder(r, c) {
-	m_wobble_temp_scale = sqrt(_c->Structure.temperatureK / 300.0);
+	m_wobble_temp_scale = sqrt(_c->Structure->temperatureK / 300.0);
 }
 //(const std::vector<float_tt> &x, std::vector<float_tt> &grad, void* f_data)
 double rotationCostFunc(const std::vector<double>& rotAngles,
@@ -125,7 +125,7 @@ double rotationCostFunc(const std::vector<double>& rotAngles,
 }
 
 void CrystalBuilder::CalculateTiltAnglesFromZoneAxis() {
-	auto refZone = _c->Structure.zoneAxis;
+	auto refZone = _c->Structure->zoneAxis;
 	std::vector<int> refZone2(3), zone2(3);
 	zone2[0] = 0;
 	zone2[1] = 0;
@@ -159,9 +159,9 @@ void CrystalBuilder::CalculateTiltAnglesFromZoneAxis() {
 	BOOST_LOG_TRIVIAL(info)<< format("Rotating (%g,%g,%g) degrees from zone axis [0,0,1] to [%d,%d,%d]")
 	% x[0]%x[1]%x[2]%refZone[0]%refZone[1]%refZone[2];
 
-	_c->Structure.crystalTiltX = x[0];
-	_c->Structure.crystalTiltY = x[1];
-	_c->Structure.crystalTiltZ = x[2];
+	_c->Structure->crystalTiltX = x[0];
+	_c->Structure->crystalTiltY = x[1];
+	_c->Structure->crystalTiltZ = x[2];
 
 	//	if nargin < 3
 	//	    refZone = [0; 0; 1];
@@ -263,12 +263,12 @@ superCellBoxPtr CrystalBuilder::Build() {
 	float_tt totOcc, choice, lastOcc;
 	float_tt u[3];
 	static int ncoord_old = 0;
-	int ncx = _c->Structure.nCellX;
-	int ncy = _c->Structure.nCellY;
-	int ncz = _c->Structure.nCellZ;
-	bool crystalIsTilted = (_c->Structure.crystalTiltX != 0)
-			|| (_c->Structure.crystalTiltY != 0)
-			|| (_c->Structure.crystalTiltZ != 0);
+	int ncx = _c->Structure->nCellX;
+	int ncy = _c->Structure->nCellY;
+	int ncz = _c->Structure->nCellZ;
+	bool crystalIsTilted = (_c->Structure->crystalTiltX != 0)
+			|| (_c->Structure->crystalTiltY != 0)
+			|| (_c->Structure->crystalTiltZ != 0);
 
 	ReadFromFile();
 
@@ -277,23 +277,23 @@ superCellBoxPtr CrystalBuilder::Build() {
 				&CrystalBuilder::AtomCompareZYX);
 	}
 	for (int i = _baseAtoms.size() - 1; i >= 0; i--) {
-		if (_c->Model.UseTDS) {
+		if (_c->Model->UseTDS) {
 			m_u2[_baseAtoms[i].Znum] = 0;
 		}
 	}
 
-	if (_c->Structure.rotateToZoneAxis) {
+	if (_c->Structure->rotateToZoneAxis) {
 		CalculateTiltAnglesFromZoneAxis();
 	}
 
-	if (_c->Structure.isBoxed) {
+	if (_c->Structure->isBoxed) {
 		TiltBoxed(_baseAtoms.size(), handleVacancies);
-		boxCenterX = _c->Structure.boxX;
-		boxCenterY = _c->Structure.boxY;
-		boxCenterZ = _c->Structure.boxZ;
-		boxXmax = _c->Structure.boxX;
-		boxYmax = _c->Structure.boxY;
-		boxZmax = _c->Structure.boxZ;
+		boxCenterX = _c->Structure->boxX;
+		boxCenterY = _c->Structure->boxY;
+		boxCenterZ = _c->Structure->boxZ;
+		boxXmax = _c->Structure->boxX;
+		boxYmax = _c->Structure->boxY;
+		boxZmax = _c->Structure->boxZ;
 	} else {
 		ReplicateUnitCell(handleVacancies);
 
@@ -335,9 +335,9 @@ superCellBoxPtr CrystalBuilder::Build() {
 					u[2] = _Mm[0][2] * (icx - bcX) + _Mm[1][2] * (icy - bcY)
 							+ _Mm[2][2] * (icz - bcZ);
 					if (crystalIsTilted)
-						RotateVect(u, u, _c->Structure.crystalTiltX,
-								_c->Structure.crystalTiltY,
-								_c->Structure.crystalTiltZ); // simply applies rotation matrix
+						RotateVect(u, u, _c->Structure->crystalTiltX,
+								_c->Structure->crystalTiltY,
+								_c->Structure->crystalTiltZ); // simply applies rotation matrix
 					// x = u[0]+boxCenterXrot; y = u[1]+boxCenterYrot; z = u[2]+boxCenterZrot;
 					float_tt x = u[0] + boxCenterX;
 					float_tt y = u[1] + boxCenterY;
@@ -365,7 +365,7 @@ superCellBoxPtr CrystalBuilder::Build() {
 				u[0] = _atoms[j].r[0] - boxCenterX;
 				u[1] = _atoms[j].r[1] - boxCenterY;
 				u[2] = _atoms[j].r[2] - boxCenterZ;
-				RotateVect(u, u, _c->Structure.crystalTiltX, _c->Structure.crystalTiltY, _c->Structure.crystalTiltZ); // simply applies rotation matrix
+				RotateVect(u, u, _c->Structure->crystalTiltX, _c->Structure->crystalTiltY, _c->Structure->crystalTiltZ); // simply applies rotation matrix
 				u[0] += boxCenterX;
 				u[1] += boxCenterY;
 				u[2] += boxCenterZ;
@@ -382,10 +382,10 @@ superCellBoxPtr CrystalBuilder::Build() {
 		BOOST_LOG_TRIVIAL(trace)<< format("atom %d: (%3.3f, %3.3f, %3.3f)") % j % _atoms[j].r[0] % _atoms[j].r[1] % _atoms[j].r[2];
 
 		//apply offsets
-		if (_c->Structure.HasOffset()) {
-			_atoms[j].r[0] += _c->Structure.xOffset;
-			_atoms[j].r[1] += _c->Structure.yOffset;
-			_atoms[j].r[2] += _c->Structure.zOffset;
+		if (_c->Structure->HasOffset()) {
+			_atoms[j].r[0] += _c->Structure->xOffset;
+			_atoms[j].r[1] += _c->Structure->yOffset;
+			_atoms[j].r[2] += _c->Structure->zOffset;
 		}
 	}
 
@@ -425,7 +425,7 @@ void CrystalBuilder::ReadFromFile() {
 	_r->ReadAtoms(_baseAtoms, _uniqueAtoms, true);
 	CalculateCellDimensions();
 	int s = _baseAtoms.size();
-//	BOOST_LOG_TRIVIAL(info)<< format("Read %d atoms, tds: %d") % s % (_c->Model.UseTDS);
+//	BOOST_LOG_TRIVIAL(info)<< format("Read %d atoms, tds: %d") % s % (_c->Model->UseTDS);
 }
 void CrystalBuilder::CalculateCrystalBoundaries() {
 	int largestZindex = -1;
@@ -482,24 +482,24 @@ void CrystalBuilder::DisplayParams() {
 	"***************************** Structure Parameters ***********************************************";
 	BOOST_LOG_TRIVIAL(info) <<
 	"**************************************************************************************************";
-	BOOST_LOG_TRIVIAL(info)<<format("* Input file:           %s") % _c->Structure.structureFilename.string().c_str();
+	BOOST_LOG_TRIVIAL(info)<<format("* Input file:           %s") % _c->Structure->structureFilename.string().c_str();
 
-	if (_c->Structure.isBoxed == false)
+	if (_c->Structure->isBoxed == false)
 	BOOST_LOG_TRIVIAL(info)<<format(" Unit cell:            ax=%g by=%g cz=%g")% m_ax% m_by% m_cz;
 	else {
 		BOOST_LOG_TRIVIAL(info)<<format(" Size of Cube:         ax=%g by=%g cz=%g")
-		% _c->Structure.boxX% _c->Structure.boxY% _c->Structure.boxZ;
+		% _c->Structure->boxX% _c->Structure->boxY% _c->Structure->boxZ;
 		BOOST_LOG_TRIVIAL(info)<<format(" Cube size adjusted:   %s")%( m_adjustCubeSize ? "yes" : "no");
 	}
 	BOOST_LOG_TRIVIAL(info)<<format(" Super cell:           %d x %d x %d unit cells")
-	%_c->Structure.nCellX% _c->Structure.nCellY% _c->Structure.nCellZ;
+	%_c->Structure->nCellX% _c->Structure->nCellY% _c->Structure->nCellZ;
 	BOOST_LOG_TRIVIAL(info)<<format(" Number of atoms:      %d (super cell)")% _atoms.size();
 	BOOST_LOG_TRIVIAL(info)<<format(" Crystal tilt:         x=%g deg, y=%g deg, z=%g deg")
-	%(_c->Structure.crystalTiltX)% (_c->Structure.crystalTiltY )%( _c->Structure.crystalTiltZ );
+	%(_c->Structure->crystalTiltX)% (_c->Structure->crystalTiltY )%( _c->Structure->crystalTiltZ );
 	BOOST_LOG_TRIVIAL(info)<<format(" Model dimensions:     ax=%gA, by=%gA, cz=%gA (after tilt)")
 	%m_ax% m_by% m_cz;
-	BOOST_LOG_TRIVIAL(info)<<format(" Temperature:          %gK") %_c->Structure.temperatureK;
-	if (_c->Model.UseTDS)
+	BOOST_LOG_TRIVIAL(info)<<format(" Temperature:          %gK") %_c->Structure->temperatureK;
+	if (_c->Model->UseTDS)
 	BOOST_LOG_TRIVIAL(info)<<format(" TDS:                  yes");
 	else
 	BOOST_LOG_TRIVIAL(info)<<format(" TDS:                  no");
@@ -533,41 +533,41 @@ void CrystalBuilder::SetResolution(ModelConfig& mc, const PotentialConfig pc) {
 	case ResolutionCalculation::FILLN:
 		mc.dx = (max_x - min_x) / mc.nx;
 		mc.dy = (max_y - min_y) / mc.ny;
-		_c->Structure.xOffset = 0;
-		_c->Structure.yOffset = 0;
+		_c->Structure->xOffset = 0;
+		_c->Structure->yOffset = 0;
 		break;
 	case ResolutionCalculation::FILLRES:
 		mc.nx = ceil((max_x - min_x) / mc.dx);
 		mc.ny = ceil((max_y - min_y) / mc.dy);
 		mc.dx = (max_x - min_x) / mc.nx;
 		mc.dy = (max_y - min_y) / mc.ny;
-		_c->Structure.xOffset = 0;
-		_c->Structure.yOffset = 0;
+		_c->Structure->xOffset = 0;
+		_c->Structure->yOffset = 0;
 		break;
 	case ResolutionCalculation::BOXRES:
-		mc.nx = _c->Structure.boxX / mc.dx;
-		mc.ny = _c->Structure.boxY / mc.dy;
+		mc.nx = _c->Structure->boxX / mc.dx;
+		mc.ny = _c->Structure->boxY / mc.dy;
 		if (mc.CenterSample) {
-			_c->Structure.xOffset = _c->Structure.boxX / 2
+			_c->Structure->xOffset = _c->Structure->boxX / 2
 					- (max_x - min_x) / 2;
-			_c->Structure.yOffset = _c->Structure.boxY / 2
+			_c->Structure->yOffset = _c->Structure->boxY / 2
 					- (max_y - min_y) / 2;
 		} else {
-			_c->Structure.xOffset = 0;
-			_c->Structure.yOffset = 0;
+			_c->Structure->xOffset = 0;
+			_c->Structure->yOffset = 0;
 		}
 		break;
 	case ResolutionCalculation::BOXN:
-		mc.dx = _c->Structure.boxX / mc.nx;
-		mc.dy = _c->Structure.boxY / mc.ny;
+		mc.dx = _c->Structure->boxX / mc.nx;
+		mc.dy = _c->Structure->boxY / mc.ny;
 		if (mc.CenterSample) {
-			_c->Structure.xOffset = _c->Structure.boxX / 2
+			_c->Structure->xOffset = _c->Structure->boxX / 2
 					- (max_x - min_x) / 2;
-			_c->Structure.yOffset = _c->Structure.boxY / 2
+			_c->Structure->yOffset = _c->Structure->boxY / 2
 					- (max_y - min_y) / 2;
 		} else {
-			_c->Structure.xOffset = 0;
-			_c->Structure.yOffset = 0;
+			_c->Structure->xOffset = 0;
+			_c->Structure->yOffset = 0;
 		}
 		break;
 
@@ -580,9 +580,9 @@ void CrystalBuilder::SetCellParameters(float_tt ax, float_tt by, float_tt cz) {
 }
 
 void CrystalBuilder::SetNCells(unsigned nx, unsigned ny, unsigned nz) {
-	_c->Structure.nCellX = nx;
-	_c->Structure.nCellY = ny;
-	_c->Structure.nCellZ = nz;
+	_c->Structure->nCellX = nx;
+	_c->Structure->nCellY = ny;
+	_c->Structure->nCellZ = nz;
 	// TODO: should this ever be false?
 	bool handleVacancies = true;
 	ReplicateUnitCell(handleVacancies);
@@ -660,8 +660,8 @@ void CrystalBuilder::TiltBoxed(int ncoord, bool handleVacancies) {
 	float_tt x, y, z, dx = 0, dy = 0, dz = 0;
 	float_tt totOcc, lastOcc, choice;
 
-	int Ncells = _c->Structure.nCellX * _c->Structure.nCellY
-			* _c->Structure.nCellZ;
+	int Ncells = _c->Structure->nCellX * _c->Structure->nCellY
+			* _c->Structure->nCellZ;
 	FloatArray2D u(boost::extents[1][3]), uf(boost::extents[1][3]);
 	FloatArray2D Mm(boost::extents[3][3]), Mminv(boost::extents[3][3]), MpRed(
 			boost::extents[3][3]), // conversion lattice to obtain red. prim. coords/ from reduced cubic rect.
@@ -679,9 +679,9 @@ void CrystalBuilder::TiltBoxed(int ncoord, bool handleVacancies) {
 	memcpy(MmOrig.data(), Mm.data(), 3 * 3 * sizeof(float_tt));
 	Inverse_3x3(MmOrigInv, MmOrig);
 	/* remember that the angles are in rad: */
-	RotateMatrix(Mm, Mm, _c->Structure.crystalTiltX / PI180,
-			_c->Structure.crystalTiltY / PI180,
-			_c->Structure.crystalTiltZ / PI180);
+	RotateMatrix(Mm, Mm, _c->Structure->crystalTiltX / PI180,
+			_c->Structure->crystalTiltY / PI180,
+			_c->Structure->crystalTiltZ / PI180);
 	Inverse_3x3(Mminv, Mm);  // computes Mminv from Mm!
 	/* find out how far we will have to go in unit of unit cell vectors.  when creating the supercell by
 	 * checking the number of unit cell vectors necessary to reach every corner of the supercell box.
@@ -697,9 +697,9 @@ void CrystalBuilder::TiltBoxed(int ncoord, bool handleVacancies) {
 	for (ix = 0; ix <= 1; ix++)
 		for (iy = 0; iy <= 1; iy++)
 			for (iz = 0; iz <= 1; iz++) {
-				a[0][0] = ix * _c->Structure.boxX - dx;
-				a[1][0] = iy * _c->Structure.boxY - dy;
-				a[2][0] = iz * _c->Structure.boxZ - dz;
+				a[0][0] = ix * _c->Structure->boxX - dx;
+				a[1][0] = iy * _c->Structure->boxY - dy;
+				a[2][0] = iz * _c->Structure->boxZ - dz;
 
 				MatrixProduct(Mminv, 3, 3, a, 3, 1, b);
 
@@ -775,8 +775,8 @@ void CrystalBuilder::TiltBoxed(int ncoord, bool handleVacancies) {
 							lastOcc += _baseAtoms[i2].occ;
 						}
 					}
-					if (_c->Model.UseTDS)
-						switch (_c->Model.displacementType) {
+					if (_c->Model->UseTDS)
+						switch (_c->Model->displacementType) {
 						case DisplacementType::Einstein:
 							EinsteinDisplacement(u, _baseAtoms[i]);
 							break;
@@ -800,9 +800,9 @@ void CrystalBuilder::TiltBoxed(int ncoord, bool handleVacancies) {
 					y = b[1][0] + dy;
 					z = b[2][0] + dz;
 
-					bool atomIsInBox = (x >= 0) && (x <= _c->Structure.boxX)
-							&& (y >= 0) && (y <= _c->Structure.boxY) && (z >= 0)
-							&& (z <= _c->Structure.boxZ);
+					bool atomIsInBox = (x >= 0) && (x <= _c->Structure->boxX)
+							&& (y >= 0) && (y <= _c->Structure->boxY) && (z >= 0)
+							&& (z <= _c->Structure->boxZ);
 					if (atomIsInBox) {
 						newAtom.r =
 								armavec( {(float_tt)x,(float_tt)y,(float_tt)z});
@@ -819,9 +819,9 @@ void CrystalBuilder::TiltBoxed(int ncoord, bool handleVacancies) {
 		i = jequal;
 	}
 	BOOST_LOG_TRIVIAL(trace)<<format("Removed %d atoms because of multiple occupancy or occupancy < 1") % jVac;
-	m_ax = _c->Structure.boxX;
-	m_by = _c->Structure.boxY;
-	m_cz = _c->Structure.boxZ;
+	m_ax = _c->Structure->boxX;
+	m_by = _c->Structure->boxY;
+	m_cz = _c->Structure->boxZ;
 }
 ////////////////////////////////////////////////////////////////////////
 // replicateUnitCell
@@ -841,9 +841,9 @@ void CrystalBuilder::ReplicateUnitCell(int handleVacancies) {
 	float_tt totalOccupancy;
 	float_tt choice, lastOcc;
 	FloatArray2D u(boost::extents[1][3]);
-	ncx = _c->Structure.nCellX;
-	ncy = _c->Structure.nCellY;
-	ncz = _c->Structure.nCellZ;
+	ncx = _c->Structure->nCellX;
+	ncy = _c->Structure->nCellY;
+	ncz = _c->Structure->nCellZ;
 
 	_atoms.resize(ncx * ncy * ncz * _baseAtoms.size());
 
@@ -926,8 +926,8 @@ void CrystalBuilder::ReplicateUnitCell(int handleVacancies) {
 						}
 					}
 
-					if (_c->Model.UseTDS)
-						switch (_c->Model.displacementType) {
+					if (_c->Model->UseTDS)
+						switch (_c->Model->displacementType) {
 						case DisplacementType::Einstein:
 							EinsteinDisplacement(u, _baseAtoms[i]);
 							break;
@@ -1024,7 +1024,7 @@ void CrystalBuilder::PhononDisplacement(FloatArray2D &u, int id, int icx,
 
 	float_tt dw = atom.dw;
 
-	if (_c->Model.UseTDS == 0)
+	if (_c->Model->UseTDS == 0)
 		return;
 
 	// We need to copy the transpose of m_Mm to Mm.
@@ -1064,7 +1064,7 @@ void CrystalBuilder::PhononDisplacement(FloatArray2D &u, int id, int icx,
 		 * int_-infty^infty exp(-x^2/2) x^2 dx = sqrt(pi)
 		 * introduced in order to match the wobble factor with <u^2>
 		 */
-		scale = (float) sqrt(_c->Structure.temperatureK / 300.0);
+		scale = (float) sqrt(_c->Structure->temperatureK / 300.0);
 	}
 
 	if (fpPhonon == NULL) {
@@ -1099,19 +1099,19 @@ void CrystalBuilder::PhononDisplacement(FloatArray2D &u, int id, int icx,
 		//					for (iy = 0; iy < 3; iy++) {
 		//						// quantize the energy distribution:
 		//						// tanh and exp give different results will therefore use exp
-		//						// nkomega = (int)(1.0/tanh(THZ_HBAR_2KB*omega[ix][iy+3*id]/_c->Structure.temperatureK));
-		//						// wobble  =      (1.0/tanh(THZ_HBAR_2KB*omega[ix][iy+3*id]/_c->Structure.temperatureK)-0.5);
-		//						// nkomega = (int)(1.0/(exp(THZ_HBAR_KB*omega[ix][iy+3*id]/_c->Structure.temperatureK)-1)+0.5);
+		//						// nkomega = (int)(1.0/tanh(THZ_HBAR_2KB*omega[ix][iy+3*id]/_c->Structure->temperatureK));
+		//						// wobble  =      (1.0/tanh(THZ_HBAR_2KB*omega[ix][iy+3*id]/_c->Structure->temperatureK)-0.5);
+		//						// nkomega = (int)(1.0/(exp(THZ_HBAR_KB*omega[ix][iy+3*id]/_c->Structure->temperatureK)-1)+0.5);
 		//						if (omega[ix][iy + 3 * idd] > 1e-4) {
 		//							wobble =
-		//									_c->Structure.temperatureK > 0 ?
+		//									_c->Structure->temperatureK > 0 ?
 		//											(1.0
 		//													/ (exp(
 		//															THZ_HBAR_KB
 		//															* omega[ix][iy
 		//																		+ 3
 		//																		* idd]
-		//																		/ _c->Structure.temperatureK)
+		//																		/ _c->Structure->temperatureK)
 		//															- 1)) :
 		//															0;
 		//							// if (ix == 0) printf("%g: %d %g\n",omega[ix][iy+3*id],nkomega,wobble);
@@ -1231,11 +1231,11 @@ void CrystalBuilder::WriteStructure(unsigned run_number) {
 
 void CrystalBuilder::GetCrystalBoundaries(float_tt &min_x, float_tt &max_x,
 		float_tt &min_y, float_tt &max_y, float_tt &min_z, float_tt &max_z) {
-	if (_c->Potential.periodicXY) {
+	if (_c->Potential->periodicXY) {
 		min_x = 0;
-		max_x = _c->Structure.nCellX * m_ax;
+		max_x = _c->Structure->nCellX * m_ax;
 		min_y = 0;
-		max_y = _c->Structure.nCellX * m_by;
+		max_y = _c->Structure->nCellX * m_by;
 		min_z = _minZ;
 		max_z = _maxZ;
 	} else {

@@ -124,16 +124,16 @@ void C2DPotential::_AddAtomRealSpace(atom& atom,
   unsigned iz;
   
 
-  if (!_c->Potential.periodicZ) {
+  if (!_c->Potential->periodicZ) {
     if (iAtomZ < 0) return;
-    if (iAtomZ >= _c->Model.nSlices) return;
+    if (iAtomZ >= _c->Model->nSlices) return;
   }                
-  iz = (iAtomZ+32*_c->Model.nSlices) % _c->Model.nSlices;         /* shift into the positive range */
+  iz = (iAtomZ+32*_c->Model->nSlices) % _c->Model->nSlices;         /* shift into the positive range */
   // x, y are the coordinates in the space of the atom box
-  AtomBoxLookUp(dPot,atom.Znum,atomBoxX,atomBoxY,0, _c->Model.UseTDS ? 0 : atom.dw);
+  AtomBoxLookUp(dPot,atom.Znum,atomBoxX,atomBoxY,0, _c->Model->UseTDS ? 0 : atom.dw);
   float_tt atomBoxZ = (double)(iAtomZ+1)*_sliceThicknesses[0]-atomZ;
 
-  unsigned idx=ix*_c->Model.ny+iy;
+  unsigned idx=ix*_c->Model->ny+iy;
 
   /* split the atom if it is close to the top edge of the slice */
   if ((atomBoxZ<0.15*_sliceThicknesses[0]) && (iz >0)) {
@@ -142,7 +142,7 @@ void C2DPotential::_AddAtomRealSpace(atom& atom,
   }
   /* split the atom if it is close to the bottom edge of the slice */
   else {
-    if ((atomBoxZ>0.85*_sliceThicknesses[0]) && (iz < _c->Model.nSlices-1)) {
+    if ((atomBoxZ>0.85*_sliceThicknesses[0]) && (iz < _c->Model->nSlices-1)) {
 // TODO use trans1     m_trans[iz][idx] += complex_tt(0.5*dPot.real(),0.5*dPot.imag());
 // TODO use trans1     m_trans[iz+1][idx] += complex_tt(0.5*dPot.real(),0.5*dPot.imag());
     }
@@ -155,7 +155,7 @@ void C2DPotential::_AddAtomRealSpace(atom& atom,
 void C2DPotential::CenterAtomZ(atom& atom, float_tt &z)
 {
   CPotential::CenterAtomZ(atom, z);
-  z += 0.5*_c->Model.dz;
+  z += 0.5*_c->Model->dz;
 }
 
 } // end namespace QSTEM

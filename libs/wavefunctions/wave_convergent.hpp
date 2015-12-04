@@ -27,7 +27,7 @@ namespace QSTEM
 class DLL_EXPORT CConvergentWave : public CBaseWave
 {
 public:
-	CConvergentWave(const ConfigPtr& c,const PersistenceManagerPtr& p);
+	CConvergentWave(const boost::shared_ptr<WaveConfig> wc, const boost::shared_ptr<ModelConfig> mc,const PersistenceManagerPtr& p);
 	CConvergentWave( const CConvergentWave& other );
 
 	virtual void DisplayParams();
