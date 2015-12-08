@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<CodeLite_Project Name="stem3" InternalType="">
+<CodeLite_Project Name="slicepp" InternalType="">
   <Plugins>
     <Plugin Name="CMakePlugin">
       <![CDATA[[{
@@ -19,7 +19,7 @@
   </Plugins>
   <VirtualDirectory Name="src">
     <File Name="Bootstrapper.cpp"/>
-    <File Name="stem3.cpp"/>
+    <File Name="slicepp.cpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="include">
     <File Name="../hdf5boost/lib/HDFFile.hpp"/>

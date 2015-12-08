@@ -112,7 +112,7 @@ slice: cmake_check_build_system
 
 # fast build rule for target.
 slice/fast:
-	$(MAKE) -f libs/CMakeFiles/slice.dir/build.make libs/CMakeFiles/slice.dir/build
+	$(MAKE) -f lib/CMakeFiles/slice.dir/build.make lib/CMakeFiles/slice.dir/build
 .PHONY : slice/fast
 
 #=============================================================================
@@ -125,7 +125,7 @@ slicepp: cmake_check_build_system
 
 # fast build rule for target.
 slicepp/fast:
-	$(MAKE) -f stem3/CMakeFiles/slicepp.dir/build.make stem3/CMakeFiles/slicepp.dir/build
+	$(MAKE) -f exe/CMakeFiles/slicepp.dir/build.make exe/CMakeFiles/slicepp.dir/build
 .PHONY : slicepp/fast
 
 #=============================================================================

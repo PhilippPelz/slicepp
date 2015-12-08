@@ -16,7 +16,7 @@
 #include <cstdint>
 //#include <algorithm>
 
-#include "../../libs/stemtypes_fftw3.hpp"
+#include "../../lib/stemtypes_fftw3.hpp"
 using boost::multi_array;
 using boost::extents;
 

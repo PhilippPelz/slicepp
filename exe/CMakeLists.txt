@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(slicepp)
+project(slicepp CXX)
 
 include_directories(
-	${CMAKE_SOURCE_DIR}/libs
+	${CMAKE_SOURCE_DIR}/lib
 	${CMAKE_SOURCE_DIR}/hdf5boost/lib
 	${OPENBABEL_INCLUDE_DIR}
 	${HDF5_INCLUDE_DIR}
@@ -12,12 +12,12 @@ include_directories(
 	${CUDA_TOOLKIT_INCLUDE}
 )
 
-FILE(GLOB SLICE_LIB_HEADERS "${CMAKE_SOURCE_DIR}/libs/*.hpp")
-FILE(GLOB SLICE_LIB_HEADERS2 "${CMAKE_SOURCE_DIR}/libs/*/*.hpp")
+FILE(GLOB SLICE_LIB_HEADERS "${CMAKE_SOURCE_DIR}/lib/*.hpp")
+FILE(GLOB SLICE_LIB_HEADERS2 "${CMAKE_SOURCE_DIR}/lib/*/*.hpp")
 FILE(GLOB SLICE_LIB_HEADERS3 "${CMAKE_SOURCE_DIR}/hdf5boost/lib/*.hpp")
 # FILE(GLOB SLICE_LIB_CU "${CMAKE_SOURCE_DIR}/libs/*/*.cu")
-FILE(GLOB SLICEPP_C_FILES "${CMAKE_SOURCE_DIR}/stem3/*.cpp")
-FILE(GLOB SLICEPP_H_FILES "${CMAKE_SOURCE_DIR}/stem3/*.hpp")
+FILE(GLOB SLICEPP_C_FILES "${CMAKE_SOURCE_DIR}/exe/*.cpp")
+FILE(GLOB SLICEPP_H_FILES "${CMAKE_SOURCE_DIR}/exe/*.hpp")
 
 add_executable(${PROJECT_NAME}
 		${SLICEPP_C_FILES}
@@ -36,12 +36,8 @@ target_link_libraries(${PROJECT_NAME}
 		${OPENBABEL_LIB}
 		${ARMA_LIB}
 		${NLOPT_LIB}
-		 ${ArrayFire_LIBRARIES}
+	 	${ArrayFire_LIBRARIES}
 		afcuda
 		${NVVM_LIB}
-		${CUDA_CUDART_LIBRARY}
-		${CUDA_cublas_LIBRARY}
-		${CUDA_cufft_LIBRARY}
 		hdfboost
-		# cuslice
 		slice)
