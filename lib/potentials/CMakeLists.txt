@@ -1,0 +1,22 @@
+cmake_minimum_required(VERSION 2.8)
+
+#include_directories("${CMAKE_SOURCE_DIR}/libs" "${FFTW3_INCLUDE_DIRS}")
+
+#FILE(GLOB QSTEM_LIB_HEADERS "${CMAKE_SOURCE_DIR}/libs/*.hpp")
+FILE(GLOB C_FILES "*.cpp")
+FILE(GLOB H_FILES "*.hpp")
+FILE(GLOB H_FILES_ABOVE1 "../*.hpp")
+FILE(GLOB H_FILES_ABOVE2 "../config/*.hpp")
+FILE(GLOB CU_FILES "*.cu")
+
+include_directories(
+	${Boost_INCLUDE_DIRS}
+	${FFTW3_INCLUDE_DIRS}
+	${ArrayFire_INCLUDE_DIRS}
+	${CUDA_TOOLKIT_INCLUDE}
+  ..
+  ../config
+)
+SET(EXTRA_LIBS ${CMAKE_THREAD_LIBS_INIT} ${CUDA_LIBRARIES})
+CUDA_ADD_LIBRARY(cuslice SHARED ${CU_FILES} ${H_FILES} ${H_FILES_ABOVE1} ${H_FILES_ABOVE2})
+TARGET_LINK_LIBRARIES(cuslice ${ArrayFire_CUDA} ${EXTRA_LIBS})

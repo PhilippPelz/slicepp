@@ -8,9 +8,9 @@ cmake_minimum_required(VERSION 2.8)
 #set(CMAKE_USER_MAKE_RULES_OVERRIDE_CXX
 #	${CMAKE_SOURCE_DIR}/cmake/Modules/cxx_flag_overrides.cmake)
 
-project(qstem)
-set (VERSION_MAJOR 3)
-set (VERSION_MINOR 0)
+project(slicepluplus)
+set (VERSION_MAJOR 0)
+set (VERSION_MINOR 1)
 if (WIN32)
 
 endif(WIN32)
@@ -23,7 +23,6 @@ else(WIN32)
 	ADD_DEFINITIONS(--std=c++11) # Or -std=c++11
 endif(WIN32)
 
-set(OPENBABEL_LIB /usr/local/lib/libopenbabel.so)
 SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -lz -ldl -lpthread -fopenmp")
 set(CYCLES_CUDA_BINARIES_ARCH sm_52)
 
@@ -70,25 +69,30 @@ if (UNIX)
 endif(UNIX)
 set(HDF5_USE_STATIC_LIBRARIES OFF)
 
-find_package(Boost 1.55 COMPONENTS system filesystem chrono timer log log_setup thread date_time REQUIRED)
-find_package(HDF5 COMPONENTS C CXX HL REQUIRED)
-find_package(fftw3 REQUIRED)
-find_package(CUDA REQUIRED)
-find_package(ArrayFire)
-include(FindCUDA)
-include(CheckComputeCapability)
+FIND_PACKAGE(Boost 1.55 COMPONENTS system filesystem chrono timer log log_setup thread date_time REQUIRED)
+FIND_PACKAGE(HDF5 COMPONENTS C CXX HL REQUIRED)
+FIND_PACKAGE(fftw3 REQUIRED)
+
+FIND_PACKAGE(ArrayFire REQUIRED)
+FIND_PACKAGE(CUDA REQUIRED)
+FIND_PACKAGE(NVVM REQUIRED)
+
+INCLUDE(FindCUDA)
+INCLUDE(CheckComputeCapability)
 string(REPLACE " " ";" CUDA_CAPABILITY_LIST ${CUDA_CAPABILITY_INFO})
+
+MESSAGE(STATUS "ArrayFire_CUDA:         " ${ArrayFire_CUDA})
+MESSAGE(STATUS "ArrayFire_LIBRARIES:         " ${ArrayFire_LIBRARIES})
 
 include_directories(
 	${Boost_INCLUDE_DIRS}
-	"${FFTW3_INCLUDE_DIRS}"
+	${FFTW3_INCLUDE_DIRS}
 	${ArrayFire_INCLUDE_DIRS}
 	${CUDA_TOOLKIT_INCLUDE}
 )
 
-
-add_subdirectory(libs)
-add_subdirectory(stem3)
+add_subdirectory(lib)
+add_subdirectory(exe)
 add_subdirectory(hdf5boost)
 
 
@@ -159,9 +163,10 @@ else (CMAKE_BUILD_TYPE MATCHES Debug)
             list(APPEND CUDA_NVCC_FLAGS -Xcompiler;-g;)
         endif ()
 endif ()
+
 foreach(cuda_gpu ${CUDA_CAPABILITY_LIST})
-list(APPEND CUDA_NVCC_FLAGS -Xcompiler;-std=c++11)
-list(APPEND CUDA_NVCC_FLAGS "-gencode ${cuda_gpu}")
+	list(APPEND CUDA_NVCC_FLAGS -Xcompiler;-std=c++11)
+	list(APPEND CUDA_NVCC_FLAGS "-gencode ${cuda_gpu}")
 endforeach(cuda_gpu)
 
 if (NOT CMAKE_BUILD_TYPE)

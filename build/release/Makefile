@@ -103,30 +103,30 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named qstem
+# Target rules for targets named slice
 
 # Build rule for target.
-qstem: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 qstem
-.PHONY : qstem
+slice: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 slice
+.PHONY : slice
 
 # fast build rule for target.
-qstem/fast:
-	$(MAKE) -f libs/CMakeFiles/qstem.dir/build.make libs/CMakeFiles/qstem.dir/build
-.PHONY : qstem/fast
+slice/fast:
+	$(MAKE) -f libs/CMakeFiles/slice.dir/build.make libs/CMakeFiles/slice.dir/build
+.PHONY : slice/fast
 
 #=============================================================================
-# Target rules for targets named stem3
+# Target rules for targets named slicepp
 
 # Build rule for target.
-stem3: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 stem3
-.PHONY : stem3
+slicepp: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 slicepp
+.PHONY : slicepp
 
 # fast build rule for target.
-stem3/fast:
-	$(MAKE) -f stem3/CMakeFiles/stem3.dir/build.make stem3/CMakeFiles/stem3.dir/build
-.PHONY : stem3/fast
+slicepp/fast:
+	$(MAKE) -f stem3/CMakeFiles/slicepp.dir/build.make stem3/CMakeFiles/slicepp.dir/build
+.PHONY : slicepp/fast
 
 #=============================================================================
 # Target rules for targets named hdfboosttest
@@ -162,8 +162,8 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... qstem"
-	@echo "... stem3"
+	@echo "... slice"
+	@echo "... slicepp"
 	@echo "... hdfboosttest"
 	@echo "... hdfboost"
 .PHONY : help
