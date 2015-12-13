@@ -37,7 +37,7 @@ void PersistenceManager::SaveProbe(af::array& wave) {
 	wave.host(a.data());
 	SaveProbe(a);
 }
-void PersistenceManager::SaveAtomDelta(af::array& delta, int slice, int Z) {
+void PersistenceManager::SaveAtomDelta(cuComplex* delta, int slice, int Z) {
 	auto a = _atomDeltas[Z];
 	if(a.get() == NULL){
 		auto e3 = boost::extents[_c->Model->nSlices][_c->Model->nx][_c->Model->ny];
@@ -45,17 +45,16 @@ void PersistenceManager::SaveAtomDelta(af::array& delta, int slice, int Z) {
 		auto sh = _atomDeltas[Z]->shape();
 //		BOOST_LOG_TRIVIAL(info)<< format("%s shape: [%d,%d,%d]") % "_atomDeltas" % sh[0] % sh[1] % sh[2];
 	}
-	delta.host(_atomDeltas[Z]->operator [](slice).origin());
+	cuda_assert(cudaMemcpy( _atomDeltas[Z]->operator [](slice).origin(),delta, _c->Model->nx * _c->Model->ny* sizeof(cuComplex), cudaMemcpyDeviceToHost));
 }
-void PersistenceManager::SaveAtomConv(af::array& delta, int slice, int Z) {
+void PersistenceManager::SaveAtomConv(cuComplex* delta, int slice, int Z) {
 	auto a = _atomConv[Z];
 	if(a.get() == NULL){
 		auto e3 = boost::extents[_c->Model->nSlices][_c->Model->nx][_c->Model->ny];
 		_atomConv[Z] = boost::shared_ptr<ComplexArray3D>(new ComplexArray3D(e3));
 		auto sh = _atomConv[Z]->shape();
-//		BOOST_LOG_TRIVIAL(info)<< format("%s shape: [%d,%d,%d]") % "_atomConv" % sh[0] % sh[1] % sh[2];
 	}
-	delta.host(_atomConv[Z]->operator [](slice).origin());
+	cuda_assert(cudaMemcpy( _atomConv[Z]->operator [](slice).origin(),delta, _c->Model->nx * _c->Model->ny* sizeof(cuComplex), cudaMemcpyDeviceToHost));
 }
 void PersistenceManager::SaveWaveAfterTransmit(ComplexArray2DPtr a, int slice) {
 

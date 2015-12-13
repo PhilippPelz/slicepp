@@ -12,7 +12,9 @@
 #include <boost/filesystem.hpp>
 #include <boost/shared_ptr.hpp>
 #include "config_IO/configs.hpp"
-
+#include "cuda_assert.hpp"
+#include "cublas_assert.hpp"
+#include "cufft_assert.hpp"
 #include <arrayfire.h>
 
 namespace QSTEM {
@@ -27,8 +29,8 @@ public:
 	void SaveWaveAfterSlice(ComplexArray2DPtr a, int slice);
 	void SaveWaveAfterPropagation(ComplexArray2DPtr a, int slice);
 	void SaveProbe(af::array& a);
-	void SaveAtomDelta(af::array& delta, int slice, int Z);
-	void SaveAtomConv(af::array& delta, int slice, int Z);
+	void SaveAtomDelta(cuComplex* delta, int slice, int Z);
+	void SaveAtomConv(cuComplex* delta, int slice, int Z);
 	void SaveWaveAfterTransmit(af::array& wave, int slice);
 	void SaveWaveAfterTransform(af::array& wave, int slice);
 	void SaveWaveAfterSlice(af::array& wave, int slice);

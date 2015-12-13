@@ -57,15 +57,13 @@ protected:
 	cufftComplex *_t_d_ptr;
 	CUDAFunctions *_cf;
 
-	cufftHandle * _fftPlan;
+	cufftHandle  _fftPlan;
 	cublasHandle_t _cublasHandle;
 
 	int _slicePixels, numAtoms, numAtUnique;
-	af::array _V_elem;
-	af::array _V_accum;
-	std::map<int,af::array> _Z_atomDeltas;
 
 	cufftComplex *_V_elem_ptr, *_V_accum_ptr;
+	std::map<int, cufftComplex*> _atomPot_d;
 };
 } /* namespace QSTEM */
 

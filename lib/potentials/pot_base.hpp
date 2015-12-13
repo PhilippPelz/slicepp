@@ -81,7 +81,7 @@ protected:
 
 	//map of atomic potential arrays
 	std::map<int, ComplexArray2D> _atomPot;
-	std::map<int, af::array> _atomPot_d;
+
 
 	int _nx,_ny;
 	// oversampled resolutions

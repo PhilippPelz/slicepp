@@ -35,12 +35,11 @@ namespace QSTEM {
 class CUDAFunctions{
 public:
 	CUDAFunctions(superCellBoxPtr info, cModelConfPtr mc);
-	void GetPhaseGrating(cufftComplex* V_d, int s,  std::map<int, af::array> & atomPot);
+//	void GetPhaseGrating(cufftComplex* V_d, int s,  std::map<int, af::array> & atomPot);
 
 	void GetSincAtomicPotential( cufftComplex* V, int Z);
 	void GetAtomicPotential( cufftComplex* V, int Z);
 	void GetAtomDeltaFunctions(cufftComplex* V, int Z,int slice);
-	void Convolve2D(cufftComplex* V, cufftComplex* V);
 	void PotentialToTransmission(cufftComplex* pot, cufftComplex* trans);
 	void cmul(cufftComplex* a1, cufftComplex* a2);
 	void SetComplex2D(cufftComplex* a, float real, float imag);
@@ -50,6 +49,7 @@ public:
 	void printIntArray(int *p, int size);
 	void initPotArrays(int pix);
 	void initArrays();
+	void releaseArrays();
 	void unlockArrays();
 	void InitArrays();
 protected:

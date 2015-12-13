@@ -23,33 +23,33 @@ CUDAFunctions::CUDAFunctions(superCellBoxPtr info, cModelConfPtr mc) {
 	gS2D = myGSize(slicePixels);
 }
 
-void CUDAFunctions::GetPhaseGrating(cufftComplex* V_slice, int slice, std::map<int, af::array> & atomPot) {
-	int nAtom = _info->atoms.size();
-
-	SetComplex2D( V_slice, 0.f, 0.f);
-	SetComplex2D( _V_accum_ptr, 0.f, 0.f);
-	for (int& Z : _info->uniqueZ) {
-		SetComplex2D( _V_elem_ptr, 0.f, 0.f);
-		SetComplex2D( _V_atom_ptr, 0.f, 0.f);
-
-		GetAtomDeltaFunctions(_V_elem_ptr, Z, slice);
-
-		cuda_assert(cudaDeviceSynchronize());
-
-		_V_elem.unlock();
-		_v_accum.unlock();
-
-		_V_elem = af::fft(_V_elem);
-		_V_elem *= atomPot[Z];
-		_V_elem = af::ifft(_V_elem);
-
-		_V_elem *= slicePixels;
-		_v_accum = _V_elem + _v_accum;
-		af::sync();
-
-		PotentialToTransmission(V_slice, _V_accum_ptr);
-	}
-}
+//void CUDAFunctions::GetPhaseGrating(cufftComplex* V_slice, int slice, std::map<int, cufftComplex*> & atomPot) {
+//	int nAtom = _info->atoms.size();
+//
+//	SetComplex2D( V_slice, 0.f, 0.f);
+//	SetComplex2D( _V_accum_ptr, 0.f, 0.f);
+//	for (int& Z : _info->uniqueZ) {
+//		SetComplex2D( _V_elem_ptr, 0.f, 0.f);
+//		SetComplex2D( _V_atom_ptr, 0.f, 0.f);
+//
+//		GetAtomDeltaFunctions(_V_elem_ptr, Z, slice);
+//
+//		cuda_assert(cudaDeviceSynchronize());
+//
+//		_V_elem.unlock();
+//		_v_accum.unlock();
+//
+//		_V_elem = af::fft(_V_elem);
+//		_V_elem *= atomPot[Z];
+//		_V_elem = af::ifft(_V_elem);
+//
+//		_V_elem *= slicePixels;
+//		_v_accum = _V_elem + _v_accum;
+//		af::sync();
+//
+//		PotentialToTransmission(V_slice, _V_accum_ptr);
+//	}
+//}
 void CUDAFunctions::PotentialToTransmission(cufftComplex* pot, cufftComplex* trans){
     int af_id = af::getDevice();
     cudaStream_t af_stream = afcu::getStream(af_id);
@@ -97,18 +97,11 @@ void CUDAFunctions::GetSincAtomicPotential(cufftComplex* V, int Z) {
 	const int gS2D = myGSize(slicePixels);
     int af_id = af::getDevice();
     cudaStream_t af_stream = afcu::getStream(af_id);
-    printf("sigma: %g",_mc->sigma);
+//    printf("sigma: %g",_mc->sigma);
 	createAtomicPotential<<< gS2D, bS, 0,  af_stream  >>> ( V, Z, _mc->nx, _mc->ny, _mc->dx, _mc->dy,_mc->sigma);
 	divideBySinc<<< gS2D, bS, 0,  af_stream  >>> ( V, _mc->nx, _mc->ny, PI);
 }
 void CUDAFunctions::GetAtomDeltaFunctions(cufftComplex* V, int Z, int slice) {
-	int nAtom = _info->znums.size();
-    int af_id = af::getDevice();
-    cudaStream_t af_stream = afcu::getStream(af_id);
-	putAtomDeltas<<< myGSize( nAtom ), myBSize( nAtom ), 0,  af_stream  >>> ( V, nAtom, znums_d, Z, xyzPos_d, _mc->imPot,
-			occupancy_d, slice, _mc->nx, _mc->ny, _mc->nSlices, _mc->dx, _mc->dy, _mc->dz);
-}
-void CUDAFunctions::Convolve2D(cufftComplex* a1, cufftComplex* a1) {
 	int nAtom = _info->znums.size();
     int af_id = af::getDevice();
     cudaStream_t af_stream = afcu::getStream(af_id);
@@ -155,29 +148,35 @@ void CUDAFunctions::printIntArray(int* p, int size) {
 	free(f_host);
 }
 void CUDAFunctions::initArrays(){
-//    cudaMalloc((void**)&xyzPos_d, _info->xyzPos.size()*sizeof(float_tt));
-//    cudaMalloc((void**)&occupancy_d, _info->occupancy.size()*sizeof(float_tt));
-//    cudaMalloc((void**)&znums_d, _info->znums.size()*sizeof(int));
-//    cudaMemcpy(xyzPos_d, host_ptr, _info->xyzPos.size()*sizeof(float_tt), cudaMemcpyHostToDevice);
-//    cudaMemcpy(occupancy_d, host_ptr,  _info->occupancy.size()*sizeof(float_tt), cudaMemcpyHostToDevice);
-//    cudaMemcpy(znums_d, host_ptr, _info->znums.size()*sizeof(int), cudaMemcpyHostToDevice);
+    cudaMalloc((void**)&xyzPos_d, _info->xyzPos.size()*sizeof(float_tt));
+    cudaMalloc((void**)&occupancy_d, _info->occupancy.size()*sizeof(float_tt));
+    cudaMalloc((void**)&znums_d, _info->znums.size()*sizeof(int));
 
-	xyzPos = af::array(_info->xyzPos.size(),_info->xyzPos.data());
-	occupancy = af::array(_info->occupancy.size(),_info->occupancy.data());
-	znums = af::array(_info->znums.size(),_info->znums.data());
+    cudaMemcpy(xyzPos_d, _info->xyzPos.data(), _info->xyzPos.size()*sizeof(float_tt), cudaMemcpyHostToDevice);
+    cudaMemcpy(occupancy_d, _info->occupancy.data(),  _info->occupancy.size()*sizeof(float_tt), cudaMemcpyHostToDevice);
+    cudaMemcpy(znums_d, _info->znums.data(), _info->znums.size()*sizeof(int), cudaMemcpyHostToDevice);
+
+//	xyzPos = af::array(_info->xyzPos.size(),_info->xyzPos.data());
+//	occupancy = af::array(_info->occupancy.size(),_info->occupancy.data());
+//	znums = af::array(_info->znums.size(),_info->znums.data());
 //	xyzPos *= 1;
 //	occupancy *= 1;
 //	znums *= 1;
 	BOOST_LOG_TRIVIAL(info)<< format("sizes: xyz %d occ %d znums %d atoms %d") % _info->xyzPos.size() %
 			_info->occupancy.size() % _info->znums.size() % _info->atoms.size();
 
-	xyzPos_d = xyzPos.device<float_tt>();
-	occupancy_d = occupancy.device<float_tt>();
-	znums_d = znums.device<int>();
+//	xyzPos_d = xyzPos.device<float_tt>();
+//	occupancy_d = occupancy.device<float_tt>();
+//	znums_d = znums.device<int>();
 //	af::sync();
-	BOOST_LOG_TRIVIAL(info)<< format("xyzPos_d: %d			size: %d") % xyzPos_d % xyzPos.dims(0);
-	BOOST_LOG_TRIVIAL(info)<< format("occupancy_d: %d		size: %d") % occupancy_d% occupancy.dims(0);
-	BOOST_LOG_TRIVIAL(info)<< format("znums_d: %d			size: %d") % znums_d% znums.dims(0);
+//	BOOST_LOG_TRIVIAL(info)<< format("xyzPos_d: %d			size: %d") % xyzPos_d % xyzPos.dims(0);
+//	BOOST_LOG_TRIVIAL(info)<< format("occupancy_d: %d		size: %d") % occupancy_d% occupancy.dims(0);
+//	BOOST_LOG_TRIVIAL(info)<< format("znums_d: %d			size: %d") % znums_d% znums.dims(0);
+}
+void CUDAFunctions::releaseArrays(){
+	cuda_assert ( cudaFree ( xyzPos_d ) );
+	cuda_assert ( cudaFree ( occupancy_d ) );
+	cuda_assert ( cudaFree ( znums_d ) );
 }
 void CUDAFunctions::initPotArrays(int slicePixels) {
 	_V_elem = af::array(slicePixels, c32);

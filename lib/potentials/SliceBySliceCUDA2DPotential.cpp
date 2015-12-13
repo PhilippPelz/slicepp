@@ -75,7 +75,7 @@ af::array SliceBySliceCUDA2DPotential::GetSlice(af::array t, unsigned idx) {
 	potential = (cufftComplex *) tafPtr;
 
 	cf->initPotArrays(slicePixels);
-	cf->GetPhaseGrating(&potential[idx * _mc->nx * _mc->ny], idx, _atomPot_d);
+//	cf->GetPhaseGrating(&potential[idx * _mc->nx * _mc->ny], idx, _atomPot_d);
 	cf->unlockArrays();
 
 	af::sync();
