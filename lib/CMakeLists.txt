@@ -46,7 +46,7 @@ include_directories(
 	${CUDA_TOOLKIT_INCLUDE}
 )
 
-cuda_add_library(${PROJECT_NAME} SHARED ${LIBS_FILES})
+cuda_add_library(${PROJECT_NAME} SHARED ${LIBS_FILES} OPTIONS -G;-g)
 target_link_libraries(${PROJECT_NAME}
 		hdfboost
 		# cuslice

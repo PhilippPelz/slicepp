@@ -16,10 +16,8 @@ FlatAreaDetector::~FlatAreaDetector() {
 }
 
 void FlatAreaDetector::RecordImage(WavePtr w){
-	_nx = _dc->nx;
-	_ny = _dc->ny;
 	_image = af::array(w->GetWaveAF());
-	float_tt scale = 1/(float_tt)(_nx *_ny);
+	float_tt scale = 1/(float_tt)(_dc->nx *_dc->ny);
 	af::fft2(_image);
 	if ( w->GetPixelDose() > FLT_EPSILON ){
 		af::ifft2(_image);
@@ -45,14 +43,14 @@ void FlatAreaDetector::anscombeNoise(af::array wave, float_tt dose){
 }
 void FlatAreaDetector::MultiplyMTF(af::array wave ){
 	af::array ix, iy, temp, mtf;
-	ix = af::seq(_nx);
-	iy = af::seq(_ny);
-	temp = ix > _nx/2;
-	ix -= temp * (_nx/2);
-	temp = iy > _ny/2;
-	iy -= temp * (_ny/2);
-	ix = af::tile(ix/_nx, 1, _ny);
-	iy = af::tile(iy.T()/_ny, _nx);
+	ix = af::seq(_dc->nx);
+	iy = af::seq(_dc->ny);
+	temp = ix > _dc->nx/2;
+	ix -= temp * (_dc->nx/2);
+	temp = iy > _dc->ny/2;
+	iy -= temp * (_dc->ny/2);
+	ix = af::tile(ix/_dc->nx, 1, _dc->ny);
+	iy = af::tile(iy.T()/_dc->ny, _dc->nx);
 	mtf = af::sqrt(ix *ix + iy*iy);
 	mtf = (_dc->mtfA * af::exp((-1) * _dc->mtfC * mtf) + _dc->mtfB * af::exp((-1) * _dc->mtfC * mtf * mtf));
 	ix *= PI;

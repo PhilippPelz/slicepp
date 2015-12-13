@@ -21,7 +21,7 @@
 					<folderInfo id="com.nvidia.cuda.ide.toolchain.seven_five.3640024.1681789415" name="/" resourcePath="">
 						<toolChain id="com.nvidia.cuda.ide.toolchain.seven_five.938536058" name="CUDA Toolkit 7.5" superClass="com.nvidia.cuda.ide.toolchain.seven_five">
 							<targetPlatform archList="all" binaryParser="com.nvidia.cuda.ide.elf;com.nvidia.cuda.ide.macho;com.nvidia.cuda.ide.cubin" id="com.nvidia.cuda.ide.targetPlatform.27263969" isAbstract="false" name="Debug Platform" osList="linux,macosx" superClass="com.nvidia.cuda.ide.targetPlatform"/>
-							<builder buildPath="${workspace_loc:/slicepp/build/debug}" command="make" enableCleanBuild="false" enabledIncrementalBuild="true" id="com.nvidia.cuda.ide.builder.443508842" incrementalBuildTarget="" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="CUDA Toolkit 7.5 Builder" parallelBuildOn="true" parallelizationNumber="2" superClass="com.nvidia.cuda.ide.builder"/>
+							<builder buildPath="${workspace_loc:/slicepp/build/debug}" enableCleanBuild="false" enabledIncrementalBuild="true" id="com.nvidia.cuda.ide.builder.443508842" incrementalBuildTarget="" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="CUDA Toolkit 7.5 Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="com.nvidia.cuda.ide.builder"/>
 							<tool id="nvcc.compiler.base.818085640" name="NVCC Compiler" superClass="nvcc.compiler.base">
 								<option id="nvcc.compiler.pic.383127711" name="Position Independent Code (-fPIC)" superClass="nvcc.compiler.pic"/>
 								<inputType id="nvcc.compiler.input.cu.1276887535" superClass="nvcc.compiler.input.cu"/>
@@ -65,7 +65,7 @@
 					<folderInfo id="com.nvidia.cuda.ide.toolchain.seven_five.3640024.50980327." name="/" resourcePath="">
 						<toolChain id="com.nvidia.cuda.ide.toolchain.seven_five.2087387889" name="CUDA Toolkit 7.5" superClass="com.nvidia.cuda.ide.toolchain.seven_five">
 							<targetPlatform archList="all" binaryParser="com.nvidia.cuda.ide.elf;com.nvidia.cuda.ide.macho;com.nvidia.cuda.ide.cubin" id="com.nvidia.cuda.ide.targetPlatform.852318693" isAbstract="false" name="Debug Platform" osList="linux,macosx" superClass="com.nvidia.cuda.ide.targetPlatform"/>
-							<builder buildPath="${workspace_loc:/slicepp/build/debug}" command="make" enableCleanBuild="false" enabledIncrementalBuild="true" id="com.nvidia.cuda.ide.builder.1288749418" incrementalBuildTarget="" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="CUDA Toolkit 7.5 Builder" parallelBuildOn="true" parallelizationNumber="2" superClass="com.nvidia.cuda.ide.builder"/>
+							<builder buildPath="${workspace_loc:/slicepp/build/release}" enableCleanBuild="false" enabledIncrementalBuild="true" id="com.nvidia.cuda.ide.builder.1288749418" incrementalBuildTarget="" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="CUDA Toolkit 7.5 Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="com.nvidia.cuda.ide.builder"/>
 							<tool id="nvcc.compiler.base.681951447" name="NVCC Compiler" superClass="nvcc.compiler.base">
 								<option id="nvcc.compiler.pic.86711037" name="Position Independent Code (-fPIC)" superClass="nvcc.compiler.pic"/>
 								<inputType id="nvcc.compiler.input.cu.1361514823" superClass="nvcc.compiler.input.cu"/>
@@ -110,6 +110,8 @@
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="debug"/>
+		<configuration configurationName="release"/>
 		<configuration configurationName="Default">
 			<resource resourceType="PROJECT" workspacePath="/slicepp"/>
 		</configuration>

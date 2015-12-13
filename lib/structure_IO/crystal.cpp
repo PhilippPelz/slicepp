@@ -49,7 +49,7 @@ static const float_tt k_sq3 = 1.0 / sqrt(3.0); /* sq3 is an additional needed fa
 CrystalBuilder::CrystalBuilder(StructureReaderPtr r, cStructureConfPtr sc, cModelConfPtr mc, cOutputConfPtr oc) :
 		_minX(0), _maxX(0), _minY(0), _maxY(0), _minZ(0), _maxZ(0), _offsetX(0), _offsetY(0), m_adjustCubeSize(false), m_phononFile(
 				boost::filesystem::path()), m_ax(0), _superCellBox(new superCellBox()), _baseAtoms(std::vector<atom>()), _atoms(std::vector<atom>()), _Mm(
-				FloatArray2D(boost::extents[3][3])), m_MmInv(FloatArray2D(boost::extents[3][3])), IStructureBuilder(r, sc, mc,oc) {
+				FloatArray2D(boost::extents[3][3])), m_MmInv(FloatArray2D(boost::extents[3][3])), IStructureBuilder(r, sc, mc, oc) {
 	m_wobble_temp_scale = sqrt(_sc->temperatureK / 300.0);
 	_tiltX = sc->crystalTiltX;
 	_tiltY = sc->crystalTiltY;
@@ -358,20 +358,20 @@ superCellBoxPtr CrystalBuilder::Build() {
 				_atoms[j].r[0] = u[0];
 				_atoms[j].r[1] = u[1];
 				_atoms[j].r[2] = u[2];
+			} /* if tilts != 0 ... */
+
+			// Rebase to topleft
+			_atoms[j].r[0] -= boxXmin;
+			_atoms[j].r[1] -= boxYmin;
+			_atoms[j].r[2] -= boxZmin;
+			BOOST_LOG_TRIVIAL(trace)<< format("atom %d: (%3.3f, %3.3f, %3.3f)") % j % _atoms[j].r[0] % _atoms[j].r[1] % _atoms[j].r[2];
+
+			//apply offsets
+			if (_mc->HasOffset()) {
+				_atoms[j].r[0] += _mc->xOffset;
+				_atoms[j].r[1] += _mc->yOffset;
+				_atoms[j].r[2] += _mc->zOffset;
 			}
-		} /* if tilts != 0 ... */
-
-		// Rebase to topleft
-		_atoms[j].r[0] -= boxXmin;
-		_atoms[j].r[1] -= boxYmin;
-		_atoms[j].r[2] -= boxZmin;
-		BOOST_LOG_TRIVIAL(trace)<< format("atom %d: (%3.3f, %3.3f, %3.3f)") % j % _atoms[j].r[0] % _atoms[j].r[1] % _atoms[j].r[2];
-
-		//apply offsets
-		if (_mc->HasOffset()) {
-			_atoms[j].r[0] += _mc->xOffset;
-			_atoms[j].r[1] += _mc->yOffset;
-			_atoms[j].r[2] += _mc->zOffset;
 		}
 	}
 
@@ -691,8 +691,7 @@ void CrystalBuilder::TiltBoxed(int ncoord, bool handleVacancies) {
 					y = b[1][0] + dy;
 					z = b[2][0] + dz;
 
-					bool atomIsInBox = (x >= 0) && (x <= _sc->boxX) && (y >= 0) && (y <= _sc->boxY) && (z >= 0)
-							&& (z <= _sc->boxZ);
+					bool atomIsInBox = (x >= 0) && (x <= _sc->boxX) && (y >= 0) && (y <= _sc->boxY) && (z >= 0) && (z <= _sc->boxZ);
 					if (atomIsInBox) {
 						newAtom.r =
 						armavec( {(float_tt)x,(float_tt)y,(float_tt)z});

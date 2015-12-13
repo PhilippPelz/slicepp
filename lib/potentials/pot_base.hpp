@@ -23,6 +23,10 @@
 #include "data_IO/PersistenceManager.hpp"
 #include "pot_interface.hpp"
 
+//#include <thrust/device_ptr.h>
+//#include <thrust/device_vector.h>
+//#include <thrust/complex.h>
+
 #include <map>
 #include "arrayfire.h"
 
@@ -42,8 +46,6 @@ public:
 	void GetSizePixels(unsigned &nx, unsigned &ny) const;
 	void WriteSlice(unsigned idx, std::string prefix);
 	void WriteProjectedPotential();
-	void SetSliceThickness(float_tt thickness_Angstroms);
-	void SetSliceThickness(std::vector<float_tt> thickness_Angstroms);
 	void SetNSlices(unsigned slices);
 	complex_tt GetSlicePixel(unsigned iz, unsigned ix, unsigned iy);
 
@@ -53,9 +55,9 @@ public:
 	virtual void MakeSlices(superCellBoxPtr info);
 	virtual void ReadPotential(std::string &fileName, unsigned subSlabIdx);
 
-	virtual af::array GetSlice(af::array t, unsigned idx);
+	virtual af::array GetSlice(af::array& t, unsigned idx);
 	virtual af::array GetSubPotential(int startx, int starty, int nx, int ny);
-	virtual af::array GetPotential();
+	virtual af::array& GetPotential();
 protected:
 	CPotential();
 
@@ -75,6 +77,7 @@ protected:
 	ComplexArray3D _t;
 	//transmission array on GPU
 	af::array _t_d;
+//	thrust::device_vector<thrust::complex<float>> _t_thrust;
 
 	//map of atomic potential arrays
 	std::map<int, ComplexArray2D> _atomPot;

@@ -95,17 +95,19 @@ void ModelConfig::Read(ptree& t) {
 	zOffset = t.get<float_tt>("structure.zOffset");
 
 	EnergykeV = t.get<float_tt>("beam.energy_keV");
-	float_tt w;
-	const float_tt emass = 510.99906; /* electron rest mass in keV */
-	const float_tt hc = 12.3984244; /* Planck's const x speed of light*/
 
-	/* electron wavelength in Angstroms */
-	wavelength = hc / sqrt(EnergykeV * (2 * emass + EnergykeV));
+    const float E0 = EnergykeV*1e3;
+    const float m0 = 9.1093822f;
+    const float c  = 2.9979246f;
+    const float e  = 1.6021766f;
+    const float h  = 6.6260696f;
+    const float pi = 3.1415927f;
 
-	float_tt s, pi, x;
-	x = (emass + EnergykeV) / (2.0 * emass + EnergykeV);
-	pi = 4.0 * atan(1.0);
-	sigma = 2.0 * pi * x / (wavelength * EnergykeV);  // 2*pi*kz*(1+kev/emaxx)/(2*emass+kev)
+    _gamma = 1.f + E0 * e / m0 / c / c * 1e-4f;
+    wavelength = h / sqrt ( 2.f * m0 * e ) * 1e-9f / sqrt ( E0 * ( 1.f + E0 * e / 2.f / m0 / c / c * 1e-4f ) ); // electron wavelength (m), see De Graef p. 92
+    sigma =  2.f * pi * _gamma * wavelength * m0 * e / h / h * 1e18f; // interaction constant (1/(Vm))
+
+    printf("E0=%g	gamma=%g	lambda=%g	sigma=%g",E0,_gamma,wavelength,sigma);
 }
 
 void OutputConfig::Read(ptree& t) {
@@ -121,6 +123,7 @@ void OutputConfig::Read(ptree& t) {
 	SaveAtomicPotential = t.get<bool>("output.SaveAtomicPotential");
 	SaveProjectedPotential = t.get<bool>("output.saveProjectedPotential");
 	SaveAtomDeltas = t.get<bool>("output.SaveAtomDeltas");
+	SaveAtomConv = t.get<bool>("output.SaveAtomConv");
 	readPotential = t.get<bool>("output.readPotential");
 	string p = t.get<string>("output.savePath");
 	savePath = boost::filesystem::path(p);

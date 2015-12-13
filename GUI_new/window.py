@@ -18,7 +18,7 @@ import json
 
 projectPath = os.path.dirname(os.path.realpath(__file__)) + '/../'
 projectPath1 = projectPath + '/Examples/configs/'
-defaultResultsPath= projectPath1 + '7.11.h5'
+defaultResultsPath= projectPath1 + 'gold.h5'
 defaultLoadConfigPath= projectPath1 + 'goldballs.json'
 defaultSaveConfigPath= projectPath1 + 'goldballs.json'
 defaultExePath= projectPath + 'build/release/bin/stem3'
@@ -229,6 +229,40 @@ class SliceGUI(QtGui.QMainWindow):
         with open(fn, 'w') as f:
             json.dump(d,f)
 
+    def loadResultFileClicked1(self):
+        fn = self.loadResultsPathTb.text()
+        fn = str(fn)
+        print fn
+        with pg.BusyCursor():
+#             self.data = h5read(fn)['data']['potential_slices']
+            self.data = h5read(fn)['data']['potential_slices']['data']
+            self.data1 = h5read(fn)['data']['exit_wave']['data']
+            self.data2 = h5read(fn)['data']['conv_slices']['data']
+            self.data3 = h5read(fn)['data']['deltas_slices']['data']
+#         d = self.data.copy()
+        imag = self.data[:,:,:,1]
+        real = self.data[:,:,:,0]
+        imag1 = self.data1[:,:,:,1]
+        real1 = self.data1[:,:,:,0]
+        imag2 = self.data2[:,:,:,1]
+        real2 = self.data2[:,:,:,0]
+        imag3 = self.data3[:,:,:,1]
+        real3 = self.data3[:,:,:,0]
+#         d1 = {key: str(d[key].shape) for key, value in d.items() if key != 'config'}
+        pot = real + 1j * imag
+        waves = real1 + 1j * imag1
+        conv = real2 + 1j * imag2
+        deltas = real3 + 1j * imag3
+        pot = np.swapaxes(pot, 0, 2)
+        waves = np.swapaxes(waves, 0, 2)
+        conv = np.swapaxes(conv, 0, 2)
+        deltas = np.swapaxes(deltas, 0, 2)
+        self.data = {'pot':pot,'waves':waves,'conv':conv,'deltas':deltas}
+        print pot
+#         self.trResults.setData(d1, hideRoot=True)
+        self.trResults.setData({'pot':str(pot.shape),'waves':str(waves.shape),
+            'conv':str(conv.shape),'deltas':str(deltas.shape)}, hideRoot=True)
+
     def loadResultFileClicked(self):
         fn = self.loadResultsPathTb.text()
         fn = str(fn)
@@ -237,7 +271,6 @@ class SliceGUI(QtGui.QMainWindow):
             self.data = h5read(fn)
         d = self.data.copy()
         d1 = {key: str(d[key].shape) for key, value in d.items() if key != 'config'}
-
         self.trResults.setData(d1, hideRoot=True)
 
     def resultsTreeItemClick(self, item, column):

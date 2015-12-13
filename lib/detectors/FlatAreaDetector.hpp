@@ -23,7 +23,7 @@ public:
 protected:
 	FlatAreaDetector();
 	void anscombeNoise(af::array slice, float_tt dose);
-	int _nx, _ny, _numSaved;
+	int _numSaved;
 	af::array _image;
 };
 }

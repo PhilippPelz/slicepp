@@ -53,10 +53,10 @@ public:
 	virtual void GetSizePixels(unsigned &nx, unsigned &ny) const =0;
 	virtual void WriteSlice(unsigned idx, std::string prefix)=0;
 	virtual void WriteProjectedPotential()=0;
-	virtual af::array GetSlice(af::array t, unsigned idx) =0;
 	virtual complex_tt GetSlicePixel(unsigned iz, unsigned ix, unsigned iy)=0;
+	virtual af::array GetSlice(af::array& t, unsigned idx) =0;
 	virtual af::array GetSubPotential(int startx, int starty, int nx, int ny){};
-	virtual af::array GetPotential(){};
+	virtual af::array& GetPotential(){};
 	virtual ~IPotential(){};
 protected:
 	IPotential(){};

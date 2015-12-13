@@ -156,18 +156,18 @@ void CConvergentWave::ConstructWave(){
 	unsigned iy, ixmid, iymid;
 	float_tt rmin, rmax, aimin, aimax;
 	float_tt k2max, alpha;
-	float_tt ax = _nx*_dx;
-	float_tt by = _ny*_dy;
-	float_tt dx = ax-_nx/2*_dx;
-	float_tt dy = by-_ny/2*_dy;
-	float_tt avgRes = sqrt(0.5*(_dx*_dx+_dy*_dy));
+	float_tt ax = _wc->nx*_mc->dx;
+	float_tt by = _wc->ny*_mc->dy;
+	float_tt dx = ax-_wc->nx/2*_mc->dx;
+	float_tt dy = by-_wc->ny/2*_mc->dy;
+	float_tt avgRes = sqrt(0.5*(_mc->dx*_mc->dx+_mc->dy*_mc->dy));
 	float_tt edge = SMOOTH_EDGE*avgRes;
 
 	float_tt sum = 0.0;
 	bool condition;
-	af::array kx(_nx, _ny), ky(_nx, _ny), kx2(_nx, _ny), ky2(_nx, _ny), k2(_nx, _ny), k2max_af(_nx, _ny), ktheta(_nx, _ny), ktheta2(_nx, _ny), phi(_nx, _ny), chi(_nx, _ny), real(_nx, _ny), imag(_nx, _ny), scale(_nx, _ny);
-	af::array x(_nx, _ny), y(_nx, _ny);
-	af::array delta(_nx, _ny);
+	af::array kx(_wc->nx, _wc->ny), ky(_wc->nx, _wc->ny), kx2(_wc->nx, _wc->ny), ky2(_wc->nx, _wc->ny), k2(_wc->nx, _wc->ny), k2max_af(_wc->nx, _wc->ny), ktheta(_wc->nx, _wc->ny), ktheta2(_wc->nx, _wc->ny), phi(_wc->nx, _wc->ny), chi(_wc->nx, _wc->ny), real(_wc->nx, _wc->ny), imag(_wc->nx, _wc->ny), scale(_wc->nx, _wc->ny);
+	af::array x(_wc->nx, _wc->ny), y(_wc->nx, _wc->ny);
+	af::array delta(_wc->nx, _wc->ny);
 	/********************************************************
 	 * formulas from:
 	 * http://cimesg1.epfl.ch/CIOL/asu94/ICT_8.html
@@ -179,7 +179,7 @@ void CConvergentWave::ConstructWave(){
 	 *******************************************************/
 	float_tt delta_c = m_Cc*m_dE_E;
 //	if (m_printLevel > 2) printf("defocus offset: %g nm (Cc = %g)\n",delta_c,m_Cc);
-	delta = af::constant(delta_c, _nx, _ny);
+	delta = af::constant(delta_c, _wc->nx, _wc->ny);
 
 	/**********************************************************
 	 *  Calculate misc constants
@@ -191,8 +191,8 @@ void CConvergentWave::ConstructWave(){
 	float_tt ry2 = ry * ry;
 
 
-	ixmid = _nx/2;
-	iymid = _ny/2;
+	ixmid = _wc->nx/2;
+	iymid = _wc->ny/2;
 
 	// Start in Fourier space
 	ToFourierSpace();
@@ -211,14 +211,14 @@ void CConvergentWave::ConstructWave(){
        of 1/2 otherwise 1 or 0
 	 */
 	float_tt pixel = ( rx2 + ry2 );
-	scale = af::constant(1.0/sqrt((float_tt)_nx*(float_tt)_ny), _nx, _ny);
+	scale = af::constant(1.0/sqrt((float_tt)_wc->nx*(float_tt)_wc->ny), _wc->nx, _wc->ny);
 
-	kx = af::range(_nx);
-	ky = af::range(_ny);
-	kx(af::seq(ixmid + 1, af::end)) -= _nx;
-	kx = af::tile(kx, 1, _ny);
-	ky(af::seq(iymid + 1, af::end)) -= _ny;
-	ky = af::tile(ky.T(), _nx);
+	kx = af::range(_wc->nx);
+	ky = af::range(_wc->ny);
+	kx(af::seq(ixmid + 1, af::end)) -= _wc->nx;
+	kx = af::tile(kx, 1, _wc->ny);
+	ky(af::seq(iymid + 1, af::end)) -= _wc->ny;
+	ky = af::tile(ky.T(), _wc->nx);
 	ky2 = ky*ky*ry2;
 	kx2 = kx*kx*rx2;
 	k2 = kx2 + ky2;
@@ -247,16 +247,16 @@ void CConvergentWave::ConstructWave(){
 
 	chi *= 2*PI/_wavlen;
 	chi -= 2.0*PI*( (kx*dx/ax) + (ky*dy/by) );
-	k2max_af = af::constant(k2max, _nx, _ny);
-	real = af::constant(0, _nx, _ny);
-	imag = af::constant(0, _nx, _ny);
+	k2max_af = af::constant(k2max, _wc->nx, _wc->ny);
+	real = af::constant(0, _wc->nx, _wc->ny);
+	imag = af::constant(0, _wc->nx, _wc->ny);
 	condition2 = (k2 <= k2max_af);
 	real += condition2*scale * af::cos(chi);
 	imag += condition2*scale * af::sin(chi);
 
 	condition2 = ( _smoothen != 0)*( af::abs(k2-k2max) <= pixel);
-	real -= af::constant(0.5, _nx, _ny)*condition2*scale * af::cos(chi);
-	imag -= af::constant(1.5, _nx, _ny)*condition2*scale * af::sin(chi);
+	real -= af::constant(0.5, _wc->nx, _wc->ny)*condition2*scale * af::cos(chi);
+	imag -= af::constant(1.5, _wc->nx, _wc->ny)*condition2*scale * af::sin(chi);
 	_wave_af = af::complex(real, imag);
 
 	/* Fourier transform into real space */
@@ -268,27 +268,27 @@ void CConvergentWave::ConstructWave(){
 	af::array r;
 	if (_isGaussian) {
 		af::array kx, ky;
-		kx = (af::range(_nx) - _nx/2);
-		ky = (af::range(_ny) - _ny/2);
-		kx = af::tile(kx, 1, _ny);
-		ky = af::tile(ky.T(), _nx);
-		r = af::exp((-1)*(kx*kx + ky*ky)/(_nx*_ny*_gaussScale));
+		kx = (af::range(_wc->nx) - _wc->nx/2);
+		ky = (af::range(_wc->ny) - _wc->ny/2);
+		kx = af::tile(kx, 1, _wc->ny);
+		ky = af::tile(ky.T(), _wc->nx);
+		r = af::exp((-1)*(kx*kx + ky*ky)/(_wc->nx*_wc->ny*_gaussScale));
 		_wave_af *= r;
 	}
 	/* Apply AIS aperture in Real Space */
 	// printf("center: %g,%g\n",dx,dy);
 	if (_CLA > 0) {
-		x = af::range(_nx)*_dx-dx;
-		y = af::range(_ny)*_dy-dy;
-		x = af::tile(x, 1, _ny);
-		y = af::tile(y.T(), _nx);
+		x = af::range(_wc->nx)*_mc->dx-dx;
+		y = af::range(_wc->ny)*_mc->dy-dy;
+		x = af::tile(x, 1, _wc->ny);
+		y = af::tile(y.T(), _wc->nx);
 		r = af::sqrt(x*x+y*y);
-		delta = r - af::constant(0.5*_CLA, _nx, _ny);
-		delta += af::constant(edge, _nx, _ny);
+		delta = r - af::constant(0.5*_CLA, _wc->nx, _wc->ny);
+		delta += af::constant(edge, _wc->nx, _wc->ny);
 		condition2 = !(delta >_zero);
 		_wave_af *= condition;
-		condition2 = !(delta < af::constant(-edge, _nx, _ny));
-		scale = (!condition* scale) + (condition*0.5*(af::constant(1, _nx, _ny)-cos(delta*PI/edge)));
+		condition2 = !(delta < af::constant(-edge, _wc->nx, _wc->ny));
+		scale = (!condition* scale) + (condition*0.5*(af::constant(1, _wc->nx, _wc->ny)-cos(delta*PI/edge)));
 		_wave_af = (!condition* _wave_af) + (condition*scale*_wave_af);
 	}
 	/*  Normalize probe intensity to unity  */
@@ -313,6 +313,7 @@ void CConvergentWave::ConstructWave(){
 	m_aimin = aimin;
 	m_aimax = aimax;
 	_probe = af::array(_wave_af);
+//	af_print_array(_probe.get());
 
 	BOOST_LOG_TRIVIAL(info) << format("wave value range (%f .. %f,i %f ... %f)") % rmin % rmax % aimin % aimax;
 	/**********************************************************/

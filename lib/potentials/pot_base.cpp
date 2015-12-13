@@ -37,7 +37,7 @@ CPotential::CPotential(cModelConfPtr mc, cOutputConfPtr oc , PersistenceManagerP
 		_nRadY(0), _nRadZ(0), _nRad2Trans(0), _ndiaAtomX(0), _ndiaAtomY(0), _boxNx(0),
 		_boxNy(0), m_boxNz(0),
 		IPotential(mc,oc,persist) {
-	af::setDevice(1);
+
 }
 CPotential::~CPotential() {
 }
@@ -385,7 +385,7 @@ af::array CPotential::GetSubPotential(int startx, int starty, int nx, int ny){
 	return _t_d(af::seq(startx, startx + nx -1), af::seq(starty, starty + ny -1), af::span);
 }
 
-af::array CPotential::GetPotential(){
+af::array& CPotential::GetPotential(){
 	return _t_d;
 }
 
@@ -394,17 +394,17 @@ void CPotential::GetSizePixels(unsigned int &nx, unsigned int &ny) const {
 	ny = _mc->ny;
 }
 
-af:: array CPotential::GetSlice(af::array t, unsigned idx){
+af:: array CPotential::GetSlice(af::array& t, unsigned idx){
 	return t(af::span, af::span, idx);
 }
 
 void CPotential::SavePotential(){
 	_persist->SavePotential(_t);
 	if (_oc->SaveProjectedPotential || _oc->ComputeFromProjectedPotential){
-		if(!_persist->_potSaved){
-			_t.resize(boost::extents[_t_d.dims(2)][_t_d.dims(1)][_t_d.dims(0)]);
-			_t_d.host(_t.data());
-		}
+//		if(!_persist->_potSaved){
+//			_t.resize(boost::extents[_t_d.dims(2)][_t_d.dims(1)][_t_d.dims(0)]);
+//			_t_d.host(_t.data());
+//		}
 		WriteProjectedPotential();
 	}
 

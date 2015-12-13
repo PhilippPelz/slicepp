@@ -9,50 +9,28 @@
 #include <iostream>
 #include "CUDAFunctions.hpp"
 #include "projectedPotential.hpp"
+#include <boost/format.hpp>
 
+#include <thrust/complex.h>
+using boost::format;
 namespace QSTEM {
 
 CUDAFunctions::CUDAFunctions(superCellBoxPtr info, cModelConfPtr mc) {
 	_info = info;
 	_mc = mc;
 
-	af::timer time = af::timer::start();
-
-	// create the needed arrays on the gpu, with a few workarounds to get arrayfire working with cuda kernels
-	xyzPos = af::array(info->xyzPos.size(), (float_tt *) info->xyzPos.data(), afHost);
-	occupancy = af::array(info->occupancy.size(), (float_tt *) info->occupancy.data(), afHost);
-	znums = af::array(info->znums.size(), (int *) info->znums.data(), afHost);
-
-	xyzPos *= 1;
-	occupancy *= 1;
-	znums *= 1;
-
-	xyzPos_d = xyzPos.device<float_tt>();
-	occupancy_d = occupancy.device<float_tt>();
-	znums_d = znums.device<int>();
-
-	af::sync();
-
 	slicePixels = _mc->nx * _mc->ny;
-	gS = myGSize(slicePixels);
-	bS = myBSize(slicePixels * _mc->nSlices);
 	gS2D = myGSize(slicePixels);
-
-    af_id = af::getDevice();
-    afcu_get_stream(&af_stream,af_id);
-//     = afcu::getStream(af_id);
-
-//	BOOST_LOG_TRIVIAL(info)<< boost::format( "%g msec used copying data to gpu") % (af::timer::stop(time)*1000);
 }
 
 void CUDAFunctions::GetPhaseGrating(cufftComplex* V_slice, int slice, std::map<int, af::array> & atomPot) {
 	int nAtom = _info->atoms.size();
 
-	SetComplex( V_slice, 0.f, 0.f);
-	SetComplex( _V_accum_ptr, 0.f, 0.f);
+	SetComplex2D( V_slice, 0.f, 0.f);
+	SetComplex2D( _V_accum_ptr, 0.f, 0.f);
 	for (int& Z : _info->uniqueZ) {
-		SetComplex( _V_elem_ptr, 0.f, 0.f);
-		SetComplex( _V_atom_ptr, 0.f, 0.f);
+		SetComplex2D( _V_elem_ptr, 0.f, 0.f);
+		SetComplex2D( _V_atom_ptr, 0.f, 0.f);
 
 		GetAtomDeltaFunctions(_V_elem_ptr, Z, slice);
 
@@ -73,30 +51,69 @@ void CUDAFunctions::GetPhaseGrating(cufftComplex* V_slice, int slice, std::map<i
 	}
 }
 void CUDAFunctions::PotentialToTransmission(cufftComplex* pot, cufftComplex* trans){
-	potential2Transmission<<< gS, bS , 0, af_stream>>> (pot, trans, slicePixels);
+    int af_id = af::getDevice();
+    cudaStream_t af_stream = afcu::getStream(af_id);
+	int slicePixels = _mc->nx * _mc->ny;
+	const int gS = myGSize(slicePixels);
+	const int bS = myBSize(slicePixels);
+	potential2Transmission<<< gS, bS, 0, af_stream >>> (pot, trans, slicePixels);
 }
-void CUDAFunctions::SetComplex(cufftComplex* a, float real, float imag){
+void CUDAFunctions::cmul(cufftComplex* a1, cufftComplex* a2){
+    int af_id = af::getDevice();
+    cudaStream_t af_stream = afcu::getStream(af_id);
+	int slicePixels = _mc->nx * _mc->ny;
+	const int gS = myGSize(slicePixels);
+	const int bS = myBSize(slicePixels);
+	multiplyWithProjectedPotential_d<<< gS, bS, 0, af_stream >>> (a1,a2,_mc->nx,_mc->ny);
+}
+void CUDAFunctions::SetComplex2D(cufftComplex* a, float real, float imag){
+	int slicePixels = _mc->nx * _mc->ny;
+	const int gS = myGSize(slicePixels);
+	const int bS = myBSize(slicePixels);
+    int af_id = af::getDevice();
+    cudaStream_t af_stream = afcu::getStream(af_id);
+	initialValues<<< gS, bS , 0, af_stream >>> ( a, slicePixels, 0.f, 0.f);
+}
+void CUDAFunctions::SetComplex3D(cufftComplex* a, float real, float imag){
 	int slicePixels = _mc->nx * _mc->ny;
 	const int gS = myGSize(slicePixels);
 	const int bS = myBSize(slicePixels * _mc->nSlices);
-	initialValues<<< gS * 2, bS , 0, af_stream>>> ( a, slicePixels, 0.f, 0.f);
+    int af_id = af::getDevice();
+    cudaStream_t af_stream = afcu::getStream(af_id);
+	initialValues<<< gS, bS , 0, af_stream >>> ( a, slicePixels, 0.f, 0.f);
 }
 void CUDAFunctions::GetAtomicPotential(cufftComplex* V, int Z) {
 	int slicePixels = _mc->nx * _mc->ny;
-	const int bS = myBSize(slicePixels * _mc->nSlices);
+	const int bS = myBSize(slicePixels);
 	const int gS2D = myGSize(slicePixels);
-	createAtomicPotential<<< gS2D, bS , 0, af_stream>>> ( V, Z, _mc->nx, _mc->ny, _mc->dx, _mc->dy);
+    int af_id = af::getDevice();
+    BOOST_LOG_TRIVIAL(info)<< format("device id: %d") % af_id;
+    cudaStream_t af_stream = afcu::getStream(af_id);
+	createAtomicPotential<<< gS2D, bS, 0,  af_stream>>> ( V, Z, _mc->nx, _mc->ny, _mc->dx, _mc->dy,_mc->sigma);
 }
 void CUDAFunctions::GetSincAtomicPotential(cufftComplex* V, int Z) {
 	int slicePixels = _mc->nx * _mc->ny;
-	const int bS = myBSize(slicePixels * _mc->nSlices);
+	const int bS = myBSize(slicePixels);
 	const int gS2D = myGSize(slicePixels);
-	createAtomicPotential<<< gS2D, bS , 0, af_stream>>> ( V, Z, _mc->nx, _mc->ny, _mc->dx, _mc->dy);
-	divideBySinc<<< gS2D, bS , 0, af_stream>>> ( V, _mc->nx, _mc->ny, PI);
+    int af_id = af::getDevice();
+    cudaStream_t af_stream = afcu::getStream(af_id);
+    printf("sigma: %g",_mc->sigma);
+	createAtomicPotential<<< gS2D, bS, 0,  af_stream  >>> ( V, Z, _mc->nx, _mc->ny, _mc->dx, _mc->dy,_mc->sigma);
+	divideBySinc<<< gS2D, bS, 0,  af_stream  >>> ( V, _mc->nx, _mc->ny, PI);
 }
 void CUDAFunctions::GetAtomDeltaFunctions(cufftComplex* V, int Z, int slice) {
-	int nAtom = _info->atoms.size();
-	putAtomDeltas<<< myGSize( nAtom ), myBSize( nAtom ) , 0, af_stream>>> ( V, nAtom, znums_d, Z, xyzPos_d, _mc->imPot, occupancy_d, slice, _mc->nx, _mc->ny, _mc->nSlices, _mc->dx, _mc->dy, _mc->dz);
+	int nAtom = _info->znums.size();
+    int af_id = af::getDevice();
+    cudaStream_t af_stream = afcu::getStream(af_id);
+	putAtomDeltas<<< myGSize( nAtom ), myBSize( nAtom ), 0,  af_stream  >>> ( V, nAtom, znums_d, Z, xyzPos_d, _mc->imPot,
+			occupancy_d, slice, _mc->nx, _mc->ny, _mc->nSlices, _mc->dx, _mc->dy, _mc->dz);
+}
+void CUDAFunctions::Convolve2D(cufftComplex* a1, cufftComplex* a1) {
+	int nAtom = _info->znums.size();
+    int af_id = af::getDevice();
+    cudaStream_t af_stream = afcu::getStream(af_id);
+	putAtomDeltas<<< myGSize( nAtom ), myBSize( nAtom ), 0,  af_stream  >>> ( V, nAtom, znums_d, Z, xyzPos_d, _mc->imPot,
+			occupancy_d, slice, _mc->nx, _mc->ny, _mc->nSlices, _mc->dx, _mc->dy, _mc->dz);
 }
 void CUDAFunctions::printPotArray(cufftComplex* V_d, int nx, int ny) {
 	cufftComplex *V_host;
@@ -137,6 +154,31 @@ void CUDAFunctions::printIntArray(int* p, int size) {
 	}
 	free(f_host);
 }
+void CUDAFunctions::initArrays(){
+//    cudaMalloc((void**)&xyzPos_d, _info->xyzPos.size()*sizeof(float_tt));
+//    cudaMalloc((void**)&occupancy_d, _info->occupancy.size()*sizeof(float_tt));
+//    cudaMalloc((void**)&znums_d, _info->znums.size()*sizeof(int));
+//    cudaMemcpy(xyzPos_d, host_ptr, _info->xyzPos.size()*sizeof(float_tt), cudaMemcpyHostToDevice);
+//    cudaMemcpy(occupancy_d, host_ptr,  _info->occupancy.size()*sizeof(float_tt), cudaMemcpyHostToDevice);
+//    cudaMemcpy(znums_d, host_ptr, _info->znums.size()*sizeof(int), cudaMemcpyHostToDevice);
+
+	xyzPos = af::array(_info->xyzPos.size(),_info->xyzPos.data());
+	occupancy = af::array(_info->occupancy.size(),_info->occupancy.data());
+	znums = af::array(_info->znums.size(),_info->znums.data());
+//	xyzPos *= 1;
+//	occupancy *= 1;
+//	znums *= 1;
+	BOOST_LOG_TRIVIAL(info)<< format("sizes: xyz %d occ %d znums %d atoms %d") % _info->xyzPos.size() %
+			_info->occupancy.size() % _info->znums.size() % _info->atoms.size();
+
+	xyzPos_d = xyzPos.device<float_tt>();
+	occupancy_d = occupancy.device<float_tt>();
+	znums_d = znums.device<int>();
+//	af::sync();
+	BOOST_LOG_TRIVIAL(info)<< format("xyzPos_d: %d			size: %d") % xyzPos_d % xyzPos.dims(0);
+	BOOST_LOG_TRIVIAL(info)<< format("occupancy_d: %d		size: %d") % occupancy_d% occupancy.dims(0);
+	BOOST_LOG_TRIVIAL(info)<< format("znums_d: %d			size: %d") % znums_d% znums.dims(0);
+}
 void CUDAFunctions::initPotArrays(int slicePixels) {
 	_V_elem = af::array(slicePixels, c32);
 	_V_atom = af::array(slicePixels, c32);
@@ -145,23 +187,20 @@ void CUDAFunctions::initPotArrays(int slicePixels) {
 	_V_elem_ptr = (cufftComplex *) _V_elem.device<af::af_cfloat>();
 	_V_atom_ptr = (cufftComplex *) _V_atom.device<af::af_cfloat>();
 	_V_accum_ptr = (cufftComplex *) _v_accum.device<af::af_cfloat>();
+	initArrays();
 }
+
 void CUDAFunctions::unlockArrays() {
 	_V_elem.unlock();
 	_V_atom.unlock();
 	_v_accum.unlock();
 }
+
 __global__ void initialValues(cuComplex* V, int size, float_tt initRe, float_tt initIm) {
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
-
-	if (i < 2 * size) {
-		if ((i % 2) == 0) {
-			V[i / 2].x = initRe;
-		}
-
-		else {
-			V[i / 2].y = initIm;
-		}
+	if (i <  size) {
+		V[i].x = initRe;
+		V[i].y = initIm;
 	}
 }
 
@@ -169,16 +208,32 @@ __global__ void putAtomDeltas(cufftComplex* V, int nAt, int *Z, int Z0, float_tt
 		int nSlices, float_tt dx, float_tt dy, float_tt dz) //double linear interpolation
 		{
 	const int i = blockIdx.x * blockDim.x + threadIdx.x;
+//	printf("Thread:(%d) 	i: %d		nAt:%d\n",threadIdx.x,i,nAt);
 	if (i < nAt) {
+//		printf("Thread:(%d) 	i: %d		Z[i]:%d\n",threadIdx.x,i,Z[i]);
+
 		if (Z[i] == Z0) {
+
 			const int m1 = nx;
 			const int m2 = ny;
 			float_tt x1, x2;
+//			printf("Thread:(%d) xyz index: %d,%d \n",threadIdx.x, i * 3 + 0,i * 3 + 1);
 			x1 = xyz[i * 3 + 0] / dx - 0.5f;
 			x2 = xyz[i * 3 + 1] / dy - 0.5f;
-			int i3 = (int) (roundf(xyz[i * 3 + 2] / dz - 0.5f));
+			int i3 = (int) (roundf(xyz[i * 3 + 2] / dz));
+//			printf("x1,m1:(%3.3f,%3.3f)		x2,m2:(%3.3f,%3.3f)	x3,slice:(%d,%d)\n",x1,m1,x2,m2,i3,s);
+//			printf("%3.3f = (xyz[%04d]=%3.3f) / %3.3f - 0.5f; %3.3f = (xyz[%04d]=%3.3f) / %3.3f - 0.5f; %3.3f = (int) (roundf(xyz[%04d]=%3.3f / %3.3f - 0.5f));\n",
+//			x1,i*3,xyz[i * 3 + 0],dx,
+//			x2,i*3+1,xyz[i * 3 + 1],dy,
+//			i3,i*3+2,xyz[i * 3 + 2],dz);
+
 
 			if (((x1 > 1.f) && (x1 < ((float_tt) (m1 - 2)))) && ((x2 > 1.f) && (x2 < ((float_tt) (m2 - 2)))) && ((i3 > s - 1) && (i3 <= s))) {
+//				if(Z0==79)
+//				printf("s=%d	Z=%d (xyz)=(%3.3g,%3.3g,%3.3g)	(m1,m2,i3)=(%d,%d,%d)	(dx,dy,dz)=(%3.3g,%3.3g,%3.3g)\n",
+//						s,Z0,xyz[i * 3 + 0],xyz[i * 3 + 1],xyz[i * 3 + 2],
+//						m1,m2,i3,
+//						dx,dy,dz);
 				int i1 = (int) roundf(x1);
 				int i2 = (int) roundf(x2);
 				int j;
@@ -190,6 +245,8 @@ __global__ void putAtomDeltas(cufftComplex* V, int nAt, int *Z, int Z0, float_tt
 				temp = (1 - fabsf(r1)) * (1 - fabsf(r2)) * occ[i];
 				//V[j].x += temp;
 				//V[j].y += temp * imPot;
+//				if(j > m1*m2)
+//					printf("Thread:(%d) V index: %d \n",threadIdx.x, j);
 				atomicAdd(&(V[j].x), temp);
 				atomicAdd(&(V[j].y), temp * imPot);
 
@@ -198,6 +255,8 @@ __global__ void putAtomDeltas(cufftComplex* V, int nAt, int *Z, int Z0, float_tt
 				temp = (1 - fabsf(r1)) * fabsf(r2) * occ[i];
 				//V[j].x += temp;
 				//V[j].y += temp * imPot;
+//				if(j > m1*m2)
+//					printf("Thread:(%d) V index: %d \n",threadIdx.x, j);
 				atomicAdd(&(V[j].x), temp);
 				atomicAdd(&(V[j].y), temp * imPot);
 
@@ -206,6 +265,8 @@ __global__ void putAtomDeltas(cufftComplex* V, int nAt, int *Z, int Z0, float_tt
 				temp = fabsf(r1) * fabsf(r2) * occ[i];
 				//V[j].x += temp;
 				//V[j].y += temp * imPot;
+//				if(j > m1*m2)
+//					printf("Thread:(%d) V index: %d \n",threadIdx.x, j);
 				atomicAdd(&(V[j].x), temp);
 				atomicAdd(&(V[j].y), temp * imPot);
 
@@ -214,6 +275,8 @@ __global__ void putAtomDeltas(cufftComplex* V, int nAt, int *Z, int Z0, float_tt
 				temp = fabsf(r1) * (1 - fabsf(r2)) * occ[i];
 				//V[j].x += temp;
 				//V[j].y += temp * imPot;
+//				if(j > m1*m2)
+//					printf("Thread:(%d) V index: %d \n",threadIdx.x, j);
 				atomicAdd(&(V[j].x), temp);
 				atomicAdd(&(V[j].y), temp * imPot);
 
@@ -254,7 +317,14 @@ __global__ void multiplyWithProjectedPotential_d(cufftComplex* V1, cufftComplex*
 		V1[i].y *= V2x;
 	}
 }
-
+struct potential2TransmissionFunctor
+{
+  __host__ __device__
+  thrust::complex<float> operator()(const thrust::complex<float>& x, const thrust::complex<float>& y) const
+  {
+    return thrust::complex<float>(expf(-x.imag())*cosf(x.real()),expf(-x.imag())*sinf(x.real()));
+  }
+};
 __global__ void potential2Transmission(cufftComplex* t, cufftComplex* V, int size) {
 	const int i = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -263,6 +333,8 @@ __global__ void potential2Transmission(cufftComplex* t, cufftComplex* V, int siz
 		float_tt Vy = V[i].y;
 		t[i].x = expf(-Vy) * cosf(Vx);
 		t[i].y = expf(-Vy) * sinf(Vx);
+//		if(i%100)
+//			printf("i=%-5d V=(%-10f,%-10f) t=(%-10f,%-10f)\n",i,Vx,Vy,t[i].x,t[i].y);
 	}
 }
 

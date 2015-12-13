@@ -7,7 +7,7 @@
 
 #include "Bootstrapper.hpp"
 #include "fftw3.h"
-
+#include "arrayfire.h"
 namespace QSTEM {
 
 //Initial sampling suggestions for calculating images of thin specimens
@@ -75,7 +75,8 @@ void Bootstrapper::Initialize(){
 	fftw_init_threads();
 	fftw_plan_with_nthreads(_c->nThreads);
 	omp_set_num_threads(_c->nThreads);
-
+	af::setDevice(0);
+	af::info();
 	RegisterWaveTypes();
 	RegisterPotentialTypes();
 	RegisterStructureTypes();

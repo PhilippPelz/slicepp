@@ -21,7 +21,6 @@
 #include "CUDAFunctions.hpp"
 
 
-
 #ifndef CUDA2DPOTENTIAL_HPP_
 #define CUDA2DPOTENTIAL_HPP_
 namespace QSTEM {
@@ -48,13 +47,20 @@ protected:
 	virtual af::array GetSlice(af::array t, unsigned idx);
 	void initPotArrays();
 	void ComputeAtPot(superCellBoxPtr info);
-	cufftComplex* toCxPtr(af::array a);
+	cufftComplex* toCxPtr(af::array& a);
+
+	void fft(cufftComplex* V);
+	void ifft(cufftComplex* V);
+	void XplusequY(cufftComplex* X, cufftComplex* Y);
 
 	//pointer to device transmission matrix
 	cufftComplex *_t_d_ptr;
 	CUDAFunctions *_cf;
 
-	int slicePixels, numAtoms, numAtUnique;
+	cufftHandle * _fftPlan;
+	cublasHandle_t _cublasHandle;
+
+	int _slicePixels, numAtoms, numAtUnique;
 	af::array _V_elem;
 	af::array _V_accum;
 	std::map<int,af::array> _Z_atomDeltas;

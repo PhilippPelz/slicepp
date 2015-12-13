@@ -68,6 +68,7 @@ void BaseExperiment::SetResolution(superCellBoxPtr b) {
 	auto mc = _c->Model;
 	auto wc = _c->Wave;
 	auto sc = _c->Structure;
+	auto dc = _c->Detector;
 
 	//TODO: nx,ny = integer multiple of # unit cells
 	//TODO: super cell size = N * unit cell size
@@ -127,6 +128,8 @@ void BaseExperiment::SetResolution(superCellBoxPtr b) {
 	if (_c->ExperimentType != ExperimentType::PTYC) {
 		wc->nx = mc->nx;
 		wc->ny = mc->ny;
+		dc->nx = mc->nx;
+		dc->ny = mc->ny;
 	}
 }
 void BaseExperiment::SetSliceThickness(superCellBoxPtr b) {
@@ -263,7 +266,8 @@ int BaseExperiment::RunMultislice(af::array t_af) {
 	af::timer time = af::timer::start();
 	for (islice = 0; islice < _c->Model->nSlices; islice++) {
 
-		_wave->Transmit(_pot->GetSlice(t_af, islice));
+		auto slice = _pot->GetSlice(t_af, islice);
+		_wave->Transmit(slice);
 		if (_c->Output->SaveWaveAfterTransmit)
 			_persist->SaveWaveAfterTransmit(_wave->GetWaveAF(), islice);
 

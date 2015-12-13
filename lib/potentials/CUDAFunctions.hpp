@@ -40,13 +40,18 @@ public:
 	void GetSincAtomicPotential( cufftComplex* V, int Z);
 	void GetAtomicPotential( cufftComplex* V, int Z);
 	void GetAtomDeltaFunctions(cufftComplex* V, int Z,int slice);
+	void Convolve2D(cufftComplex* V, cufftComplex* V);
 	void PotentialToTransmission(cufftComplex* pot, cufftComplex* trans);
-	void SetComplex(cufftComplex* a, float real, float imag);
+	void cmul(cufftComplex* a1, cufftComplex* a2);
+	void SetComplex2D(cufftComplex* a, float real, float imag);
+	void SetComplex3D(cufftComplex* a, float real, float imag);
 	void printPotArray(cufftComplex* V_d, int nx, int ny);
 	void printFloatArray(float_tt* f, int nx, int ny, int offset);
 	void printIntArray(int *p, int size);
-	void initPotArrays(int slicePixels);
+	void initPotArrays(int pix);
+	void initArrays();
 	void unlockArrays();
+	void InitArrays();
 protected:
 	int myGSize(int size);
 	int myBSize(int size);
@@ -58,9 +63,7 @@ protected:
 	af::array xyzPos, occupancy, znums;
 	float_tt *xyzPos_d, *occupancy_d;
 	int *znums_d;
-	int gS, bS, gS2D, slicePixels;
-	int af_id;
-	cudaStream_t af_stream;
+	int gS2D, slicePixels;
 };
 __global__ void putAtomDeltas (  cufftComplex* V, int nAt, int *Z, int Z0, float_tt *xyz, float_tt imPot, float_tt *occ, int s, int nx, int ny, int nslice, float_tt dx, float_tt dy, float_tt dz );
 __global__ void divideBySinc ( cufftComplex* V, int nx, int ny, float_tt PI);

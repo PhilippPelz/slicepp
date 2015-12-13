@@ -37,7 +37,13 @@ public:
 	int nCellY = 8;
 	int nCellZ = 8;
 	bool rotateToZoneAxis;
-	float_tt temperatureK, crystalTiltX, crystalTiltY, crystalTiltZ, boxX, boxY, boxZ;
+	float_tt temperatureK;
+	float_tt crystalTiltX;
+	float_tt crystalTiltY;
+	float_tt crystalTiltZ;
+	float_tt boxX;
+	float_tt boxY;
+	float_tt boxZ;
 	bool isBoxed;
 	virtual void Read(ptree& t);
 	StructureConfPtr Clone() const;
@@ -45,7 +51,11 @@ public:
 
 class DLL_EXPORT ModelConfig: IPropertyTreeReader {
 public:
-	bool UseTDS, TiltBack, CenterSlices, CenterSample, rotateToZoneAxis;
+	bool UseTDS;
+	bool TiltBack;
+	bool CenterSlices;
+	bool CenterSample;
+	bool rotateToZoneAxis;
 	int TDSRuns, nx, ny, nSlices;
 	QSTEM::SliceThicknessCalculation SliceThicknessCalculation;
 	QSTEM::ResolutionCalculation ResolutionCalculation;
@@ -57,7 +67,7 @@ public:
 	//atom radius in angstrom
 	float_tt ratom;
 	std::string PotentialType;
-	float_tt EnergykeV, wavelength, sigma;
+	float_tt EnergykeV, wavelength, sigma, _gamma;
 	float_tt imPot;
 
 	virtual void Read(ptree& t);
@@ -83,7 +93,7 @@ public:
 	int LogLevel, SaveWaveIterations;
 	bool SavePotential, SaveProjectedPotential, WriteLogFile, saveProbe, SaveWaveAfterTransmit, SaveWaveAfterTransform, SaveWaveAfterPropagation,
 			SaveWaveAfterSlice, SaveAtomicPotential, ComputeFromProjectedPotential,
-			SaveAtomDeltas;
+			SaveAtomDeltas,SaveAtomConv;
 	boost::filesystem::path savePath, LogFileName;
 	boost::filesystem::path configPath;
 

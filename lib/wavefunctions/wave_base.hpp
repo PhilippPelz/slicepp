@@ -41,7 +41,7 @@ public:
 	CBaseWave(const boost::shared_ptr<WaveConfig> wc, const boost::shared_ptr<ModelConfig> mc,const PersistenceManagerPtr p);
 	CBaseWave( const CBaseWave& other );
 	bool IsRealSpace(){return m_realSpace;}
-	int GetTotalPixels() const {return _nx*_ny;}
+	int GetTotalPixels() const {return _wc->nx*_wc->ny;}
 	void DisplayParams();
 	void ToRealSpace();
 	void ToFourierSpace();
@@ -51,13 +51,13 @@ public:
 	inline float_tt GetVoltage()  const {return _E;}
 	inline float_tt GetWavelength()  const {return _wavlen;}
 	inline float_tt GetPixelIntensity(int i) const { return abs2(_wave.data()[i]); }
-	inline float_tt GetPixelIntensity(int x, int y) const  {return GetPixelIntensity(x+_nx*y);}
+	inline float_tt GetPixelIntensity(int x, int y) const  {return GetPixelIntensity(x+_wc->nx*y);}
 	inline float_tt GetPixelDose() const {return _pixelDose; }
 	inline ComplexArray2D GetWave() const {return  _wave;}
 
 	inline af::array GetPixelIntensity() const {return af::real(_wave_af)*af::real(_wave_af) + af::imag(_wave_af)*af::imag(_wave_af);}
-	inline af::array GetWaveAF() const {return  _wave_af;}
-	inline af::array GetProbe() const {return  _probe;}
+	inline af::array& GetWaveAF() {return  _wave_af;}
+	inline af::array& GetProbe() {return  _probe;}
 
 	void WriteBeams(int absoluteSlice);
 	float_tt GetIntegratedIntensity() const ;
@@ -67,11 +67,11 @@ public:
 	virtual void FormProbe();
 	virtual void ResetProbe();
 	virtual void GetExtents(int& nx, int& ny) const;
-	virtual void Transmit(af::array t);
+	virtual void Transmit(af::array& t);
 	virtual void PropagateToNextSlice();
 	virtual void InitializePropagators();
-	virtual af::array fftShift(af::array _wave);
-	virtual af::array ifftShift(af::array _wave);
+	virtual af::array fftShift(af::array& _wave);
+	virtual af::array ifftShift(af::array& _wave);
 	virtual void ApplyTransferFunction();
 
 protected:
@@ -81,10 +81,8 @@ protected:
 	std::vector<float_tt> m_propxr, m_propxi, m_propyr, m_propyi;
 	bool m_realSpace;
 	int m_detPosX, m_detPosY;
-	int _nx, _ny;
 	int m_Scherzer;
 	int slice_c;
-	float_tt _dx, _dy;
 	float_tt m_k2max;
 	float_tt _E;
 	float_tt _wavlen;

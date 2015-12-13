@@ -25,10 +25,6 @@ namespace QSTEM {
 
 CBaseWave::CBaseWave(const boost::shared_ptr<WaveConfig> wc, const boost::shared_ptr<ModelConfig> mc, const PersistenceManagerPtr p) :
 		IWave(wc, mc, p) {
-	_nx = _wc->nx;
-	_ny = _wc->ny;
-	_dx = _mc->dx;
-	_dy = _mc->dy;
 	_E = _mc->EnergykeV;
 	m_realSpace = true;
 	_pixelDose = _wc->pixelDose;
@@ -41,8 +37,8 @@ void CBaseWave::InitializePropagators() {
 	//t = exp(-i pi lam k^2 dz)
 	af::array s, kx2D, ky2D;
 // Tile the arrays to create 2D versions of the k vectors
-	kx2D = af::tile(m_kx2, 1, _ny);
-	ky2D = af::tile(m_ky2.T(), _nx);
+	kx2D = af::tile(m_kx2, 1, _wc->ny);
+	ky2D = af::tile(m_ky2.T(), _wc->nx);
 	s = scale * (kx2D + ky2D);
 	_prop = af::complex(af::cos(s), af::sin(s));
 
@@ -52,11 +48,11 @@ void CBaseWave::InitializePropagators() {
 	//_prop = fftShift(_prop);
 }
 
-af::array CBaseWave::fftShift(af::array wave) {
+af::array CBaseWave::fftShift(af::array& wave) {
 	return af::shift(wave, wave.dims(0) / 2, wave.dims(1) / 2);
 }
 
-af::array CBaseWave::ifftShift(af::array wave) {
+af::array CBaseWave::ifftShift(af::array& wave) {
 	return af::shift(wave, (wave.dims(0) + 1) / 2, (wave.dims(1) + 1) / 2);
 }
 
@@ -69,14 +65,14 @@ void CBaseWave::ApplyTransferFunction() {
 
 	// multiply wave (in rec. space) with transfer function and write result to imagewave
 	ToFourierSpace();
-	for (int i = 0; i < _nx; i++)
-		for (int j = 0; j < _ny; j++) {
+	for (int i = 0; i < _wc->nx; i++)
+		for (int j = 0; j < _wc->ny; j++) {
 			// here, we apply the CTF:
 			// 20140110 - MCS - I think this is where Christoph wanted to apply the CTF - nothing is done ATM.
 
 			// TODO: use these for calculating a radius (to get the CTF value from)
-			//ix=i%m_nx;
-			//iy=i/m_ny;
+			//ix=i%m_wc->nx;
+			//iy=i/m_wc->ny;
 
 			//		wave[i][j] = m_wave[i][j];
 		}
@@ -88,15 +84,15 @@ void CBaseWave::PropagateToNextSlice() {
 	//_wave_af = ifftShift(_wave_af);
 } /* end propagate */
 
-void CBaseWave::Transmit(af::array t_af) {
+void CBaseWave::Transmit(af::array& t_af) {
 	_wave_af *= t_af;
 } /* end transmit() */
 /** Copy constructor - make sure arrays are deep-copied */
 CBaseWave::CBaseWave(const CBaseWave &other) :
 		CBaseWave(other._wc, other._mc, other._persist) {
 	// TODO: make sure arrays are deep copied
-	other.GetSizePixels(_nx, _ny);
-	other.GetResolution(_dx, _dy);
+	other.GetSizePixels(_wc->nx, _wc->ny);
+	other.GetResolution(_mc->dx, _mc->dy);
 	_E = other.GetVoltage();
 }
 
@@ -104,36 +100,35 @@ CBaseWave::~CBaseWave() {
 }
 
 void CBaseWave::InitializeKVectors() {
-	float_tt ax = _mc->dx * _nx;
-	float_tt by = _mc->dy * _ny;
+	float_tt ax = _mc->dx * _wc->nx;
+	float_tt by = _mc->dy * _wc->ny;
 
-	m_kx = (af::range(_nx) - _nx / 2) / ax;
+	m_kx = (af::range(_wc->nx) - _wc->nx / 2) / ax;
 	m_kx2 = m_kx * m_kx;
 
-	m_ky = (af::range(_ny) - _ny / 2) / ax;
+	m_ky = (af::range(_wc->ny) - _wc->ny / 2) / ax;
 	m_ky2 = m_ky * m_ky;
 
-	m_k2max = _nx / (2.0F * ax);
-	if (_ny / (2.0F * by) < m_k2max)
-		m_k2max = _ny / (2.0F * by);
+	m_k2max = _wc->nx / (2.0F * ax);
+	if (_wc->ny / (2.0F * by) < m_k2max)
+		m_k2max = _wc->ny / (2.0F * by);
 	m_k2max = 2.0 / 3.0 * m_k2max;
 	m_k2max = m_k2max * m_k2max;
 
 	GetK2();
-	_k2max = af::constant(m_k2max, _nx, _ny);
+	_k2max = af::constant(m_k2max, _wc->nx, _wc->ny);
 	_condition = (m_k2 < _k2max);
 	_condition = fftShift(_condition);
 }
 
 void CBaseWave::GetExtents(int& nx, int& ny) const {
-	nx = _nx;
-	ny = _ny;
+	nx = _wc->nx;
+	ny = _wc->ny;
 }
 void CBaseWave::FormProbe() {
-
-	_zero = af::constant(0, _nx, _ny);
+	_zero = af::constant(0, _wc->nx, _wc->ny);
 	_wave_af = af::complex(_zero, _zero);
-	_wave.resize(boost::extents[_nx][_ny]);
+	_wave.resize(boost::extents[_wc->nx][_wc->ny]);
 	InitializeKVectors();
 }
 
@@ -147,14 +142,14 @@ void CBaseWave::DisplayParams() {
 	BOOST_LOG_TRIVIAL(info) <<
 	"**************************************************************************************************";
 	BOOST_LOG_TRIVIAL(info)<<format("* Real space res.:      %gA (=%gmrad)")% (1.0/m_k2max)%(GetWavelength()*m_k2max*1000.0);
-	BOOST_LOG_TRIVIAL(info)<<format("* Reciprocal space res: dkx=%g, dky=%g (1/A)")% (1.0/(_nx*_mc->dx))%(1.0/(_ny*_mc->dy));
+	BOOST_LOG_TRIVIAL(info)<<format("* Reciprocal space res: dkx=%g, dky=%g (1/A)")% (1.0/(_wc->nx*_mc->dx))%(1.0/(_wc->ny*_mc->dy));
 
-	BOOST_LOG_TRIVIAL(info)<<format("* Beams:                %d x %d ")%_nx%_ny;
+	BOOST_LOG_TRIVIAL(info)<<format("* Beams:                %d x %d ")%_wc->nx%_wc->ny;
 
 	BOOST_LOG_TRIVIAL(info)<<format("* Acc. voltage:         %g (lambda=%gA)")%_E%(Wavelength(_E));
 
-	BOOST_LOG_TRIVIAL(info)<<format("* Probe array:          %d x %d pixels")%_nx%_ny;
-	BOOST_LOG_TRIVIAL(info)<<format("*                       %g x %gA")%(_nx*_mc->dx)%(_ny*_mc->dy);
+	BOOST_LOG_TRIVIAL(info)<<format("* Probe array:          %d x %d pixels")%_wc->nx%_wc->ny;
+	BOOST_LOG_TRIVIAL(info)<<format("*                       %g x %gA")%(_wc->nx*_mc->dx)%(_wc->ny*_mc->dy);
 }
 
 /*
@@ -165,19 +160,19 @@ void CBaseWave::DisplayParams() {
  }
  */
 void CBaseWave::GetSizePixels(int &x, int &y) const {
-	x = _nx;
-	y = _ny;
+	x = _wc->nx;
+	y = _wc->ny;
 }
 
 void CBaseWave::GetResolution(float_tt &x, float_tt &y) const {
-	x = _dx;
-	y = _dy;
+	x = _mc->dx;
+	y = _mc->dy;
 }
 
 void CBaseWave::GetK2() {
 	af::array kx2D, ky2D;
-	kx2D = af::tile(m_kx2, 1, _ny);
-	ky2D = af::tile(m_ky2.T(), _nx);
+	kx2D = af::tile(m_kx2, 1, _wc->ny);
+	ky2D = af::tile(m_ky2.T(), _wc->nx);
 	m_k2 = kx2D + ky2D;
 }
 
@@ -185,7 +180,7 @@ float_tt CBaseWave::GetIntegratedIntensity() const {
 	float_tt intensity;
 	intensity = af::sum<float_tt>(af::sqrt(af::real(_wave_af) * af::real(_wave_af) + af::imag(_wave_af) * af::imag(_wave_af)));
 	// TODO: divide by px or not?
-	return (intensity) / (_nx * _ny);
+	return (intensity) / (_wc->nx * _wc->ny);
 }
 
 /*--------------------- wavelength() -----------------------------------*/
