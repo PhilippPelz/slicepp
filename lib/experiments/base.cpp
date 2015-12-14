@@ -151,8 +151,6 @@ void BaseExperiment::SetSliceThickness(superCellBoxPtr b) {
 			break;
 	}
 	int atomRadiusSlices = ceil(mc->ratom / mc->dz);
-	if (mc->Use3D)
-		_c->Model->nSlices += 2 * atomRadiusSlices + 2;
 }
 void BaseExperiment::DisplayProgress(int flag) {
 	// static double timer;

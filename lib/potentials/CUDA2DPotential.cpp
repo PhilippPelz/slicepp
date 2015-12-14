@@ -106,21 +106,7 @@ void CUDA2DPotential::MakeSlices(superCellBoxPtr info) {
 		SavePotential();
 }
 
-// don't forget to unlock the array once you are done with your kernel calls
-cufftComplex* CUDA2DPotential::toCxPtr(af::array& a) {
-	return (cufftComplex *) a.device<afcfloat>();
-}
-void CUDA2DPotential::copyToDeviceInt(int *devdst, std::vector<int> src, int size) {
-	for (int i = 0; i < size; i++) {
-		cuda_assert(cudaMemcpy(&devdst[i], &src[i], sizeof(int), cudaMemcpyHostToDevice));
-	}
-}
 
-void CUDA2DPotential::copyToDeviceFloat(float_tt *devdst, std::vector<float_tt> src, int size) {
-	for (int i = 0; i < size; i++) {
-		cuda_assert(cudaMemcpy(&devdst[i], &src.data()[i], sizeof(float_tt), cudaMemcpyHostToDevice));
-	}
-}
 
 af::array CUDA2DPotential::GetSlice(af::array t, unsigned idx) {
 	return t(af::span, af::span, idx);

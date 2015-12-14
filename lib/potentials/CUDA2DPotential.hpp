@@ -35,10 +35,7 @@ public:
 	virtual void MakeSlices(superCellBoxPtr info);
 
 protected:
-//	virtual void SliceSetup();
 	void progressCounter(int j, int jTot);
-	void copyToDeviceInt(int *devdst, std::vector<int> src, int size);
-	void copyToDeviceFloat(float_tt *devdst, std::vector<float_tt> src, int size);
 
 	virtual void AddAtomToSlices(atom& atom, float_tt atomX, float_tt atomY, float_tt atomZ);
 	virtual void ComputeAtomPotential(int znum){};
@@ -47,7 +44,6 @@ protected:
 	virtual af::array GetSlice(af::array t, unsigned idx);
 	void initPotArrays();
 	void ComputeAtPot(superCellBoxPtr info);
-	cufftComplex* toCxPtr(af::array& a);
 
 	void fft(cufftComplex* V);
 	void ifft(cufftComplex* V);
@@ -55,6 +51,9 @@ protected:
 
 	//pointer to device transmission matrix
 	cufftComplex *_t_d_ptr;
+	cufftComplex *_V_elem_ptr;
+	cufftComplex *_V_accum_ptr;
+
 	CUDAFunctions *_cf;
 
 	cufftHandle  _fftPlan;
@@ -62,7 +61,6 @@ protected:
 
 	int _slicePixels, numAtoms, numAtUnique;
 
-	cufftComplex *_V_elem_ptr, *_V_accum_ptr;
 	std::map<int, cufftComplex*> _atomPot_d;
 };
 } /* namespace QSTEM */

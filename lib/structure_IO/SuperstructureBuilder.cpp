@@ -155,9 +155,6 @@ superCellBoxPtr SuperstructureBuilder::Build(){
 	else {
 		for (auto& a : _superCell->atoms) {
 			charge += a.q*a.occ;
-			if(_mc->Use3D){
-				a.r[2] += _mc->ratom;
-			}
 		}
 	}
 	for (int j = 0 ; j < _superCell->atoms.size(); j++) {

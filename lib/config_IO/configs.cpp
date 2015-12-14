@@ -18,9 +18,6 @@
  */
 
 #include "configs.hpp"
-#include "readparams.hpp"
-#include <boost/algorithm/string.hpp>
-#include "string.h"
 #include <string>
 // used for splitting strings where necessary
 #include <boost/tokenizer.hpp>
@@ -89,7 +86,7 @@ void ModelConfig::Read(ptree& t) {
 	ratom = t.get<float_tt>("model.atomRadiusAngstrom");
 	DoZInterpolation = t.get<bool>("model.DoZInterpolation");
 	UseQPotentialOffsets = t.get<bool>("model.UseQPotentialOffsets");
-	imPot = t.get<float>("wave.imaginary potential factor");
+	ImagPot = t.get<float>("wave.imaginary potential factor");
 	xOffset = t.get<float_tt>("structure.xOffset");
 	yOffset = t.get<float_tt>("structure.yOffset");
 	zOffset = t.get<float_tt>("structure.zOffset");
@@ -172,7 +169,6 @@ void WaveConfig::Read(ptree& t) {
 	tiltY = t.get<float_tt>("wave.tiltY");
 	nx = t.get<int>("wave.nx");
 	ny = t.get<int>("wave.ny");
-
 	pixelDose = t.get<float_tt>("wave.pixel dose");
 
 }

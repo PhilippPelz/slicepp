@@ -105,7 +105,7 @@ void CUDAFunctions::GetAtomDeltaFunctions(cufftComplex* V, int Z, int slice) {
 	int nAtom = _info->znums.size();
     int af_id = af::getDevice();
     cudaStream_t af_stream = afcu::getStream(af_id);
-	putAtomDeltas<<< myGSize( nAtom ), myBSize( nAtom ), 0,  af_stream  >>> ( V, nAtom, znums_d, Z, xyzPos_d, _mc->imPot,
+	putAtomDeltas<<< myGSize( nAtom ), myBSize( nAtom ), 0,  af_stream  >>> ( V, nAtom, znums_d, Z, xyzPos_d, _mc->ImagPot,
 			occupancy_d, slice, _mc->nx, _mc->ny, _mc->nSlices, _mc->dx, _mc->dy, _mc->dz);
 }
 void CUDAFunctions::printPotArray(cufftComplex* V_d, int nx, int ny) {
