@@ -18,197 +18,48 @@
  */
 
 #include "configs.hpp"
-#include <string>
-// used for splitting strings where necessary
-#include <boost/tokenizer.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
-using boost::format;
+#include <stdlib.h>
+#include <string.h>
 
-namespace QSTEM {
-
-void StructureConfig::Read(ptree& t) {
-	structureFilename = boost::filesystem::path(t.get<string>("structure.structure_filename"));
-	nCellX = t.get<int>("structure.ncellx");
-	nCellY = t.get<int>("structure.ncelly");
-	nCellZ = t.get<int>("structure.ncellz");
-	temperatureK = t.get<float_tt>("structure.temperatureK");
-	crystalTiltX = t.get<float_tt>("structure.crystalTiltX");
-	crystalTiltY = t.get<float_tt>("structure.crystalTiltY");
-	crystalTiltZ = t.get<float_tt>("structure.crystalTiltZ");
-	boxX = t.get<float_tt>("structure.boxX");
-	boxY = t.get<float_tt>("structure.boxY");
-	boxZ = t.get<float_tt>("structure.boxZ");
-	isBoxed = t.get<bool>("structure.isBoxed");
-	rotateToZoneAxis = t.get<bool>("structure.rotateToZoneAxis");
-	zoneAxis.resize(3);
-	string zoneAxisStr = t.get<string>("structure.zoneAxis");
-	std::vector<std::string> strs;
-	boost::split(strs, zoneAxisStr, boost::is_any_of(","));
-	if (strs.size() < 3) {
-		BOOST_LOG_TRIVIAL(error)<< format("Zone Axis vector must have 3 dimensions");
-	} else {
-		std::string::size_type sz;
-		for(int i=0;i<3;i++) {
-			zoneAxis[i] = std::stoi(strs[i],&sz);
-		}
-	}
-
-}
-StructureConfPtr StructureConfig::Clone() const {
-	return StructureConfPtr(new StructureConfig(*this));
-}
-void ModelConfig::Read(ptree& t) {
-	UseTDS = t.get<bool>("model.tds");
-	displacementType = static_cast<QSTEM::DisplacementType>(t.get<int>("model.displacementType"));
-	TiltBack = t.get<bool>("model.tiltBack");
-	CenterSlices = t.get<bool>("model.centerSlices");
-	CenterSample = t.get<bool>("model.centerSample");
-	TDSRuns = t.get<int>("model.tdsRuns");
-	nx = t.get<int>("model.nx");
-	ny = t.get<int>("model.ny");
-	nSlices = t.get<int>("model.slices");
-	SliceThicknessCalculation = static_cast<QSTEM::SliceThicknessCalculation>(t.get<int>("model.sliceThicknessCalculation"));
-	ResolutionCalculation = static_cast<QSTEM::ResolutionCalculation>(t.get<int>("model.resolutionCalculation"));
-	dz = t.get<float_tt>("model.sliceThicknessAngstrom");
-	dx = t.get<float_tt>("model.resolutionXAngstrom");
-	dy = t.get<float_tt>("model.resolutionYAngstrom");
-	beamTiltX = t.get<float_tt>("model.beamTiltX");
-	beamTiltY = t.get<float_tt>("model.beamTiltY");
-	SourceDiameterAngstrom = t.get<float_tt>("beam.sourceDiameterAngstrom");
-	BeamCurrentpA = t.get<float_tt>("beam.beamCurrentpA");
-	PlotVrr = t.get<bool>("model.plotVr_r");
-	periodicXY = t.get<bool>("model.periodicXY");
-	periodicZ = t.get<bool>("model.periodicZ");
-	StructureFactorType = static_cast<QSTEM::StructureFactorType>(t.get<int>("model.structureFactors"));
-	CUDAOnTheFly = t.get<bool>("model.CUDAOnTheFly");
-	PotentialType = t.get<std::string>("model.type");
-	ratom = t.get<float_tt>("model.atomRadiusAngstrom");
-	DoZInterpolation = t.get<bool>("model.DoZInterpolation");
-	UseQPotentialOffsets = t.get<bool>("model.UseQPotentialOffsets");
-	ImagPot = t.get<float>("wave.imaginary potential factor");
-	xOffset = t.get<float_tt>("structure.xOffset");
-	yOffset = t.get<float_tt>("structure.yOffset");
-	zOffset = t.get<float_tt>("structure.zOffset");
-
-	EnergykeV = t.get<float_tt>("beam.energy_keV");
-
-    const float E0 = EnergykeV*1e3;
-    const float m0 = 9.1093822f;
-    const float c  = 2.9979246f;
-    const float e  = 1.6021766f;
-    const float h  = 6.6260696f;
-    const float pi = 3.1415927f;
-
-    _gamma = 1.f + E0 * e / m0 / c / c * 1e-4f;
-    wavelength = h / sqrt ( 2.f * m0 * e ) * 1e-9f / sqrt ( E0 * ( 1.f + E0 * e / 2.f / m0 / c / c * 1e-4f ) ); // electron wavelength (m), see De Graef p. 92
-    sigma =  2.f * pi * _gamma * wavelength * m0 * e / h / h * 1e18f; // interaction constant (1/(Vm))
-
-    printf("E0=%g	gamma=%g	lambda=%g	sigma=%g",E0,_gamma,wavelength,sigma);
+StructureConfig* StructureConfig_clone(const StructureConfig* cloneMe){
+	StructureConfig* p = (StructureConfig*)malloc(sizeof(StructureConfig));
+	memcpy((void*)p,(const void*) cloneMe,sizeof(StructureConfig));
+	return p;
 }
 
-void OutputConfig::Read(ptree& t) {
-	LogLevel = t.get<int>("output.loglevel");
-	SaveWaveIterations = t.get<int>("output.SaveWaveAfterNSlices");
-	PendelloesungPlot = t.get<bool>("output.pendelloesungPlot");
-	SavePotential = t.get<bool>("output.savePotential");
-	SaveWaveAfterTransmit = t.get<bool>("output.SaveWaveAfterTransmit");
-	SaveWaveAfterTransform = t.get<bool>("output.SaveWaveAfterTransform");
-	SaveWaveAfterSlice = t.get<bool>("output.SaveWaveAfterSlice");
-	SaveWaveAfterPropagation = t.get<bool>("output.SaveWaveAfterPropagation");
-	saveProbe = t.get<bool>("output.saveProbe");
-	SaveAtomicPotential = t.get<bool>("output.SaveAtomicPotential");
-	SaveProjectedPotential = t.get<bool>("output.saveProjectedPotential");
-	SaveAtomDeltas = t.get<bool>("output.SaveAtomDeltas");
-	SaveAtomConv = t.get<bool>("output.SaveAtomConv");
-	readPotential = t.get<bool>("output.readPotential");
-	string p = t.get<string>("output.savePath");
-	savePath = boost::filesystem::path(p);
-	string p1 = t.get<string>("output.logFileName");
-	LogFileName = boost::filesystem::path(p1);
-	WriteLogFile = t.get<bool>("output.writeLogFile");
-	ComputeFromProjectedPotential = t.get<bool>("output.ComputeFromProjectedPotential");
+StructureConfig* StructureConfig_new(){
+	StructureConfig* p =  (StructureConfig*)malloc(sizeof(StructureConfig));
+	memset((void*)p,0,sizeof(StructureConfig));
+	return p;
 }
-void WaveConfig::Read(ptree& t) {
-	type = t.get<int>("wave.type");
-	Cs = t.get<float_tt>("wave.Cs");
-	C5 = t.get<float_tt>("wave.C5");
-	Cc = t.get<float_tt>("wave.Cc");
-	dV_V = t.get<float_tt>("wave.dV/V");
-	alpha = t.get<float_tt>("wave.alpha");
-	Defocus = t.get<float_tt>("wave.defocus");
-	Astigmatism = t.get<float_tt>("wave.astigmatism");
-	AstigmatismAngle = t.get<float_tt>("wave.astigmatismAngle");
-	Smooth = t.get<bool>("wave.smooth");
-	Gaussian = t.get<bool>("wave.gaussian");
-	a_33 = t.get<float_tt>("wave.a_33");
-	a_31 = t.get<float_tt>("wave.a_31");
-	a_44 = t.get<float_tt>("wave.a_44");
-	a_42 = t.get<float_tt>("wave.a_42");
-	a_55 = t.get<float_tt>("wave.a_55");
-	a_53 = t.get<float_tt>("wave.a_53");
-	a_51 = t.get<float_tt>("wave.a_51");
-	a_66 = t.get<float_tt>("wave.a_66");
-	a_64 = t.get<float_tt>("wave.a_64");
-	a_62 = t.get<float_tt>("wave.a_62");
-	phi_33 = t.get<float_tt>("wave.phi_33");
-	phi_31 = t.get<float_tt>("wave.phi_31");
-	phi_44 = t.get<float_tt>("wave.phi_44");
-	phi_42 = t.get<float_tt>("wave.phi_42");
-	phi_55 = t.get<float_tt>("wave.phi_55");
-	phi_53 = t.get<float_tt>("wave.phi_53");
-	phi_51 = t.get<float_tt>("wave.phi_51");
-	phi_66 = t.get<float_tt>("wave.phi_66");
-	phi_64 = t.get<float_tt>("wave.phi_64");
-	phi_62 = t.get<float_tt>("wave.phi_62");
-	gaussScale = t.get<float_tt>("wave.gaussScale");
-	dI_I = t.get<float_tt>("wave.dI/I");
-	dE_E = t.get<float_tt>("wave.dE/E");
-	AISaperture = t.get<float_tt>("wave.AISaperture");
-	tiltX = t.get<float_tt>("wave.tiltX");
-	tiltY = t.get<float_tt>("wave.tiltY");
-	nx = t.get<int>("wave.nx");
-	ny = t.get<int>("wave.ny");
-	pixelDose = t.get<float_tt>("wave.pixel dose");
-
+ModelConfig* ModelConfig_new(){
+	ModelConfig* p =  (ModelConfig*)malloc(sizeof(ModelConfig));
+	memset((void*)p,0,sizeof(ModelConfig));
+	return p;
+}
+WaveConfig* WaveConfig_new(){
+	WaveConfig* p =  (WaveConfig*)malloc(sizeof(WaveConfig));
+	memset((void*)p,0,sizeof(WaveConfig));
+	return p;
+}
+OutputConfig* OutputConfig_new(){
+	OutputConfig* p =  (OutputConfig*)malloc(sizeof(OutputConfig));
+	memset((void*)p,0,sizeof(OutputConfig));
+	return p;
+}
+DetectorConfig* DetectorConfig_new(){
+	DetectorConfig* p =  (DetectorConfig*)malloc(sizeof(DetectorConfig));
+	memset((void*)p,0,sizeof(DetectorConfig));
+	return p;
+}
+ScanConfig* ScanConfig_new(){
+	ScanConfig* p =  (ScanConfig*)malloc(sizeof(ScanConfig));
+	memset((void*)p,0,sizeof(ScanConfig));
+	return p;
+}
+c_Config* c_Config_new(){
+	c_Config* p =  (c_Config*)malloc(sizeof(c_Config));
+	memset((void*)p,0,sizeof(c_Config));
+	return p;
 }
 
-void ScanConfig::Read(ptree& t) {
-
-	xPos = t.get<int>("scan.x Start Position");
-	yPos = t.get<int>("scan.y Start Position");
-	xStep = t.get<int>("scan.xStep");
-	yStep = t.get<int>("scan.yStep");
-	scanType = t.get<int>("scan.scanType");
-}
-void DetectorConfig::Read(ptree& t) {
-	type = t.get<int>("detector.type");
-	mtfA = t.get<float_tt>("detector.mtfA");
-	mtfB = t.get<float_tt>("detector.mtfB");
-	mtfC = t.get<float_tt>("detector.mtfC");
-	mtfD = t.get<float_tt>("detector.mtfD");
-	DwellTimeMsec = t.get<float_tt>("beam.dwellTimeMsec");
-	nx = t.get<int>("wave.nx");
-	ny = t.get<int>("wave.ny");
-}
-Config::Config(ptree& t, boost::filesystem::path configPath) {
-	ExperimentType = static_cast<QSTEM::ExperimentType>(t.get<int>("mode"));
-	nThreads = t.get<int>("nthreads");
-
-	Structure = boost::shared_ptr<StructureConfig>(new StructureConfig());
-	Model = boost::shared_ptr<ModelConfig>(new ModelConfig());
-	Output = boost::shared_ptr<OutputConfig>(new OutputConfig());
-	Wave = boost::shared_ptr<WaveConfig>(new WaveConfig());
-	Scan = boost::shared_ptr<ScanConfig>(new ScanConfig());
-	Detector = boost::shared_ptr<DetectorConfig>(new DetectorConfig());
-
-	Output->configPath = configPath;
-	Structure->Read(t);
-	Model->Read(t);
-	Output->Read(t);
-	Wave->Read(t);
-	Scan->Read(t);
-	Detector->Read(t);
-}
-
-} // end namespace QSTEM

@@ -28,7 +28,7 @@
 #include "projectedPotential.hpp"
 #include "arrayfire.h"
 #include "stemtypes_fftw3.hpp"
-#include "config_IO/configs.hpp"
+#include "config_IO/ConfigReader.hpp"
 #include "af/cuda.h"
 
 namespace QSTEM {

@@ -29,7 +29,6 @@ namespace QSTEM
 
 CoherentSinglePositionExperiment::CoherentSinglePositionExperiment(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p, const DetPtr& d, const PersistenceManagerPtr& pers) : BaseExperiment(c,s,w,p,d,pers)
 {
-	m_mode=ExperimentType::CBED;
 	_lbeams = false;
 }
 
@@ -73,7 +72,7 @@ void CoherentSinglePositionExperiment::Run()
 	for (_runCount = 0;_runCount < _c->Model->TDSRuns;_runCount++) {
 		auto box = _structureBuilder->DisplaceAtoms();
 		_pot->MakeSlices(box);
-		if (_c->Output->saveProbe) _persist->SaveProbe(_wave->GetProbe());
+		if (_c->Output->SaveProbe) _persist->SaveProbe(_wave->GetProbe());
 		RunMultislice(_pot->GetPotential());
 
 		if (_lbeams) {

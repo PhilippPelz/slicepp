@@ -30,7 +30,6 @@ QSTEM - image simulation for TEM/STEM/CBED
 #endif
 
 #include "Bootstrapper.hpp"
-
 #include <string.h>
 #include <omp.h>
 #include <time.h>

@@ -20,7 +20,7 @@ PersistenceManager::PersistenceManager() :
 PersistenceManager::PersistenceManager(const ConfigPtr c) :
 		PersistenceManager() {
 	_c = c;
-	_file = HDFFile(_c->Output->savePath);
+	_file = HDFFile(_c->Output->SavePath);
 	_info = _file.CreateGroup("config");
 }
 
@@ -158,7 +158,7 @@ void PersistenceManager::InitStorage() {
 		_waveSlicesAfterFT.resize(e3);
 	if (_c->Output->SaveWaveAfterTransmit)
 		_waveSlicesAfterTransmit.resize(e3);
-	if (_c->Output->saveProbe)
+	if (_c->Output->SaveProbe)
 		_probe.resize(e2);
 	if (_c->Output->SaveAtomDeltas)
 		for (auto& kv : _atomDeltas)
@@ -183,7 +183,7 @@ void PersistenceManager::ResizeStorage(int xdim, int ydim) {
 		_waveSlicesAfterFT.resize(e3);
 	if (_c->Output->SaveWaveAfterTransmit)
 		_waveSlicesAfterTransmit.resize(e3);
-	if (_c->Output->saveProbe)
+	if (_c->Output->SaveProbe)
 		_probe.resize(e2);
 	if (_c->Output->SaveAtomDeltas)
 		for (auto& kv : _atomDeltas)

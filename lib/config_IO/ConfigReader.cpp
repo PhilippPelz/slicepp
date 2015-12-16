@@ -9,27 +9,51 @@
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
+#include <boost/log/trivial.hpp>
+
 
 namespace QSTEM {
+
+using boost::property_tree::ptree;
+
+
+Config::Config() {
+	Structure = boost::shared_ptr<StructureConfig>(StructureConfig_new());
+	Model = boost::shared_ptr<ModelConfig>(ModelConfig_new());
+	Output = boost::shared_ptr<OutputConfig>(OutputConfig_new());
+	Wave = boost::shared_ptr<WaveConfig>(WaveConfig_new());
+	Scan = boost::shared_ptr<ScanConfig>(ScanConfig_new());
+	Detector = boost::shared_ptr<DetectorConfig>(DetectorConfig_new());
+}
+
+Config::Config(c_Config& c) {
+	Structure = boost::shared_ptr<StructureConfig>(c.Structure);
+	Model = boost::shared_ptr<ModelConfig>(c.Model);
+	Output = boost::shared_ptr<OutputConfig>(c.Output);
+	Wave = boost::shared_ptr<WaveConfig>(c.Wave);
+	Scan = boost::shared_ptr<ScanConfig>(c.Scan);
+	Detector = boost::shared_ptr<DetectorConfig>(c.Detector);
+
+	SavePath = boost::filesystem::path(c.Output->SavePath);
+	StructureFilename = boost::filesystem::path(c.Structure->structureFilename);
+	ConfigPath = boost::filesystem::path(c.Output->ConfigPath);
+}
 
 ConfigReader::ConfigReader() {
 	// TODO Auto-generated constructor stub
 
 }
 
-ConfigReader::~ConfigReader() {
-	// TODO Auto-generated destructor stub
-}
 
 ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
 	ConfigPtr c = ConfigPtr(new Config());
 
 	ptree t;
-	bpt::json_parser::read_json(configFile.string().c_str(),pt);
+	boost::property_tree::json_parser::read_json(configFile.string().c_str(),t);
 
-	c->Output->configPath = boost::filesystem::path(_configFile).parent_path();
-	ExperimentType = static_cast<QSTEM::ExperimentType>(t.get<int>("mode"));
-	nThreads = t.get<int>("nthreads");
+	c->Output->ConfigPath = configFile.parent_path().string().c_str();
+	c->ExperimentType = t.get<int>("mode");
+	c->nThreads = t.get<int>("nthreads");
 
 	c->Detector->type = t.get<int>("detector.type");
 	c->Detector->mtfA = t.get<float_tt>("detector.mtfA");
@@ -95,21 +119,23 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
 	c->Output->SaveWaveAfterTransform = t.get<bool>("output.SaveWaveAfterTransform");
 	c->Output->SaveWaveAfterSlice = t.get<bool>("output.SaveWaveAfterSlice");
 	c->Output->SaveWaveAfterPropagation = t.get<bool>("output.SaveWaveAfterPropagation");
-	c->Output->saveProbe = t.get<bool>("output.saveProbe");
+	c->Output->SaveProbe = t.get<bool>("output.saveProbe");
 	c->Output->SaveAtomicPotential = t.get<bool>("output.SaveAtomicPotential");
 	c->Output->SaveProjectedPotential = t.get<bool>("output.saveProjectedPotential");
 	c->Output->SaveAtomDeltas = t.get<bool>("output.SaveAtomDeltas");
 	c->Output->SaveAtomConv = t.get<bool>("output.SaveAtomConv");
 	c->Output->readPotential = t.get<bool>("output.readPotential");
-	string p = t.get<string>("output.savePath");
-	c->Output->savePath = boost::filesystem::path(p);
-	string p1 = t.get<string>("output.logFileName");
-	c->Output->LogFileName = boost::filesystem::path(p1);
+//	string p = t.get<string>("output.savePath").c_str();
+//	c->Output->savePath = boost::filesystem::path(p);
+	c->Output->SavePath = t.get<string>("output.savePath").c_str();
+//	string p1 = t.get<string>("output.logFileName");
+//	c->Output->LogFileName = boost::filesystem::path(p1);
+	c->Output->LogFileName = t.get<string>("output.logFileName").c_str();;
 	c->Output->WriteLogFile = t.get<bool>("output.writeLogFile");
 	c->Output->ComputeFromProjectedPotential = t.get<bool>("output.ComputeFromProjectedPotential");
 
 	c->Model->UseTDS = t.get<bool>("model.tds");
-	c->Model->displacementType = static_cast<QSTEM::DisplacementType>(t.get<int>("model.displacementType"));
+	c->Model->displacementType = t.get<int>("model.displacementType");
 	c->Model->TiltBack = t.get<bool>("model.tiltBack");
 	c->Model->CenterSlices = t.get<bool>("model.centerSlices");
 	c->Model->CenterSample = t.get<bool>("model.centerSample");
@@ -117,8 +143,8 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
 	c->Model->nx = t.get<int>("model.nx");
 	c->Model->ny = t.get<int>("model.ny");
 	c->Model->nSlices = t.get<int>("model.slices");
-	c->Model->SliceThicknessCalculation = static_cast<QSTEM::SliceThicknessCalculation>(t.get<int>("model.sliceThicknessCalculation"));
-	c->Model->ResolutionCalculation = static_cast<QSTEM::ResolutionCalculation>(t.get<int>("model.resolutionCalculation"));
+	c->Model->SliceThicknessCalculation = t.get<int>("model.sliceThicknessCalculation");
+	c->Model->ResolutionCalculation = t.get<int>("model.resolutionCalculation");
 	c->Model->dz = t.get<float_tt>("model.sliceThicknessAngstrom");
 	c->Model->dx = t.get<float_tt>("model.resolutionXAngstrom");
 	c->Model->dy = t.get<float_tt>("model.resolutionYAngstrom");
@@ -129,9 +155,9 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
 	c->Model->PlotVrr = t.get<bool>("model.plotVr_r");
 	c->Model->periodicXY = t.get<bool>("model.periodicXY");
 	c->Model->periodicZ = t.get<bool>("model.periodicZ");
-	c->Model->StructureFactorType = static_cast<QSTEM::StructureFactorType>(t.get<int>("model.structureFactors"));
+	c->Model->StructureFactorType = t.get<int>("model.structureFactors");
 	c->Model->CUDAOnTheFly = t.get<bool>("model.CUDAOnTheFly");
-	c->Model->PotentialType = t.get<std::string>("model.type");
+	c->Model->PotentialType = t.get<std::string>("model.type").c_str();
 	c->Model->ratom = t.get<float_tt>("model.atomRadiusAngstrom");
 	c->Model->DoZInterpolation = t.get<bool>("model.DoZInterpolation");
 	c->Model->UseQPotentialOffsets = t.get<bool>("model.UseQPotentialOffsets");
@@ -142,7 +168,7 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
 
 	c->Model->EnergykeV = t.get<float_tt>("beam.energy_keV");
 
-    const float E0 = EnergykeV*1e3;
+    const float E0 = c->Model->EnergykeV*1e3;
     const float m0 = 9.1093822f;
     const float c0  = 2.9979246f;
     const float e  = 1.6021766f;
@@ -151,9 +177,9 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
 
     c->Model->_gamma = 1.f + E0 * e / m0 / c0 / c0 * 1e-4f;
     c->Model->wavelength = h / sqrt ( 2.f * m0 * e ) * 1e-9f / sqrt ( E0 * ( 1.f + E0 * e / 2.f / m0 / c0 / c0 * 1e-4f ) ); // electron wavelength (m), see De Graef p. 92
-    c->Model->sigma =  2.f * pi * _gamma * wavelength * m0 * e / h / h * 1e18f; // interaction constant (1/(Vm))
+    c->Model->sigma =  2.f * pi * c->Model->_gamma * c->Model->wavelength * m0 * e / h / h * 1e18f; // interaction constant (1/(Vm))
 
-    c->Structure->structureFilename = boost::filesystem::path(t.get<string>("structure.structure_filename"));
+    c->Structure->structureFilename = t.get<string>("structure.structure_filename").c_str();
     c->Structure->nCellX = t.get<int>("structure.ncellx");
     c->Structure->nCellY = t.get<int>("structure.ncelly");
     c->Structure->nCellZ = t.get<int>("structure.ncellz");
@@ -165,19 +191,32 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
     c->Structure->boxY = t.get<float_tt>("structure.boxY");
     c->Structure->boxZ = t.get<float_tt>("structure.boxZ");
     c->Structure->isBoxed = t.get<bool>("structure.isBoxed");
-    c->Model->rotateToZoneAxis = t.get<bool>("structure.rotateToZoneAxis");
-    c->Model->zoneAxis.resize(3);
+    c->Structure->rotateToZoneAxis = t.get<bool>("structure.rotateToZoneAxis");
 	string zoneAxisStr = t.get<string>("structure.zoneAxis");
 	std::vector<std::string> strs;
 	boost::split(strs, zoneAxisStr, boost::is_any_of(","));
 	if (strs.size() < 3) {
-		BOOST_LOG_TRIVIAL(error)<< format("Zone Axis vector must have 3 dimensions");
+//		BOOST_LOG_TRIVIAL(error)<< format("Zone Axis vector must have 3 dimensions");
 	} else {
 		std::string::size_type sz;
 		for(int i=0;i<3;i++) {
-			c->Model->zoneAxis[i] = std::stoi(strs[i],&sz);
+			c->Structure->zoneAxis[i] = std::stoi(strs[i],&sz);
 		}
 	}
+	auto sp = boost::filesystem::path(c->Output->SavePath);
+	auto lf = boost::filesystem::path(c->Output->LogFileName);
+	auto sf = boost::filesystem::path(c->Structure->structureFilename);
+	if(sp.has_relative_path()){
+		c->Output->SavePath = (configFile.parent_path() / c->Output->SavePath).string().c_str();
+	}
+	if(lf.has_relative_path()){
+		c->Output->LogFileName = (configFile.parent_path() / c->Output->LogFileName).string().c_str();
+	}
+	if(sf.has_relative_path()){
+		c->Structure->structureFilename = (configFile.parent_path() / c->Structure->structureFilename).string().c_str();
+	}
+
+	return c;
 }
 
 } /* namespace QSTEM */

@@ -24,35 +24,48 @@ namespace QSTEM {
 //the ADF-STEM detector (for STEM)
 
 Bootstrapper::Bootstrapper(int argc, char *argv[]) {
-	if (argc < 2)   _configFile = "config.json";
-	else    _configFile=argv[1];
+	string config;
+	if (argc < 2)   config = "config.json";
+	else    config=argv[1];
 
-	_configPath = boost::filesystem::path(_configFile).parent_path();
+	_configFile = boost::filesystem::path(config);
 
-	ptree pt;
-	bpt::json_parser::read_json(_configFile.c_str(),pt);
+	logging::add_console_log(std::cout, keywords::format = ">> %Message%");
 
-	_c = ConfigPtr(new Config(pt,_configPath));
-	
-	if(_c->Output->savePath.has_relative_path()){
-		_c->Output->savePath = _configPath / _c->Output->savePath;
-	}
-	if(_c->Output->LogFileName.has_relative_path()){
-		_c->Output->LogFileName = _configPath / _c->Output->LogFileName;
-	}
-	if(_c->Structure->structureFilename.has_relative_path()){
-		_c->Structure->structureFilename = _configPath / _c->Structure->structureFilename;
-	}
+}
+
+Bootstrapper::~Bootstrapper() {
+	// TODO Auto-generated destructor stub
+}
+
+void Bootstrapper::Initialize(){
+
+	auto cr = ConfigReader();
+	auto c = cr.Read(_configFile);
+
+	fftw_init_threads();
+	fftw_plan_with_nthreads(c->nThreads);
+	omp_set_num_threads(c->nThreads);
+
+	af::info();
+
+	RegisterWaveTypes();
+	RegisterPotentialTypes();
+	RegisterStructureTypes();
+	RegisterExperimentTypes();
+	RegisterStructureReaders();
+	RegisterStructureBuilders();
+	RegisterDetectorTypes();
 
 	logging::core::get()->set_filter
 	(
-	    logging::trivial::severity >= static_cast<logging::trivial::severity_level>(_c->Output->LogLevel)
+	    logging::trivial::severity >= static_cast<logging::trivial::severity_level>(c->Output->LogLevel)
 	);
-	logging::add_console_log(std::cout, keywords::format = ">> %Message%");
-	if(_c->Output->WriteLogFile)
+
+	if(c->Output->WriteLogFile)
 		logging::add_file_log
 			(
-				keywords::file_name = _c->Output->LogFileName.string(),
+				keywords::file_name = std::string(c->Output->LogFileName),
 				// This makes the sink to write log records that look like this:
 				// 1: <normal> A normal severity message
 				// 2: <error> An error severity message
@@ -65,40 +78,21 @@ Bootstrapper::Bootstrapper(int argc, char *argv[]) {
 				),
 				keywords::auto_flush = true
 			);
-}
 
-Bootstrapper::~Bootstrapper() {
-	// TODO Auto-generated destructor stub
-}
+	boost::filesystem::path p(c->Structure->structureFilename);
 
-void Bootstrapper::Initialize(){
-	fftw_init_threads();
-	fftw_plan_with_nthreads(_c->nThreads);
-	omp_set_num_threads(_c->nThreads);
-	af::setDevice(0);
-	af::info();
-	RegisterWaveTypes();
-	RegisterPotentialTypes();
-	RegisterStructureTypes();
-	RegisterExperimentTypes();
-	RegisterStructureReaders();
-	RegisterStructureBuilders();
-	RegisterDetectorTypes();
-
-	boost::filesystem::path p(_c->Structure->structureFilename);
-	std::string str = _c->Model->PotentialType;
+	std::string str = c->Model->PotentialType;
  	std::transform(str.begin(), str.end(),str.begin(), ::toupper);
 
 	auto sreader = StructureReaderPtr(_structureReaderFactory[".cif"](p));
-	auto structureBuilder = StructureBuilderPtr(_structureBuilderFactory[p.extension().string()](sreader,_c->Structure,_c->Model,_c->Output));
-	auto persist = PersistenceManagerPtr(new PersistenceManager(_c));
-	auto w = WaveConfPtr(_c->Wave);
-	auto m = ModelConfPtr(_c->Model);
-	auto wave = WavePtr(_waveFactory[_c->Wave->type](w,m,persist));
-	auto detector = DetPtr(_detectorFactory[_c->Detector->type](_c->Detector,persist));
-	auto potential = PotPtr(_potentialFactory[str](_c->Model,_c->Output,persist));
-	_e = ExperimentPtr( _experimentFactory[_c->ExperimentType](_c,structureBuilder,wave,potential,detector, persist));
-
+	auto structureBuilder = StructureBuilderPtr(_structureBuilderFactory[p.extension().string()](sreader,c->Structure,c->Model,c->Output));
+	auto persist = PersistenceManagerPtr(new PersistenceManager(c));
+	auto w = WaveConfPtr(c->Wave);
+	auto m = ModelConfPtr(c->Model);
+	auto wave = WavePtr(_waveFactory[c->Wave->type](w,m,persist));
+	auto detector = DetPtr(_detectorFactory[c->Detector->type](c->Detector,persist));
+	auto potential = PotPtr(_potentialFactory[str](c->Model,c->Output,persist));
+	_e = ExperimentPtr( _experimentFactory[c->ExperimentType](c,structureBuilder,wave,potential,detector, persist));
 }
 
 ExperimentPtr Bootstrapper::GetExperiment(){
@@ -117,9 +111,9 @@ void Bootstrapper::RegisterWaveTypes(){
 	_waveFactory[2] = boost::factory<CConvergentWave*>();
 }
 void Bootstrapper::RegisterExperimentTypes(){
-	_experimentFactory[ExperimentType::CBED] = boost::factory<CoherentCBED*>();
-	_experimentFactory[ExperimentType::TEM] = boost::factory<CoherentTEM*>();
-	_experimentFactory[ExperimentType::PTYC] = boost::factory<Ptychograph*>();
+	_experimentFactory[CBED] = boost::factory<CoherentCBED*>();
+	_experimentFactory[TEM] = boost::factory<CoherentTEM*>();
+	_experimentFactory[PTYC] = boost::factory<Ptychograph*>();
 }
 void Bootstrapper::RegisterPotentialTypes(){
 	_potentialFactory["3DFFT"]= boost::factory<C3DFFTPotential*>();

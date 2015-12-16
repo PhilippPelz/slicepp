@@ -8,7 +8,7 @@
 #ifndef STEM3_BOOTSTRAPPER_H_
 #define STEM3_BOOTSTRAPPER_H_
 
-#include "config_IO/configs.hpp"
+#include "config_IO/ConfigReader.hpp"
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
@@ -65,7 +65,6 @@ public:
 	void Initialize();
 	ExperimentPtr GetExperiment();
 protected:
-	ConfigPtr _c;
 	ExperimentPtr _e;
 	void RegisterWaveTypes();
 	void RegisterExperimentTypes();
@@ -80,8 +79,7 @@ protected:
 	PotentialFactory _potentialFactory;
 	StructureReaderFactory _structureReaderFactory;
 	StructureBuilderFactory _structureBuilderFactory;
-	std::string _configFile;
-	boost::filesystem::path _configPath;
+	boost::filesystem::path _configFile;
 };
 
 } /* namespace QSTEM */

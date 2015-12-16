@@ -11,7 +11,7 @@
 #include "HDFFile.hpp"
 #include <boost/filesystem.hpp>
 #include <boost/shared_ptr.hpp>
-#include "config_IO/configs.hpp"
+#include "config_IO/ConfigReader.hpp"
 #include "cuda_assert.hpp"
 #include "cublas_assert.hpp"
 #include "cufft_assert.hpp"

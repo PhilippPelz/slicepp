@@ -367,7 +367,7 @@ superCellBoxPtr CrystalBuilder::Build() {
 			BOOST_LOG_TRIVIAL(trace)<< format("atom %d: (%3.3f, %3.3f, %3.3f)") % j % _atoms[j].r[0] % _atoms[j].r[1] % _atoms[j].r[2];
 
 			//apply offsets
-			if (_mc->HasOffset()) {
+			if (_mc->xOffset != 0 || _mc->yOffset != 0 || _mc->zOffset != 0) {
 				_atoms[j].r[0] += _mc->xOffset;
 				_atoms[j].r[1] += _mc->yOffset;
 				_atoms[j].r[2] += _mc->zOffset;
@@ -468,7 +468,7 @@ void CrystalBuilder::DisplayParams() {
 	"***************************** Structure Parameters ***********************************************";
 	BOOST_LOG_TRIVIAL(info) <<
 	"**************************************************************************************************";
-	BOOST_LOG_TRIVIAL(info)<<format("* Input file:           %s") % _sc->structureFilename.string().c_str();
+	BOOST_LOG_TRIVIAL(info)<<format("* Input file:           %s") % _sc->structureFilename;
 
 	if (_sc->isBoxed == false)
 	BOOST_LOG_TRIVIAL(info)<<format(" Unit cell:            ax=%g by=%g cz=%g")% m_ax% m_by% m_cz;

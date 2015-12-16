@@ -62,7 +62,7 @@ superCellBoxPtr SuperstructureBuilder::Build(){
 
 	BOOST_LOG_TRIVIAL(info) << format("Starting to build superstructure...");
 
-	if (!readParams(_sc->structureFilename.string().c_str()))
+	if (!readParams(_sc->structureFilename))
 		exit(0);
 	if (_nGrains > 0) {
 		// loop, until we find crystalline grains:
@@ -343,13 +343,14 @@ int SuperstructureBuilder::readParams(const char *datFileName){
 			boost::filesystem::path p(unitCellFile);
 			BOOST_LOG_TRIVIAL(info) << "before replace " << p;
 			if(p.has_relative_path()){
-				BOOST_LOG_TRIVIAL(info) << "in replace " << _oc->configPath << p;
-				p = _oc->configPath / p;
+				BOOST_LOG_TRIVIAL(info) << "in replace " << _oc->ConfigPath << p;
+				p = _oc->ConfigPath / p;
 			}
-			auto sc = _sc->Clone();
-			sc->structureFilename = p;
-			CrystalBuilder cryst(_r,sc,_mc,_oc);
+			auto sc = StructureConfig_clone(_sc.get());
+			sc->structureFilename = p.string().c_str();
+			CrystalBuilder cryst(_r,cStructureConfPtr(sc),_mc,_oc);
 			cryst.ReadFromFile();
+			free(sc);
 			auto atoms = cryst.GetUnitCellAtoms();
 			auto unique = cryst.GetUniqueAtoms();
 			for(int Znum : unique){
@@ -397,14 +398,14 @@ int SuperstructureBuilder::readParams(const char *datFileName){
 			boost::filesystem::path p(unitCellFile);
 			BOOST_LOG_TRIVIAL(info) << "before replace " << p;
 			if(p.has_relative_path()){
-				BOOST_LOG_TRIVIAL(info) << "in replace " << _oc->configPath << p;
-				p = _oc->configPath / p;
+				BOOST_LOG_TRIVIAL(info) << "in replace " << _oc->ConfigPath << p;
+				p = _oc->ConfigPath / p;
 			}
-			auto sc = _sc->Clone();
-			sc->structureFilename = p;
-			CrystalBuilder cryst(_r,sc,_mc,_oc);
-			cryst.SetFillUnitCell(true);
+			auto sc = StructureConfig_clone(_sc.get());
+			sc->structureFilename = p.string().c_str();
+			CrystalBuilder cryst(_r,cStructureConfPtr(sc),_mc,_oc);
 			cryst.ReadFromFile();
+			free(sc);
 			auto atoms = cryst.GetUnitCellAtoms();
 			auto unique = cryst.GetUniqueAtoms();
 			for(int Znum : unique){

@@ -21,7 +21,7 @@
 #define CRYSTAL_H
 
 #include "stemtypes_fftw3.hpp"
-#include "config_IO/configs.hpp"
+#include "config_IO/ConfigReader.hpp"
 #include "structure_IO/IStructureBuilder.hpp"
 
 #include <string>

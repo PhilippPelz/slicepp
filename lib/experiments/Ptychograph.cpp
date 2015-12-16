@@ -36,7 +36,6 @@ namespace QSTEM
 
 Ptychograph::Ptychograph(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p, const DetPtr& d, const PersistenceManagerPtr& pers):BaseExperiment(c,s,w,p,d,pers)
 {
-	m_mode=ExperimentType::PTYC;
 	_scan = ScanPtr(new Scan(c));
 	_lbeams = false;
 }
@@ -77,7 +76,7 @@ void Ptychograph::Run()
 		//p ->MakeSlices(box);
 
 		_pot->MakeSlices(box);
-		if (_c->Output->saveProbe) _persist->SaveProbe(_wave->GetProbe());
+		if (_c->Output->SaveProbe) _persist->SaveProbe(_wave->GetProbe());
 		BOOST_LOG_TRIVIAL(info) << format("Calculating for %.1f position(s)") % scanPositions.size();
 		for(auto i = 0; i != scanPositions.size(); i++) {
 //			_wave->SetPositionOffset(scanPositions[i].first, scanPositions[i].second);

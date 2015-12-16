@@ -87,7 +87,7 @@ void CUDAFunctions::GetAtomicPotential(cufftComplex* V, int Z) {
 	const int bS = myBSize(slicePixels);
 	const int gS2D = myGSize(slicePixels);
     int af_id = af::getDevice();
-    BOOST_LOG_TRIVIAL(info)<< format("device id: %d") % af_id;
+//    BOOST_LOG_TRIVIAL(info)<< format("device id: %d") % af_id;
     cudaStream_t af_stream = afcu::getStream(af_id);
 	createAtomicPotential<<< gS2D, bS, 0,  af_stream>>> ( V, Z, _mc->nx, _mc->ny, _mc->dx, _mc->dy,_mc->sigma);
 }
@@ -162,8 +162,8 @@ void CUDAFunctions::initArrays(){
 //	xyzPos *= 1;
 //	occupancy *= 1;
 //	znums *= 1;
-	BOOST_LOG_TRIVIAL(info)<< format("sizes: xyz %d occ %d znums %d atoms %d") % _info->xyzPos.size() %
-			_info->occupancy.size() % _info->znums.size() % _info->atoms.size();
+//	BOOST_LOG_TRIVIAL(info)<< format("sizes: xyz %d occ %d znums %d atoms %d") % _info->xyzPos.size() %
+//			_info->occupancy.size() % _info->znums.size() % _info->atoms.size();
 
 //	xyzPos_d = xyzPos.device<float_tt>();
 //	occupancy_d = occupancy.device<float_tt>();

@@ -56,8 +56,7 @@ void BaseExperiment::DisplayParams() {
 	BOOST_LOG_TRIVIAL(info)<< format("* Running program slice++ (version %s) in %d mode") % VERSION %
 	static_cast<int>(_c->ExperimentType);
 	BOOST_LOG_TRIVIAL(info)<< format("* Date: %s, Time: %s") % Date % Time;
-	BOOST_LOG_TRIVIAL(info)<< format("* Output file/folder:          %s") %
-	_c->Output->savePath.string().c_str();
+	BOOST_LOG_TRIVIAL(info)<< format("* Output file/folder:          %s") % _c->Output->SavePath;
 	(m_equalDivs ? "equal" : "non-equal");
 	BOOST_LOG_TRIVIAL(info)<< format("* TDS:                         %d runs") % _c->Model->TDSRuns;
 	BOOST_LOG_TRIVIAL(info)<<

@@ -17,51 +17,66 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef READ_QSC_H
-#define READ_QSC_H
+#ifndef configs_hpp
+#define configs_hpp
 
-#include "config_interface.hpp"
-#include <boost/filesystem.hpp>
+enum ExperimentType {
+	STEM = 3, CBED = 1, TEM = 4, NBED = 2, PTYC = 5
+};
+enum SliceThicknessCalculation {
+	Auto = 1, SliceThickness = 2, NumberOfSlices = 3
+};
+enum StructureFactorType {
+	WeickKohl = 1, Rez = 2
+};
+enum SaveLevel {
+	Everything = 1, Something = 2, Results = 3
+};
+enum ResolutionCalculation {
+	FILLRES = 1, FILLN = 2, BOXRES = 3, BOXN = 4
+};
+enum DisplacementType {
+	Einstein = 1, Phonon = 2, None = 3
+};
 
-namespace QSTEM {
-
-struct StructureConfig;
-typedef boost::shared_ptr<const StructureConfig> cStructureConfPtr;
-typedef boost::shared_ptr<StructureConfig> StructureConfPtr;
-
-typedef struct DLL_EXPORT StructureConfig{
-public:
-	boost::filesystem::path structureFilename;
-	std::vector<int> zoneAxis;
+typedef struct StructureConfig {
+	const char* structureFilename;
 	int nCellX;
 	int nCellY;
 	int nCellZ;
-	bool rotateToZoneAxis;
-	float_tt temperatureK;
-	float_tt crystalTiltX;
-	float_tt crystalTiltY;
-	float_tt crystalTiltZ;
-	float_tt boxX;
-	float_tt boxY;
-	float_tt boxZ;
+	float temperatureK;
+	float crystalTiltX;
+	float crystalTiltY;
+	float crystalTiltZ;
+	float boxX;
+	float boxY;
+	float boxZ;
 	bool isBoxed;
-
-	StructureConfPtr Clone() const;
+	int zoneAxis[3];
+	bool rotateToZoneAxis;
 } StructureConfig;
 
-typedef struct DLL_EXPORT ModelConfig{
-public:
+typedef struct ModelConfig {
+
 	bool UseTDS;
 	bool TiltBack;
 	bool CenterSlices;
 	bool CenterSample;
-	bool rotateToZoneAxis;
+
 	int TDSRuns, nx, ny, nSlices;
-	QSTEM::SliceThicknessCalculation SliceThicknessCalculation;
-	QSTEM::ResolutionCalculation ResolutionCalculation;
-	float_tt dz, dx, dy, beamTiltX, beamTiltY, SourceDiameterAngstrom, BeamCurrentpA, xOffset, yOffset, zOffset;
-	std::vector<int> zoneAxis;
-	DisplacementType displacementType;
+
+	float dz;
+	float dx;
+	float dy;
+	float beamTiltX;
+	float beamTiltY;
+	float SourceDiameterAngstrom;
+	float BeamCurrentpA;
+	float xOffset;
+	float yOffset;
+	float zOffset;
+
+
 	bool Use3D;
 	bool UseFFT;
 	bool CUDAOnTheFly;
@@ -70,57 +85,60 @@ public:
 	bool periodicZ;
 	bool DoZInterpolation;
 	bool UseQPotentialOffsets;
-	QSTEM::StructureFactorType StructureFactorType;
+
+	int StructureFactorType;
+	int SliceThicknessCalculation;
+	int ResolutionCalculation;
+	int displacementType;
+
 	//atom radius in angstrom
-	float_tt ratom;
-	std::string PotentialType;
-	float_tt EnergykeV, wavelength, sigma, _gamma;
-	float_tt ImagPot;
-
-
-	bool HasOffset() const {
-		return xOffset != 0 || yOffset != 0 || zOffset != 0;
-	}
+	float ratom;
+	const char* PotentialType;
+	float EnergykeV;
+	float wavelength;
+	float sigma;
+	float _gamma;
+	float ImagPot;
 } ModelConfig;
 
-typedef struct DLL_EXPORT WaveConfig{
-public:
-	float_tt Cs;
-	float_tt C5;
-	float_tt Cc;
-	float_tt dV_V;
-	float_tt alpha;
-	float_tt Defocus;
-	float_tt Astigmatism;
-	float_tt AstigmatismAngle;
-	float_tt a_33;
-	float_tt a_31;
-	float_tt a_44;
-	float_tt a_42;
-	float_tt a_55;
-	float_tt a_53;
-	float_tt a_51;
-	float_tt a_66;
-	float_tt a_64;
-	float_tt a_62;
-	float_tt phi_33;
-	float_tt phi_31;
-	float_tt phi_44;
-	float_tt phi_42;
-	float_tt phi_55;
-	float_tt phi_53;
-	float_tt phi_51;
-	float_tt phi_66;
-	float_tt phi_64;
-	float_tt phi_62;
-	float_tt gaussScale;
-	float_tt dI_I;
-	float_tt dE_E;
-	float_tt AISaperture;
-	float_tt tiltX;
-	float_tt tiltY;
-	float_tt posX;
-	float_tt posY, pixelDose;
+typedef struct WaveConfig {
+
+	float Cs;
+	float C5;
+	float Cc;
+	float dV_V;
+	float alpha;
+	float Defocus;
+	float Astigmatism;
+	float AstigmatismAngle;
+	float a_33;
+	float a_31;
+	float a_44;
+	float a_42;
+	float a_55;
+	float a_53;
+	float a_51;
+	float a_66;
+	float a_64;
+	float a_62;
+	float phi_33;
+	float phi_31;
+	float phi_44;
+	float phi_42;
+	float phi_55;
+	float phi_53;
+	float phi_51;
+	float phi_66;
+	float phi_64;
+	float phi_62;
+	float gaussScale;
+	float dI_I;
+	float dE_E;
+	float AISaperture;
+	float tiltX;
+	float tiltY;
+	float posX;
+	float posY, pixelDose;
 
 	bool Smooth;
 	bool Gaussian;
@@ -128,17 +146,16 @@ public:
 	int nx;
 	int ny;
 
-
 } WaveConfig;
 
-typedef struct DLL_EXPORT OutputConfig{
-public:
+typedef struct OutputConfig {
+
 	int LogLevel;
 	int SaveWaveIterations;
 	bool SavePotential;
 	bool SaveProjectedPotential;
 	bool WriteLogFile;
-	bool saveProbe;
+	bool SaveProbe;
 	bool SaveWaveAfterTransmit;
 	bool SaveWaveAfterTransform;
 	bool SaveWaveAfterPropagation;
@@ -146,73 +163,55 @@ public:
 	bool SaveAtomicPotential;
 	bool ComputeFromProjectedPotential, SaveAtomDeltas;
 	bool SaveAtomConv;
-	boost::filesystem::path savePath;
-	bool LogFileName;
-	boost::filesystem::path configPath;
+
+	const char* LogFileName;
+	const char* SavePath;
+	const char* ConfigPath;
 
 	// TODO: deprecated
 	bool PendelloesungPlot;
 	bool readPotential;
 
-
 } OutputConfig;
 
-typedef struct DLL_EXPORT DetectorConfig{
-public:
-	float_tt mtfA;
-	float_tt mtfB;
-	float_tt mtfC;
-	float_tt mtfD;
-	float_tt DwellTimeMsec;
+typedef struct DetectorConfig {
+	float mtfA;
+	float mtfB;
+	float mtfC;
+	float mtfD;
+	float DwellTimeMsec;
 	int type;
 	int nx;
 	int ny;
-
 } DetectorConfig;
 
-typedef struct DLL_EXPORT ScanConfig{
-public:
+typedef struct ScanConfig {
 	int xPos;
 	int yPos;
 	int xStep;
 	int yStep;
 	int scanType;
-
 } ScanConfig;
 
-typedef struct DLL_EXPORT Config {
-public:
-	Config();
-
+typedef struct c_Config {
 	int nThreads;
-	ExperimentType ExperimentType;
+	int ExperimentType;
 
-	boost::shared_ptr<StructureConfig> Structure;
-	boost::shared_ptr<ModelConfig> Model;
-	boost::shared_ptr<OutputConfig> Output;
-	boost::shared_ptr<WaveConfig> Wave;
-	boost::shared_ptr<ScanConfig> Scan;
-	boost::shared_ptr<DetectorConfig> Detector;
-} Config;
+	StructureConfig* Structure;
+	ModelConfig* Model;
+	OutputConfig* Output;
+	WaveConfig* Wave;
+	ScanConfig* Scan;
+	DetectorConfig* Detector;
+} c_Config;
 
-typedef boost::shared_ptr<const Config> cConfigPtr;
-typedef boost::shared_ptr<Config> ConfigPtr;
-
-typedef boost::shared_ptr<const ModelConfig> cModelConfPtr;
-typedef boost::shared_ptr<ModelConfig> ModelConfPtr;
-
-typedef boost::shared_ptr<const OutputConfig> cOutputConfPtr;
-typedef boost::shared_ptr<OutputConfig> OutputConfPtr;
-
-typedef boost::shared_ptr<const WaveConfig> cWaveConfPtr;
-typedef boost::shared_ptr<WaveConfig> WaveConfPtr;
-
-typedef boost::shared_ptr<const ScanConfig> cScanConfPtr;
-typedef boost::shared_ptr<ScanConfig> ScanConfPtr;
-
-typedef boost::shared_ptr<const DetectorConfig> cDetectorConfPtr;
-typedef boost::shared_ptr<DetectorConfig> DetectorConfPtr;
-
-} // end namespace QSTEM
+StructureConfig* StructureConfig_clone(const StructureConfig* cloneMe);
+StructureConfig* StructureConfig_new();
+ModelConfig* ModelConfig_new();
+WaveConfig* WaveConfig_new();
+OutputConfig* OutputConfig_new();
+DetectorConfig* DetectorConfig_new();
+ScanConfig* ScanConfig_new();
+c_Config* c_Config_new();
 
 #endif

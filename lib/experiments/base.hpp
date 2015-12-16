@@ -92,7 +92,6 @@ protected:
 	float_tt m_thickness;       // The total thickness of the sample at the current slice
 	float_tt m_dz;
 	RealVector m_chisq;
-	QSTEM::ExperimentType m_mode;      // String representing the multislice mode (e.g. TEM, STEM, etc.)
 	RealVector m_avgArray;   // The averaged diffraction pattern (m_avgCount says how many are averaged currently)
 	/* integer offset for positioning probe within potential array */
 
@@ -102,7 +101,7 @@ protected:
 typedef boost::function<
 		BaseExperiment*(const ConfigPtr& c, const StructureBuilderPtr& s, const WavePtr& w, const PotPtr& p, const DetPtr& d,
 				const PersistenceManagerPtr& pers)> experimentCreator;
-typedef std::map<ExperimentType, experimentCreator> ExperimentFactory;
+typedef std::map<int, experimentCreator> ExperimentFactory;
 
 }
 #endif

@@ -8,7 +8,7 @@
 #ifndef LIBS_STRUCTURE_IO_ISTRUCTUREBUILDER_HPP_
 #define LIBS_STRUCTURE_IO_ISTRUCTUREBUILDER_HPP_
 
-#include "config_IO/configs.hpp"
+#include "config_IO/ConfigReader.hpp"
 #include "structureInterface.hpp"
 
 #include<list>
