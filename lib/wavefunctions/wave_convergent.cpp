@@ -156,11 +156,11 @@ void CConvergentWave::ConstructWave(){
 	unsigned iy, ixmid, iymid;
 	float_tt rmin, rmax, aimin, aimax;
 	float_tt k2max, alpha;
-	float_tt ax = _wc->nx*_mc->dx;
-	float_tt by = _wc->ny*_mc->dy;
-	float_tt dx = ax-_wc->nx/2*_mc->dx;
-	float_tt dy = by-_wc->ny/2*_mc->dy;
-	float_tt avgRes = sqrt(0.5*(_mc->dx*_mc->dx+_mc->dy*_mc->dy));
+	float_tt ax = _wc->nx*_mc->d[0];
+	float_tt by = _wc->ny*_mc->d[1];
+	float_tt dx = ax-_wc->nx/2*_mc->d[0];
+	float_tt dy = by-_wc->ny/2*_mc->d[1];
+	float_tt avgRes = sqrt(0.5*(_mc->d[0]*_mc->d[0]+_mc->d[1]*_mc->d[1]));
 	float_tt edge = SMOOTH_EDGE*avgRes;
 
 	float_tt sum = 0.0;
@@ -278,8 +278,8 @@ void CConvergentWave::ConstructWave(){
 	/* Apply AIS aperture in Real Space */
 	// printf("center: %g,%g\n",dx,dy);
 	if (_CLA > 0) {
-		x = af::range(_wc->nx)*_mc->dx-dx;
-		y = af::range(_wc->ny)*_mc->dy-dy;
+		x = af::range(_wc->nx)*_mc->d[0]-dx;
+		y = af::range(_wc->ny)*_mc->d[1]-dy;
 		x = af::tile(x, 1, _wc->ny);
 		y = af::tile(y.T(), _wc->nx);
 		r = af::sqrt(x*x+y*y);

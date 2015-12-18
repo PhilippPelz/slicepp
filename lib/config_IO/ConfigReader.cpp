@@ -135,19 +135,21 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
 	c->Output->ComputeFromProjectedPotential = t.get<bool>("output.ComputeFromProjectedPotential");
 
 	c->Model->UseTDS = t.get<bool>("model.tds");
-	c->Model->displacementType = t.get<int>("model.displacementType");
+	c->Model->DisplaceType = (DisplacementType)t.get<int>("model.displacementType");
+	c->Model->SliceCalcType = (SliceThicknessCalculation)t.get<int>("model.sliceThicknessCalculation");
+	c->Model->ResCalcType = (ResolutionCalculation)t.get<int>("model.resolutionCalculation");
+	c->Model->StructFactorType = (StructureFactorType)t.get<int>("model.structureFactors");
+
 	c->Model->TiltBack = t.get<bool>("model.tiltBack");
-	c->Model->CenterSlices = t.get<bool>("model.centerSlices");
 	c->Model->CenterSample = t.get<bool>("model.centerSample");
 	c->Model->TDSRuns = t.get<int>("model.tdsRuns");
-	c->Model->nx = t.get<int>("model.nx");
-	c->Model->ny = t.get<int>("model.ny");
-	c->Model->nSlices = t.get<int>("model.slices");
-	c->Model->SliceThicknessCalculation = t.get<int>("model.sliceThicknessCalculation");
-	c->Model->ResolutionCalculation = t.get<int>("model.resolutionCalculation");
-	c->Model->dz = t.get<float_tt>("model.sliceThicknessAngstrom");
-	c->Model->dx = t.get<float_tt>("model.resolutionXAngstrom");
-	c->Model->dy = t.get<float_tt>("model.resolutionYAngstrom");
+	c->Model->n[0] = t.get<int>("model.nx");
+	c->Model->n[1] = t.get<int>("model.ny");
+	c->Model->n[2] = t.get<int>("model.slices");
+
+	c->Model->d[2] = t.get<float_tt>("model.sliceThicknessAngstrom");
+	c->Model->d[0] = t.get<float_tt>("model.resolutionXAngstrom");
+	c->Model->d[1] = t.get<float_tt>("model.resolutionYAngstrom");
 	c->Model->beamTiltX = t.get<float_tt>("model.beamTiltX");
 	c->Model->beamTiltY = t.get<float_tt>("model.beamTiltY");
 	c->Model->SourceDiameterAngstrom = t.get<float_tt>("beam.sourceDiameterAngstrom");
@@ -155,16 +157,15 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
 	c->Model->PlotVrr = t.get<bool>("model.plotVr_r");
 	c->Model->periodicXY = t.get<bool>("model.periodicXY");
 	c->Model->periodicZ = t.get<bool>("model.periodicZ");
-	c->Model->StructureFactorType = t.get<int>("model.structureFactors");
-	c->Model->CUDAOnTheFly = t.get<bool>("model.CUDAOnTheFly");
+
 	c->Model->PotentialType = t.get<std::string>("model.type").c_str();
 	c->Model->ratom = t.get<float_tt>("model.atomRadiusAngstrom");
 	c->Model->DoZInterpolation = t.get<bool>("model.DoZInterpolation");
 	c->Model->UseQPotentialOffsets = t.get<bool>("model.UseQPotentialOffsets");
 	c->Model->ImagPot = t.get<float>("wave.imaginary potential factor");
-	c->Model->xOffset = t.get<float_tt>("structure.xOffset");
-	c->Model->yOffset = t.get<float_tt>("structure.yOffset");
-	c->Model->zOffset = t.get<float_tt>("structure.zOffset");
+	c->Model->offset[0] = t.get<float_tt>("structure.xOffset");
+	c->Model->offset[1] = t.get<float_tt>("structure.yOffset");
+	c->Model->offset[2] = t.get<float_tt>("structure.zOffset");
 
 	c->Model->EnergykeV = t.get<float_tt>("beam.energy_keV");
 
@@ -180,16 +181,16 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
     c->Model->sigma =  2.f * pi * c->Model->_gamma * c->Model->wavelength * m0 * e / h / h * 1e18f; // interaction constant (1/(Vm))
 
     c->Structure->structureFilename = t.get<string>("structure.structure_filename").c_str();
-    c->Structure->nCellX = t.get<int>("structure.ncellx");
-    c->Structure->nCellY = t.get<int>("structure.ncelly");
-    c->Structure->nCellZ = t.get<int>("structure.ncellz");
-    c->Structure->temperatureK = t.get<float_tt>("structure.temperatureK");
-    c->Structure->crystalTiltX = t.get<float_tt>("structure.crystalTiltX");
-    c->Structure->crystalTiltY = t.get<float_tt>("structure.crystalTiltY");
-    c->Structure->crystalTiltZ = t.get<float_tt>("structure.crystalTiltZ");
-    c->Structure->boxX = t.get<float_tt>("structure.boxX");
-    c->Structure->boxY = t.get<float_tt>("structure.boxY");
-    c->Structure->boxZ = t.get<float_tt>("structure.boxZ");
+    c->Structure->nCells[0] = t.get<int>("structure.ncellx");
+    c->Structure->nCells[1] = t.get<int>("structure.ncelly");
+    c->Structure->nCells[2] = t.get<int>("structure.ncellz");
+    c->Structure->T_Kelvin = t.get<float_tt>("structure.temperatureK");
+    c->Structure->crystalTilt[0] = t.get<float_tt>("structure.crystalTiltX");
+    c->Structure->crystalTilt[1] = t.get<float_tt>("structure.crystalTiltY");
+    c->Structure->crystalTilt[2] = t.get<float_tt>("structure.crystalTiltZ");
+    c->Structure->box[0] = t.get<float_tt>("structure.boxX");
+    c->Structure->box[1] = t.get<float_tt>("structure.boxY");
+    c->Structure->box[1] = t.get<float_tt>("structure.boxZ");
     c->Structure->isBoxed = t.get<bool>("structure.isBoxed");
     c->Structure->rotateToZoneAxis = t.get<bool>("structure.rotateToZoneAxis");
 	string zoneAxisStr = t.get<string>("structure.zoneAxis");

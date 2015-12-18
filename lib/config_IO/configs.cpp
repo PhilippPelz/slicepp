@@ -63,3 +63,31 @@ c_Config* c_Config_new(){
 	return p;
 }
 
+void StructureConfig_delete(StructureConfig* c){
+	free(c);
+}
+
+void ModelConfig_delete(ModelConfig* c){
+	free(c);
+}
+
+void WaveConfig_delete(WaveConfig* c){
+	free(c);
+}
+
+void OutputConfig_delete(OutputConfig* c){
+	free(c);
+}
+
+void DetectorConfig_delete(DetectorConfig* c){
+	free(c);
+}
+
+void ScanConfig_delete(ScanConfig* c){
+	free(c);
+}
+
+void c_Config_delete(c_Config* c){
+	free(c);
+}
+

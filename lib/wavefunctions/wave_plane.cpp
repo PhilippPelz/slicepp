@@ -76,8 +76,8 @@ void CPlaneWave::TiltBeam(bool tiltBack)
 		float_tt ktx = direction*2.0*M_PI*sin(_wc->tiltX)/GetWavelength();
 		float_tt kty = direction*2.0*M_PI*sin(_wc->tiltY)/GetWavelength();
 		unsigned px=_wc->nx*_wc->ny;
-		af::array x = _mc->dx*(af::range(_wc->nx) - _wc->nx/2);
-		af::array y = _mc->dy*(af::range(_wc->ny) - _wc->ny/2);
+		af::array x = _mc->d[0]*(af::range(_wc->nx) - _wc->nx/2);
+		af::array y = _mc->d[1]*(af::range(_wc->ny) - _wc->ny/2);
 		af::array x2D = af::tile(x.T(), 1, _wc->ny);
 		af::array y2D = af::tile(y, _wc->nx);
 		_wave_af = af::complex(cos(ktx*x2D + kty*y2D)*scale, sin(ktx*x2D + kty*y2D)*scale);

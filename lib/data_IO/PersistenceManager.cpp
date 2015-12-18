@@ -40,21 +40,21 @@ void PersistenceManager::SaveProbe(af::array& wave) {
 void PersistenceManager::SaveAtomDelta(cuComplex* delta, int slice, int Z) {
 	auto a = _atomDeltas[Z];
 	if(a.get() == NULL){
-		auto e3 = boost::extents[_c->Model->nSlices][_c->Model->nx][_c->Model->ny];
+		auto e3 = boost::extents[_c->Model->n[2]][_c->Model->n[0]][_c->Model->n[1]];
 		_atomDeltas[Z] = boost::shared_ptr<ComplexArray3D>(new ComplexArray3D(e3));
 		auto sh = _atomDeltas[Z]->shape();
 //		BOOST_LOG_TRIVIAL(info)<< format("%s shape: [%d,%d,%d]") % "_atomDeltas" % sh[0] % sh[1] % sh[2];
 	}
-	cuda_assert(cudaMemcpy( _atomDeltas[Z]->operator [](slice).origin(),delta, _c->Model->nx * _c->Model->ny* sizeof(cuComplex), cudaMemcpyDeviceToHost));
+	cuda_assert(cudaMemcpy( _atomDeltas[Z]->operator [](slice).origin(),delta, _c->Model->n[0] * _c->Model->n[1]* sizeof(cuComplex), cudaMemcpyDeviceToHost));
 }
 void PersistenceManager::SaveAtomConv(cuComplex* delta, int slice, int Z) {
 	auto a = _atomConv[Z];
 	if(a.get() == NULL){
-		auto e3 = boost::extents[_c->Model->nSlices][_c->Model->nx][_c->Model->ny];
+		auto e3 = boost::extents[_c->Model->n[2]][_c->Model->n[0]][_c->Model->n[1]];
 		_atomConv[Z] = boost::shared_ptr<ComplexArray3D>(new ComplexArray3D(e3));
 		auto sh = _atomConv[Z]->shape();
 	}
-	cuda_assert(cudaMemcpy( _atomConv[Z]->operator [](slice).origin(),delta, _c->Model->nx * _c->Model->ny* sizeof(cuComplex), cudaMemcpyDeviceToHost));
+	cuda_assert(cudaMemcpy( _atomConv[Z]->operator [](slice).origin(),delta, _c->Model->n[0] * _c->Model->n[1]* sizeof(cuComplex), cudaMemcpyDeviceToHost));
 }
 void PersistenceManager::SaveWaveAfterTransmit(ComplexArray2DPtr a, int slice) {
 
@@ -146,8 +146,8 @@ void PersistenceManager::Save2DDataSet(af::array& data, string name) {
 }
 
 void PersistenceManager::InitStorage() {
-	auto e3 = boost::extents[_c->Model->nSlices][_c->Model->nx][_c->Model->ny];
-	auto e2 = boost::extents[_c->Model->nx][_c->Model->ny];
+	auto e3 = boost::extents[_c->Model->n[2]][_c->Model->n[0]][_c->Model->n[1]];
+	auto e2 = boost::extents[_c->Model->n[0]][_c->Model->n[1]];
 	if (_c->Output->SavePotential || _c->Output->ComputeFromProjectedPotential)
 		_potential.resize(e3);
 	if (_c->Output->SaveWaveAfterSlice)
@@ -171,10 +171,10 @@ void PersistenceManager::InitStorage() {
 }
 
 void PersistenceManager::ResizeStorage(int xdim, int ydim) {
-	auto e3 = boost::extents[_c->Model->nSlices][xdim][ydim];
+	auto e3 = boost::extents[_c->Model->n[2]][xdim][ydim];
 	auto e2 = boost::extents[xdim][ydim];
 	if (_c->Output->SavePotential || _c->Output->ComputeFromProjectedPotential)
-		_potential.resize(boost::extents[_c->Model->nSlices][_c->Model->nx][_c->Model->ny]);
+		_potential.resize(boost::extents[_c->Model->n[2]][_c->Model->n[0]][_c->Model->n[1]]);
 	if (_c->Output->SaveWaveAfterSlice)
 		_waveSlicesAfterSlice.resize(e3);
 	if (_c->Output->SaveWaveAfterPropagation)
@@ -192,7 +192,7 @@ void PersistenceManager::ResizeStorage(int xdim, int ydim) {
 		for (auto& kv : _atomConv)
 			kv.second->resize(e3);
 	if (_c->Output->SaveProjectedPotential || _c->Output->ComputeFromProjectedPotential)
-		_projectedPotential.resize(boost::extents[_c->Model->nx][_c->Model->ny]);
+		_projectedPotential.resize(boost::extents[_c->Model->n[0]][_c->Model->n[1]]);
 }
 
 void PersistenceManager::StoreToDisc() {

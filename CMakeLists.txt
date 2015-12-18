@@ -23,7 +23,7 @@ else(WIN32)
 	ADD_DEFINITIONS(--std=c++11) # Or -std=c++11
 endif(WIN32)
 
-SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -lz -ldl -lpthread -fopenmp")
+set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -lz -ldl -lpthread -fopenmp")
 set(CYCLES_CUDA_BINARIES_ARCH sm_52)
 
 # Define the version number for use in projects
@@ -63,6 +63,8 @@ else(CLUSTER)
 	#set(CUDA_CUDART_LIBRARY /usr/local/cuda/libcudart.so)
 	#set(CUDA_INCLUDE_DIRS /usr/local/cuda/include)
   set(BOOST_ROOT "/usr/lib/x86_64-linux-gnu")
+	SET(BOOST_INCLUDEDIR 				"/data/netapp/boost_1_58_0/boost")
+	SET(BOOST_LIBRARYDIR 				"/data/netapp/boost_1_58_0/stage/lib")
 endif(CLUSTER)
 
 if (UNIX)
@@ -73,6 +75,37 @@ set(HDF5_USE_STATIC_LIBRARIES OFF)
 FIND_PACKAGE(Boost 1.55 COMPONENTS system filesystem chrono timer log log_setup thread date_time REQUIRED)
 FIND_PACKAGE(HDF5 COMPONENTS C CXX HL REQUIRED)
 FIND_PACKAGE(fftw3 REQUIRED)
+
+# This is because an anaconda installation can mess up the libraries that are linked
+list(REMOVE_DUPLICATES HDF5_INCLUDE_DIRS)
+list(REMOVE_DUPLICATES HDF5_LIBRARIES)
+set(hdf5_inc "")
+set(hdf5_lib "")
+foreach(incdir ${HDF5_INCLUDE_DIRS})
+	if(incdir MATCHES "anaconda")
+
+	else()
+		MESSAGE(STATUS "HDF5_INCLUDE_DIRS: " ${incdir})
+		LIST(APPEND hdf5_inc ${incdir})
+	endif()
+endforeach(incdir)
+
+foreach(libdir ${HDF5_LIBRARIES})
+	if(libdir MATCHES "anaconda")
+
+	else()
+		MESSAGE(STATUS "HDF5_LIBRARIES: " ${libdir})
+		LIST(APPEND hdf5_lib ${libdir})
+	endif()
+endforeach(libdir)
+LIST(APPEND hdf5_lib /usr/local/lib/libhdf5.so)
+LIST(APPEND hdf5_lib /usr/local/lib/libhdf5_hl.so)
+LIST(APPEND hdf5_inc /usr/local/include)
+set(HDF5_INCLUDE_DIRS ${hdf5_inc})
+set(HDF5_LIBRARIES ${hdf5_lib})
+MESSAGE(STATUS "HDF5_LIBRARIES: " ${hdf5_lib})
+MESSAGE(STATUS "HDF5_INCLUDE_DIRS: " ${hdf5_inc})
+#end of hack
 
 FIND_PACKAGE(ArrayFire REQUIRED)
 FIND_PACKAGE(CUDA REQUIRED)
@@ -96,7 +129,6 @@ include_directories(
 add_subdirectory(lib)
 add_subdirectory(exe)
 add_subdirectory(hdf5boost)
-
 
 OPTION( BUILD_TESTS "Set to ON to enable unit test target generation.  Requires Boost Test binary libraries to be installed." OFF )
 if (BUILD_TESTS)

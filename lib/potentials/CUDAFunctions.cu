@@ -19,7 +19,7 @@ CUDAFunctions::CUDAFunctions(superCellBoxPtr info, cModelConfPtr mc) {
 	_info = info;
 	_mc = mc;
 
-	slicePixels = _mc->nx * _mc->ny;
+	slicePixels = _mc->n[0] * _mc->n[1];
 	gS2D = myGSize(slicePixels);
 }
 
@@ -53,7 +53,7 @@ CUDAFunctions::CUDAFunctions(superCellBoxPtr info, cModelConfPtr mc) {
 void CUDAFunctions::PotentialToTransmission(cufftComplex* pot, cufftComplex* trans){
     int af_id = af::getDevice();
     cudaStream_t af_stream = afcu::getStream(af_id);
-	int slicePixels = _mc->nx * _mc->ny;
+	int slicePixels = _mc->n[0] * _mc->n[1];
 	const int gS = myGSize(slicePixels);
 	const int bS = myBSize(slicePixels);
 	potential2Transmission<<< gS, bS, 0, af_stream >>> (pot, trans, slicePixels);
@@ -61,13 +61,13 @@ void CUDAFunctions::PotentialToTransmission(cufftComplex* pot, cufftComplex* tra
 void CUDAFunctions::cmul(cufftComplex* a1, cufftComplex* a2){
     int af_id = af::getDevice();
     cudaStream_t af_stream = afcu::getStream(af_id);
-	int slicePixels = _mc->nx * _mc->ny;
+	int slicePixels = _mc->n[0] * _mc->n[1];
 	const int gS = myGSize(slicePixels);
 	const int bS = myBSize(slicePixels);
-	multiplyWithProjectedPotential_d<<< gS, bS, 0, af_stream >>> (a1,a2,_mc->nx,_mc->ny);
+	multiplyWithProjectedPotential_d<<< gS, bS, 0, af_stream >>> (a1,a2,_mc->n[0],_mc->n[1]);
 }
 void CUDAFunctions::SetComplex2D(cufftComplex* a, float real, float imag){
-	int slicePixels = _mc->nx * _mc->ny;
+	int slicePixels = _mc->n[0] * _mc->n[1];
 	const int gS = myGSize(slicePixels);
 	const int bS = myBSize(slicePixels);
     int af_id = af::getDevice();
@@ -75,38 +75,38 @@ void CUDAFunctions::SetComplex2D(cufftComplex* a, float real, float imag){
 	initialValues<<< gS, bS , 0, af_stream >>> ( a, slicePixels, 0.f, 0.f);
 }
 void CUDAFunctions::SetComplex3D(cufftComplex* a, float real, float imag){
-	int slicePixels = _mc->nx * _mc->ny;
+	int slicePixels = _mc->n[0] * _mc->n[1];
 	const int gS = myGSize(slicePixels);
-	const int bS = myBSize(slicePixels * _mc->nSlices);
+	const int bS = myBSize(slicePixels * _mc->n[2]);
     int af_id = af::getDevice();
     cudaStream_t af_stream = afcu::getStream(af_id);
 	initialValues<<< gS, bS , 0, af_stream >>> ( a, slicePixels, 0.f, 0.f);
 }
 void CUDAFunctions::GetAtomicPotential(cufftComplex* V, int Z) {
-	int slicePixels = _mc->nx * _mc->ny;
+	int slicePixels = _mc->n[0] * _mc->n[1];
 	const int bS = myBSize(slicePixels);
 	const int gS2D = myGSize(slicePixels);
     int af_id = af::getDevice();
 //    BOOST_LOG_TRIVIAL(info)<< format("device id: %d") % af_id;
     cudaStream_t af_stream = afcu::getStream(af_id);
-	createAtomicPotential<<< gS2D, bS, 0,  af_stream>>> ( V, Z, _mc->nx, _mc->ny, _mc->dx, _mc->dy,_mc->sigma);
+	createAtomicPotential<<< gS2D, bS, 0,  af_stream>>> ( V, Z, _mc->n[0], _mc->n[1], _mc->d[0], _mc->d[1],_mc->sigma);
 }
 void CUDAFunctions::GetSincAtomicPotential(cufftComplex* V, int Z) {
-	int slicePixels = _mc->nx * _mc->ny;
+	int slicePixels = _mc->n[0] * _mc->n[1];
 	const int bS = myBSize(slicePixels);
 	const int gS2D = myGSize(slicePixels);
     int af_id = af::getDevice();
     cudaStream_t af_stream = afcu::getStream(af_id);
 //    printf("sigma: %g",_mc->sigma);
-	createAtomicPotential<<< gS2D, bS, 0,  af_stream  >>> ( V, Z, _mc->nx, _mc->ny, _mc->dx, _mc->dy,_mc->sigma);
-	divideBySinc<<< gS2D, bS, 0,  af_stream  >>> ( V, _mc->nx, _mc->ny, PI);
+	createAtomicPotential<<< gS2D, bS, 0,  af_stream  >>> ( V, Z, _mc->n[0], _mc->n[1], _mc->d[0], _mc->d[1],_mc->sigma);
+	divideBySinc<<< gS2D, bS, 0,  af_stream  >>> ( V, _mc->n[0], _mc->n[1], PI);
 }
 void CUDAFunctions::GetAtomDeltaFunctions(cufftComplex* V, int Z, int slice) {
 	int nAtom = _info->znums.size();
     int af_id = af::getDevice();
     cudaStream_t af_stream = afcu::getStream(af_id);
 	putAtomDeltas<<< myGSize( nAtom ), myBSize( nAtom ), 0,  af_stream  >>> ( V, nAtom, znums_d, Z, xyzPos_d, _mc->ImagPot,
-			occupancy_d, slice, _mc->nx, _mc->ny, _mc->nSlices, _mc->dx, _mc->dy, _mc->dz);
+			occupancy_d, slice, _mc->n[0], _mc->n[1], _mc->n[2], _mc->d[0], _mc->d[1], _mc->d[2]);
 }
 void CUDAFunctions::printPotArray(cufftComplex* V_d, int nx, int ny) {
 	cufftComplex *V_host;

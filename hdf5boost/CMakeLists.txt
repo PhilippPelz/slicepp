@@ -9,16 +9,17 @@ ADD_DEFINITIONS(-std=c++11)
 add_subdirectory(lib)
 
 include_directories(
-	${CMAKE_SOURCE_DIR} 
-	${CMAKE_SOURCE_DIR}/hdf5boost/lib 
-	${HDF5_INCLUDE_DIRS}
-	${Boost_INCLUDE_DIRS} 
-	)
+${CMAKE_SOURCE_DIR}
+${CMAKE_SOURCE_DIR}/hdf5boost/lib
+${HDF5_INCLUDE_DIRS}
+${Boost_INCLUDE_DIRS}
+)
 
 add_definitions(${HDF5_DEFINITIONS})
 SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -lz -ldl")
 
 add_executable(hdfboosttest main.cpp)
-target_link_libraries(hdfboosttest hdfboost ${Boost_LIBRARIES} ${HDF5_LIBRARIES} ${HDF5_C_LIBRARIES} ${HDF5_HL_LIBRARIES} ${HDF5_CXX_LIBRARIES})
-
-
+target_link_libraries(hdfboosttest hdfboost
+${Boost_LIBRARIES}
+${HDF5_LIBRARIES}
+)

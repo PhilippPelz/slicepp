@@ -46,11 +46,11 @@ void CPotential::DisplayParams() {
 	BOOST_LOG_TRIVIAL(info) <<
 	"**************************************************************************************************";
 	BOOST_LOG_TRIVIAL(info)<<format("* Log level:            %d") % _oc->LogLevel;
-	BOOST_LOG_TRIVIAL(info)<<format("* Model Sampling:       %g x %g x %g A") % _mc->dx% _mc->dy% _mc->dz;
+	BOOST_LOG_TRIVIAL(info)<<format("* Model Sampling:       %g x %g x %g A") % _mc->d[0]% _mc->d[1]% _mc->d[2];
 //	BOOST_LOG_TRIVIAL(info)<<format("* Pot. array offset:    (%g,%g,%g) A") % _c->Structure->xOffset%_c->Structure->yOffset% _c->Structure->zOffset;
 	BOOST_LOG_TRIVIAL(info)<<format("* Potential periodic:   (x,y): %s ") %((_mc->periodicXY) ? "yes" : "no");
-	BOOST_LOG_TRIVIAL(info)<<format("* Potential array:      %d x %d")% _mc->nx% _mc->ny;
-	BOOST_LOG_TRIVIAL(info)<<format("*                       %g x %gA") % (_mc->nx * _mc->dx)% (_mc->ny * _mc->dy);
+	BOOST_LOG_TRIVIAL(info)<<format("* Potential array:      %d x %d")% _mc->n[0]% _mc->n[1];
+	BOOST_LOG_TRIVIAL(info)<<format("*                       %g x %gA") % (_mc->n[0] * _mc->d[0])% (_mc->n[1] * _mc->d[1]);
 	BOOST_LOG_TRIVIAL(info) <<
 	"**************************************************************************************************";
 }
@@ -63,14 +63,14 @@ void CPotential::ReadSlice(const std::string &fileName,
 }
 
 void CPotential::SliceSetup() {
-	_ddx = _mc->dx / (double) OVERSAMPLING;
-	_ddy = _mc->dy / (double) OVERSAMPLING;
+	_ddx = _mc->d[0] / (double) OVERSAMPLING;
+	_ddy = _mc->d[1] / (double) OVERSAMPLING;
 
-	_ndiaAtomX = 2 * OVERSAMPLING * (int) ceil(_mc->ratom / _mc->dx );
-	_ndiaAtomY = 2 * OVERSAMPLING * (int) ceil(_mc->ratom / _mc->dy );
+	_ndiaAtomX = 2 * OVERSAMPLING * (int) ceil(_mc->ratom / _mc->d[0] );
+	_ndiaAtomY = 2 * OVERSAMPLING * (int) ceil(_mc->ratom / _mc->d[1] );
 
-	_dkx = 0.5 * OVERSAMPLING / ((_ndiaAtomX) * _mc->dx);
-	_dky = 0.5 * OVERSAMPLING / ((_ndiaAtomY) * _mc->dy);
+	_dkx = 0.5 * OVERSAMPLING / ((_ndiaAtomX) * _mc->d[0]);
+	_dky = 0.5 * OVERSAMPLING / ((_ndiaAtomY) * _mc->d[1]);
 
 	_kmax = 0.5 * _ndiaAtomX * _dkx / (double) OVERSAMPLING; // largest k that we'll admit
 	_kmax2 = _kmax * _kmax;
@@ -79,21 +79,21 @@ void CPotential::SliceSetup() {
 	_boxNx = (int) (_mc->ratom / _ddx + 2.0);
 	_boxNy = (int) (_mc->ratom / _ddy + 2.0);
 
-	_totalThickness = _mc->dz * _mc->nSlices;
-	_dr = min(_mc->dx,_mc->dy) / OVERSAMPLING;
+	_totalThickness = _mc->d[2] * _mc->n[2];
+	_dr = min(_mc->d[0],_mc->d[1]) / OVERSAMPLING;
 	_nrAtomTrans =  (int) ceil(_mc->ratom / _dr + 0.5);
 
-	_nRadX = (int) ceil(_mc->ratom / _mc->dx);
-	_nRadY = (int) ceil(_mc->ratom / _mc->dy);
-	_nRadZ = (int) ceil(_mc->ratom / _mc->dz) ;
+	_nRadX = (int) ceil(_mc->ratom / _mc->d[0]);
+	_nRadY = (int) ceil(_mc->ratom / _mc->d[1]);
+	_nRadZ = (int) ceil(_mc->ratom / _mc->d[2]) ;
 	_nRad2Trans = _nRadX * _nRadX + _nRadY * _nRadY;
 
 	_atomRadius2 = _mc->ratom * _mc->ratom;
-	_sliceThicknesses.resize(_mc->nSlices);
+	_sliceThicknesses.resize(_mc->n[2]);
 
-	_sliceThicknesses[0] = _mc->dz;
+	_sliceThicknesses[0] = _mc->d[2];
 
-	_t.resize(boost::extents[_mc->nSlices][_mc->nx][_mc->ny]);
+	_t.resize(boost::extents[_mc->n[2]][_mc->n[0]][_mc->n[1]]);
 	std::fill(_t.data(), _t.data() + _t.size(), complex_tt(0, 0));
 }
 
@@ -166,7 +166,7 @@ void CPotential::MakeSlices(superCellBoxPtr info) {
 	}
 
 	CleanUp();
-	_t_d = af::array(_mc->nx, _mc->ny, _mc->nSlices, (afcfloat *)_t.data());
+	_t_d = af::array(_mc->n[0], _mc->n[1], _mc->n[2], (afcfloat *)_t.data());
 	MakePhaseGratings();
 	time(&time1);
 	BOOST_LOG_TRIVIAL(info)<< format( "%g sec used for real space potential calculation (%g sec per atom)")
@@ -193,9 +193,9 @@ void CPotential::MakePhaseGratings() {
 void CPotential::WriteSlice(unsigned idx, std::string prefix) {
 	char buf[255];
 	std::map<std::string, float_tt> params;
-	params["Thickness"] = _mc->dz;
-	params["dx"] = _mc->dx;
-	params["dy"] = _mc->dy;
+	params["Thickness"] = _mc->d[2];
+	params["dx"] = _mc->d[0];
+	params["dy"] = _mc->d[1];
 	sprintf(buf, "Projected Potential (slice %d)", idx);
 	std::string comment = buf;
 	std::stringstream filename;
@@ -207,12 +207,12 @@ void CPotential::WriteSlice(unsigned idx, std::string prefix) {
 void CPotential::WriteProjectedPotential() {
 	std::map<std::string, float_tt> params;
 	char buf[255];
-	ComplexArray2D sum(extents[_mc->nx][_mc->ny]);
+	ComplexArray2D sum(extents[_mc->n[0]][_mc->n[1]]);
 	float_tt potVal = 0;
 
-	for (unsigned iz = 0; iz < _mc->nSlices; iz++){
-		for (unsigned ix = 0; ix < _mc->nx; ix++) {
-			for (unsigned iy = 0; iy < _mc->ny; iy++) {
+	for (unsigned iz = 0; iz < _mc->n[2]; iz++){
+		for (unsigned ix = 0; ix < _mc->n[0]; ix++) {
+			for (unsigned iy = 0; iy < _mc->n[1]; iy++) {
 				sum[ix][iy] += _t[iz][ix][iy];
 			}
 		}
@@ -390,8 +390,8 @@ af::array& CPotential::GetPotential(){
 }
 
 void CPotential::GetSizePixels(unsigned int &nx, unsigned int &ny) const {
-	nx = _mc->nx;
-	ny = _mc->ny;
+	nx = _mc->n[0];
+	ny = _mc->n[1];
 }
 
 af:: array CPotential::GetSlice(af::array& t, unsigned idx){

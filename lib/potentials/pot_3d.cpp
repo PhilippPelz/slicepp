@@ -25,7 +25,7 @@ namespace QSTEM
 
 C3DPotential::C3DPotential(cModelConfPtr mc, cOutputConfPtr oc , PersistenceManagerPtr p) : RealSpacePotential(mc,oc,p)
 {
-	m_sliceStep = 2*_mc->nx*_mc->ny;
+	m_sliceStep = 2*_mc->n[0]*_mc->n[1];
 	m_boxNz = (int)(_mc->ratom/_ddz+2.0);
 	_totalThickness += 2*_mc->ratom;
 }
@@ -37,7 +37,7 @@ void C3DPotential::SaveAtomicPotential(int znum){
 }
 void C3DPotential::SliceSetup(){
 	CPotential::SliceSetup();
-	_ddz = _mc->dz / (double) OVERSAMPLINGZ;
+	_ddz = _mc->d[2] / (double) OVERSAMPLINGZ;
 }
 void C3DPotential::DisplayParams()
 {
@@ -110,7 +110,7 @@ void C3DPotential::AtomBoxLookUp(complex_tt &val, int Znum, float_tt x, float_tt
 
 bool C3DPotential::CheckAtomZInBounds(float_tt atomZ)
 {
-	return ((atomZ + _mc->ratom < _totalThickness) && (atomZ - _mc->ratom + _mc->dz >= 0));
+	return ((atomZ + _mc->ratom < _totalThickness) && (atomZ - _mc->ratom + _mc->d[2] >= 0));
 }
 
 void C3DPotential::AddAtomToSlices(atom& atom )
@@ -142,13 +142,13 @@ void C3DPotential::_AddAtomRealSpace(atom &atom,
 			if (iaz+iAtomZ < 0) {
 				if (-iAtomZ <= _nRadZ) iaz = -iAtomZ;
 				else break;
-				if (abs(iaz)>_mc->nSlices) break;
+				if (abs(iaz)>_mc->n[2]) break;
 			}
-			if (iaz+iAtomZ >= _mc->nSlices)        break;
+			if (iaz+iAtomZ >= _mc->n[2])        break;
 		}
 		atomBoxZ = (double)(iAtomZ+iaz+0.5)*_sliceThicknesses[0]-atomBoxZ;
 		/* shift into the positive range */
-		iz = (iaz+iAtomZ+32*_mc->nSlices) % _mc->nSlices;
+		iz = (iaz+iAtomZ+32*_mc->n[2]) % _mc->n[2];
 		/* x,y,z is the true vector from the atom center
 		 * We can look up the proj potential at that spot
 		 * using trilinear extrapolation.

@@ -49,7 +49,7 @@ void Ptychograph::Run()
 	int ix,iy,i,pCount,result;
 	double timer,timerTot ;
 	float_tt t=0;
-	FloatArray2D avgPendelloesung(boost::extents[_nbout][_c->Model->nSlices]);
+	FloatArray2D avgPendelloesung(boost::extents[_nbout][_c->Model->n[2]]);
 	std::map<std::string, double> params;
 	std::vector<unsigned> position(1);         // Used to indicate the number of averages
 	std::vector<std::pair<int, int>> scanPositions;

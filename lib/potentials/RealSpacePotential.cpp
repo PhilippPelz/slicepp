@@ -128,8 +128,8 @@ void RealSpacePotential::AddAtomRealSpace(atom& atom, float_tt atomX, float_tt a
 
 	/* Warning: will assume constant slice thickness ! */
 	/* do not round here: atomX=0..dx -> iAtomX=0 */
-	unsigned iAtomX = (int) floor(atomX / _mc->dx);
-	unsigned iAtomY = (int) floor(atomY / _mc->dy);
+	unsigned iAtomX = (int) floor(atomX / _mc->d[0]);
+	unsigned iAtomY = (int) floor(atomY / _mc->d[1]);
 	unsigned iAtomZ = (int) floor(atomZ / _sliceThicknesses[0]);
 
 	for (int iax = -_nRadX; iax <= _nRadX; iax++) {
@@ -139,11 +139,11 @@ void RealSpacePotential::AddAtomRealSpace(atom& atom, float_tt atomX, float_tt a
 				if (abs(iax) > _nRadX)
 					break;
 			}
-			if (iax + iAtomX >= _mc->nx)
+			if (iax + iAtomX >= _mc->n[0])
 				break;
 		}
-		float_tt x = (iAtomX + iax) * _mc->dx - atomX;
-		unsigned ix = (iax + iAtomX + 16 * _mc->nx) % _mc->nx; /* shift into the positive range */
+		float_tt x = (iAtomX + iax) * _mc->d[0] - atomX;
+		unsigned ix = (iax + iAtomX + 16 * _mc->n[0]) % _mc->n[0]; /* shift into the positive range */
 		for (int iay = -_nRadY; iay <= _nRadY; iay++) {
 			if (!_mc->periodicXY) {
 				if (iay + iAtomY < 0) {
@@ -151,11 +151,11 @@ void RealSpacePotential::AddAtomRealSpace(atom& atom, float_tt atomX, float_tt a
 					if (abs(iay) > _nRadY)
 						break;
 				}
-				if (iay + iAtomY >= _mc->ny)
+				if (iay + iAtomY >= _mc->n[1])
 					break;
 			}
-			float_tt y = (iAtomY + iay) * _mc->dy - atomY;
-			unsigned iy = (iay + iAtomY + 16 * _mc->ny) % _mc->ny; /* shift into the positive range */
+			float_tt y = (iAtomY + iay) * _mc->d[1] - atomY;
+			unsigned iy = (iay + iAtomY + 16 * _mc->n[1]) % _mc->n[1]; /* shift into the positive range */
 			float_tt r2sqr = x * x + y * y;
 			if (r2sqr <= _atomRadius2) {
 				// This (virtual) method is meant to be implemented by subclasses,

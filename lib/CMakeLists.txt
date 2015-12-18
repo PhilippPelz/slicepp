@@ -41,10 +41,16 @@ include_directories(
   experiments
   ../hdf5boost/lib
   ${OPENBABEL_INCLUDE_DIR}
-  ${HDF5_INCLUDE_DIR}
+  ${HDF5_INCLUDE_DIRS}
   ${NLOPT_INCLUDE_DIR}
 	${CUDA_TOOLKIT_INCLUDE}
 )
+
+get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+foreach(dir ${dirs})
+  message(STATUS "dir='${dir}'")
+endforeach()
+message(STATUS "HDF5_LIBRARIES in libslice: " ${HDF5_LIBRARIES})
 
 cuda_add_library(${PROJECT_NAME} SHARED ${LIBS_FILES} OPTIONS -G;-g)
 target_link_libraries(${PROJECT_NAME}
@@ -67,3 +73,5 @@ target_link_libraries(${PROJECT_NAME}
 if(OPENMP)
   SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "${OpenMP_C_FLAGS}" LINK_FLAGS  "${OpenMP_C_FLAGS}")
 endif(OPENMP)
+
+#message(STATUS "BUILD_SLICETH in libslice: " ${BUILD_SLICETH})

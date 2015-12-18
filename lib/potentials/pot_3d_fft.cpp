@@ -47,7 +47,7 @@ void C3DFFTPotential::DisplayParams() {
 	BOOST_LOG_TRIVIAL(info)<< format("* Creating up to %d intermediate arrays of size %d x %d to store sliced potentials")
 			% _nzPerSlice % (2*_nrAtomTrans) % _ndiaAtomZ;
 	BOOST_LOG_TRIVIAL(info)<< format("* Potential offset: will use %d sampling points per slice, total nz=%d (%d)")
-			% _nzPerSlice % _mc->nSlices % (_nzPerSlice >> 1);
+			% _nzPerSlice % _mc->n[2] % (_nzPerSlice >> 1);
 }
 /********************************************************************************
  * Clean up after the total potential has been created
@@ -83,10 +83,10 @@ FloatArray2DView C3DFFTPotential::getSlicedAtomicPotentialAt(ratio rat, int Znum
 		FloatArray2D& ia = _intAtPot[rat];
 		std::fill(_intAtPot[rat].data(), _intAtPot[rat].data() + _intAtPot[rat].size(), 0);
 		for (int iax = -_nRadX; iax <= _nRadX; iax++) {
-			float_tt x2 = (iax  ) * _mc->dx;
+			float_tt x2 = (iax  ) * _mc->d[0];
 			x2 *= x2;
 			for (int iay = -_nRadY; iay <= _nRadY; iay++) {
-				float_tt y2 = (iay  ) * _mc->dy;
+				float_tt y2 = (iay  ) * _mc->d[1];
 				y2 *= y2;
 				float_tt r = sqrt(x2 + y2); // TODO: LUT for sqrt or precompute r
 				int ir = (int) floor(r / _dr);
@@ -125,7 +125,7 @@ FloatArray2DView C3DFFTPotential::getSlicedAtomicPotentialAt(ratio rat, int Znum
 }
 void C3DFFTPotential::AddAtomNonPeriodic(atom& atom, unsigned int iAtomX, unsigned int iAtomY) {
 	ComplexVector atPotOffsPtr;
-	float_tt fatomZ = atom.r[2] / _mc->dz;
+	float_tt fatomZ = atom.r[2] / _mc->d[2];
 	unsigned iAtomZ = (int) ceil(fatomZ);
 	float_tt dAtomZ = abs(fatomZ - iAtomZ + 1);
 	unsigned ndAtomZ = (unsigned) floor(dAtomZ / _dz);
@@ -136,8 +136,8 @@ void C3DFFTPotential::AddAtomNonPeriodic(atom& atom, unsigned int iAtomX, unsign
 	int iystart = (int) iAtomY - (int) _nRadY < 0 ? 0 : iAtomY - _nRadY;
 	int izstart = iAtomZ - _nRadZ;
 
-	int ixend = (int) iAtomX + (int) _nRadX >= _mc->nx ? _mc->nx - 1 : iAtomX + _nRadX;
-	int iyend = (int) iAtomY + (int) _nRadY >= _mc->ny ? _mc->ny - 1 : iAtomY + _nRadY;
+	int ixend = (int) iAtomX + (int) _nRadX >= _mc->n[0] ? _mc->n[0] - 1 : iAtomX + _nRadX;
+	int iyend = (int) iAtomY + (int) _nRadY >= _mc->n[1] ? _mc->n[1] - 1 : iAtomY + _nRadY;
 	int izend = iAtomZ + _nRadZ;
 
 	if (_mc->UseQPotentialOffsets) {
@@ -145,10 +145,10 @@ void C3DFFTPotential::AddAtomNonPeriodic(atom& atom, unsigned int iAtomX, unsign
 	}
 
 	for (int iax = ixstart; iax <= ixend; iax++) {
-		float_tt x2 = (iax + 0.5) * _mc->dx - atom.r[0];
+		float_tt x2 = (iax + 0.5) * _mc->d[0] - atom.r[0];
 		x2 *= x2;
 		for (int iay = iystart; iay <= iyend; iay++) {
-			float_tt y2 = (iay + 0.5) * _mc->dy - atom.r[1];
+			float_tt y2 = (iay + 0.5) * _mc->d[1] - atom.r[1];
 			y2 *= y2;
 			float_tt r = sqrt(x2 + y2); // TODO: LUT for sqrt or precompute r
 			int ir = (int) floor(r / _dr);
@@ -167,8 +167,8 @@ void C3DFFTPotential::AddAtomNonPeriodic(atom& atom, unsigned int iAtomX, unsign
 }
 
 void C3DFFTPotential::AddAtomToSlices(atom& atom) {
-	unsigned iAtomX = (int) floor(atom.r[0] / _mc->dx);
-	unsigned iAtomY = (int) floor(atom.r[1] / _mc->dy);
+	unsigned iAtomX = (int) floor(atom.r[0] / _mc->d[0]);
+	unsigned iAtomY = (int) floor(atom.r[1] / _mc->d[1]);
 
 	if (_mc->periodicXY) {
 		AddAtomPeriodic(atom,  iAtomX,  iAtomY);
@@ -178,7 +178,7 @@ void C3DFFTPotential::AddAtomToSlices(atom& atom) {
 }
 
 void C3DFFTPotential::AddAtomPeriodic(atom& atom, unsigned iAtomX, unsigned iAtomY) {
-	int iAtomZ = (int) rint(atom.r[2] / _mc->dz) + _nRadZ;
+	int iAtomZ = (int) rint(atom.r[2] / _mc->d[2]) + _nRadZ;
 	int iax0 = iAtomX - _nRadX;
 	int iax1 = iAtomX + _nRadX;
 	int iay0 = iAtomY - _nRadY;
@@ -209,9 +209,9 @@ void C3DFFTPotential::AddAtomPeriodic(atom& atom, unsigned iAtomX, unsigned iAto
 	// iaz must be relative to the first slice of the atom potential box.
 	for (int iax = iax0; iax < iax1; iax++) {
 		for (int iay = iay0; iay < iay1; iay++) {
-			float_tt x2 = iax * _mc->dx - atom.r[0];
+			float_tt x2 = iax * _mc->d[0] - atom.r[0];
 			x2 *= x2;
-			float_tt y2 = iay * _mc->dy - atom.r[1];
+			float_tt y2 = iay * _mc->d[1] - atom.r[1];
 			y2 *= y2;
 			float_tt ddr = sqrt(x2 + y2) / _dr;
 			int iCurrentRadius = (int) floor(ddr);
@@ -220,7 +220,7 @@ void C3DFFTPotential::AddAtomPeriodic(atom& atom, unsigned iAtomX, unsigned iAto
 				float fractionAboveCurrentRadius = ddr - (double) iCurrentRadius;
 				// Include interpolation in z-direction as well (may do it in a very smart way here !):
 
-				float_tt dOffsZ = (iAtomZ - _nRadZ - atom.r[2] / _mc->dz) * _nzPerSlice;
+				float_tt dOffsZ = (iAtomZ - _nRadZ - atom.r[2] / _mc->d[2]) * _nzPerSlice;
 #if Z_INTERPOLATION
 				int iOffsZ = (int)dOffsZ;
 				float_tt ddz = fabs(dOffsZ - (double)iOffsZ);
@@ -305,12 +305,12 @@ void C3DFFTPotential::AddAtomPeriodic(atom& atom, unsigned iAtomX, unsigned iAto
 #endif // Z_INTERPOLATION
 						}
 					}
-					int ix = (iAtomX + iax + _mc->nx) % _mc->nx;
-					int iy = (iAtomY + iay + _mc->ny) % _mc->ny;
+					int ix = (iAtomX + iax + _mc->n[0]) % _mc->n[0];
+					int iy = (iAtomY + iay + _mc->n[1]) % _mc->n[1];
 					_t[iAtomZ + iaz][iy][ix] += potVal;
 
 					BOOST_LOG_TRIVIAL(trace)<< boost::format("_trans1[%d ][%d][%d] += %f\n")
-					% (iAtomZ+iaz)%((iAtomY+iay+_mc->ny) % _mc->ny)% ((iAtomX+iax+_mc->nx) % _mc->nx)%potVal;
+					% (iAtomZ+iaz)%((iAtomY+iay+_mc->n[1]) % _mc->n[1])% ((iAtomX+iax+_mc->n[0]) % _mc->n[0])%potVal;
 					iOffsZ += iOffsStep;
 				} // for iaz
 			} // if ir < Nr-1
@@ -343,19 +343,19 @@ void C3DFFTPotential::AddAtomPeriodic(atom& atom, unsigned iAtomX, unsigned iAto
 void C3DFFTPotential::SliceSetup() {
 	CPotential::SliceSetup();
 
-	for (unsigned i = 0; i < _mc->nSlices; i++) {
+	for (unsigned i = 0; i < _mc->n[2]; i++) {
 		if (_sliceThicknesses[0] != _sliceThicknesses[i]) {
 			BOOST_LOG_TRIVIAL(warning)<< format("Warning: slice thickness not constant, will give wrong results (iz=%d)!") % i;
 		}
 	}
 
 	if (_atPot.size() == 0) {
-		_nzPerSlice = (int) floor(OVERSAMPLING * _mc->dz / min(_mc->dx,_mc->dy));
+		_nzPerSlice = (int) floor(OVERSAMPLING * _mc->d[2] / min(_mc->d[0],_mc->d[1]));
 		if (_nzPerSlice % 2 != 0) _nzPerSlice++;
-		_dz = _mc->dz / _nzPerSlice;
-		_nrAtomZ =  (int) ceil(_mc->ratom /  _mc->dz) * _nzPerSlice;
+		_dz = _mc->d[2] / _nzPerSlice;
+		_nrAtomZ =  (int) ceil(_mc->ratom /  _mc->d[2]) * _nzPerSlice;
 		_ndiaAtomZ = (2 * _nrAtomZ);
-		_dkz = _nzPerSlice / (_ndiaAtomZ * _mc->dz);
+		_dkz = _nzPerSlice / (_ndiaAtomZ * _mc->d[2]);
 		SetScatteringFactors(_kmax);
 	}
 }
@@ -388,7 +388,7 @@ void C3DFFTPotential::ComputeAtomPotential(int Znum) {
 		// however (nzPerSlice+1)/2 above zero in z-direction
 		int izOffset = (_nzPerSlice - 1);
 		float_tt xPos = -2.0 * PI * 0.0; // or m_dx*nx/(OVERSAMPLING), if in center
-		float_tt zPos = -2.0 * PI * (_mc->dz / _nzPerSlice * (izOffset/2));
+		float_tt zPos = -2.0 * PI * (_mc->d[2] / _nzPerSlice * (izOffset/2));
 
 		for (int iz = 0; iz < _ndiaAtomZ; iz++) {
 			float_tt kz = _dkz * (iz < _nrAtomZ ? iz : iz - _ndiaAtomZ);
@@ -512,7 +512,7 @@ void C3DFFTPotential::GetAtomPotentialOffset3D(unsigned Znum, float_tt B,
 //		// however (nzPerSlice+1)/2 above zero in z-direction
 //		float_tt xPos = -2.0 * PI * 0.0; // or m_dx*nx/(OVERSAMPLING), if in center
 //		unsigned izOffset = (nzPerSlice - 1) / 2;
-//		float_tt zPos = -2.0 * PI * (_mc->dz / nzPerSlice * (izOffset));
+//		float_tt zPos = -2.0 * PI * (_mc->d[2] / nzPerSlice * (izOffset));
 //
 //		// kzborder = dkz*(nz/(2*OVERSAMP_Z) -1);
 //		for (unsigned iz = 0; iz < nz; iz++) {

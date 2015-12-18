@@ -25,11 +25,11 @@ void SliceBySliceCUDA2DPotential::MakeSlices(superCellBoxPtr info) {
 void SliceBySliceCUDA2DPotential::copyDataToGPU(superCellBoxPtr info) {
 	cf = new CUDAFunctions(info, _mc);
 
-	slicePixels = _mc->nx * _mc->ny;
+	slicePixels = _mc->n[0] * _mc->n[1];
 	numAtoms = info->atoms.size();
 	numAtUnique = info->uniqueZ.size();
 
-	_t_d = af::array(_mc->nx * _mc->ny * _mc->nSlices, c32);
+	_t_d = af::array(_mc->n[0] * _mc->n[1] * _mc->n[2], c32);
 	af::sync();
 	tafPtr = _t_d.device<afcfloat>();
 	potential = (cufftComplex *) tafPtr;
@@ -52,7 +52,7 @@ void SliceBySliceCUDA2DPotential::copyDataToGPU(superCellBoxPtr info) {
 	BOOST_LOG_TRIVIAL(info)<< format( "%g msec used copying data to gpu") % (af::timer::stop(time)*1000);
 
 	if (_oc->SavePotential || _oc->ComputeFromProjectedPotential) {
-		_t_host.resize(boost::extents[_mc->nSlices][_mc->nx][_mc->ny]);
+		_t_host.resize(boost::extents[_mc->n[2]][_mc->n[0]][_mc->n[1]]);
 	}
 }
 void SliceBySliceCUDA2DPotential::copyToDeviceInt(int *devdst, std::vector<int> src, int size) {
@@ -69,13 +69,13 @@ void SliceBySliceCUDA2DPotential::copyToDeviceFloat(float_tt *devdst, std::vecto
 
 af::array SliceBySliceCUDA2DPotential::GetSlice(af::array t, unsigned idx) {
 
-	af::array slicepot = af::array(_mc->nx, _mc->ny, c32);
+	af::array slicepot = af::array(_mc->n[0], _mc->n[1], c32);
 	af::sync();
 	tafPtr = slicepot.device<afcfloat>();
 	potential = (cufftComplex *) tafPtr;
 
 	cf->initPotArrays(slicePixels);
-//	cf->GetPhaseGrating(&potential[idx * _mc->nx * _mc->ny], idx, _atomPot_d);
+//	cf->GetPhaseGrating(&potential[idx * _mc->n[0] * _mc->n[1]], idx, _atomPot_d);
 	cf->unlockArrays();
 
 	af::sync();
@@ -85,11 +85,11 @@ af::array SliceBySliceCUDA2DPotential::GetSlice(af::array t, unsigned idx) {
 		_t_d(af::seq(idx * slicePixels, (idx + 1) * slicePixels - 1)) = slicepot(af::span);
 	}
 
-	if (idx == _mc->nSlices - 1) {
+	if (idx == _mc->n[2] - 1) {
 		xyzPos.unlock();
 		occupancy.unlock();
 		znums.unlock();
-		_t_d = af::moddims(_t_d, _mc->nx, _mc->ny, _mc->nSlices);
+		_t_d = af::moddims(_t_d, _mc->n[0], _mc->n[1], _mc->n[2]);
 		SavePotential();
 	}
 	return slicepot;

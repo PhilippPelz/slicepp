@@ -13,7 +13,7 @@
 namespace QSTEM {
 CUDA2DPotential::CUDA2DPotential(cModelConfPtr mc, cOutputConfPtr oc, PersistenceManagerPtr p) :
 		CPotential(mc, oc, p) {
-	cufft_assert(cufftPlan2d(&_fftPlan, _mc->nx, _mc->ny, CUFFT_C2C));
+	cufft_assert(cufftPlan2d(&_fftPlan, _mc->n[0], _mc->n[1], CUFFT_C2C));
 	cublas_assert(cublasCreate ( &_cublasHandle));
 }
 
@@ -23,9 +23,9 @@ CUDA2DPotential::~CUDA2DPotential() {
 	cufft_assert(cufftDestroy(_fftPlan));
 }
 void CUDA2DPotential::initPotArrays() {
-	_slicePixels = _mc->nx * _mc->ny;
+	_slicePixels = _mc->n[0] * _mc->n[1];
 
-	cuda_assert(cudaMalloc((void**) &_t_d_ptr, _mc->nSlices * _slicePixels * sizeof(cufftComplex)));
+	cuda_assert(cudaMalloc((void**) &_t_d_ptr, _mc->n[2] * _slicePixels * sizeof(cufftComplex)));
 	cuda_assert(cudaMalloc((void**) &_V_elem_ptr, _slicePixels * sizeof(cufftComplex)));
 	cuda_assert(cudaMalloc((void**) &_V_accum_ptr, _slicePixels * sizeof(cufftComplex)));
 
@@ -67,8 +67,8 @@ void CUDA2DPotential::MakeSlices(superCellBoxPtr info) {
 	af::timer time = af::timer::start();
 	BOOST_LOG_TRIVIAL(info)<< "Calculating potential ...";
 
-	for (int islice = 0; islice < _mc->nSlices; islice++) {
-		progressCounter(islice, _mc->nSlices);
+	for (int islice = 0; islice < _mc->n[2]; islice++) {
+		progressCounter(islice, _mc->n[2]);
 		_cf->SetComplex2D(_V_accum_ptr, 0.f, 0.f);
 //		cuda_assert(cudaDeviceSynchronize());
 		for (int& Z : info->uniqueZ) {
@@ -100,7 +100,7 @@ void CUDA2DPotential::MakeSlices(superCellBoxPtr info) {
 	% elapsed % (elapsed / info->atoms.size());
 
 	_cf->releaseArrays();
-	_t_d = af::array(_mc->ny, _mc->nx, _mc->nSlices,(afcfloat*)_t_d_ptr,afDevice);
+	_t_d = af::array(_mc->n[1], _mc->n[0], _mc->n[2],(afcfloat*)_t_d_ptr,afDevice);
 	af::sync();
 	if (_oc->SavePotential)
 		SavePotential();
@@ -117,15 +117,15 @@ void CUDA2DPotential::AddAtomToSlices(atom& atom, float_tt atomX, float_tt atomY
 }
 
 void CUDA2DPotential::SaveAtomicPotential(int Z) {
-	_atomPot[Z].resize(boost::extents[_mc->nx][_mc->ny]);
-	cuda_assert(cudaMemcpy( _atomPot[Z].data(),_atomPot_d[Z], _mc->nx * _mc->ny* sizeof(cufftComplex), cudaMemcpyDeviceToHost));
+	_atomPot[Z].resize(boost::extents[_mc->n[0]][_mc->n[1]]);
+	cuda_assert(cudaMemcpy( _atomPot[Z].data(),_atomPot_d[Z], _mc->n[0] * _mc->n[1]* sizeof(cufftComplex), cudaMemcpyDeviceToHost));
 	std::stringstream str;
 	str << "atomicPotential_";
 	str << Z;
 	_persist->Save2DDataSet(_atomPot[Z], str.str());
 }
 void CUDA2DPotential::SavePotential() {
-	_t.resize(boost::extents[_mc->nSlices][_mc->nx][_mc->ny]);
+	_t.resize(boost::extents[_mc->n[2]][_mc->n[0]][_mc->n[1]]);
 	_t_d.host(_t.data());
 	CPotential::SavePotential();
 }

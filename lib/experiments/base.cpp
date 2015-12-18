@@ -72,84 +72,84 @@ void BaseExperiment::SetResolution(superCellBoxPtr b) {
 	//TODO: nx,ny = integer multiple of # unit cells
 	//TODO: super cell size = N * unit cell size
 
-	switch (mc->ResolutionCalculation) {
+	switch (mc->ResCalcType) {
 		case ResolutionCalculation::FILLN:
 			if (sc->isBoxed) {
 
 			} else {
 
 			}
-			mc->nx = (mc->nx % 2 != 0) ? mc->nx + 1 : mc->nx;
-			mc->ny = (mc->ny % 2 != 0) ? mc->ny + 1 : mc->ny;
-			mc->dx = (max_x - 0) / mc->nx;
-			mc->dy = (max_y - 0) / mc->ny;
-			mc->xOffset = 0;
-			mc->yOffset = 0;
+			mc->n[0] = (mc->n[0] % 2 != 0) ? mc->n[0] + 1 : mc->n[0];
+			mc->n[1] = (mc->n[1] % 2 != 0) ? mc->n[1] + 1 : mc->n[1];
+			mc->d[0] = (max_x - 0) / mc->n[0];
+			mc->d[1] = (max_y - 0) / mc->n[1];
+			mc->offset[0] = 0;
+			mc->offset[1] = 0;
 			break;
 		case ResolutionCalculation::FILLRES:
-			mc->nx = ceil((max_x - 0) / mc->dx);
-			mc->ny = ceil((max_y - 0) / mc->dy);
-			mc->nx = (mc->nx % 2 != 0) ? mc->nx + 1 : mc->nx;
-			mc->ny = (mc->ny % 2 != 0) ? mc->ny + 1 : mc->ny;
-			mc->dx = (max_x - 0) / mc->nx;
-			mc->dy = (max_y - 0) / mc->ny;
-			mc->xOffset = 0;
-			mc->yOffset = 0;
+			mc->n[0] = ceil((max_x - 0) / mc->d[0]);
+			mc->n[1] = ceil((max_y - 0) / mc->d[1]);
+			mc->n[0] = (mc->n[0] % 2 != 0) ? mc->n[0] + 1 : mc->n[0];
+			mc->n[1] = (mc->n[1] % 2 != 0) ? mc->n[1] + 1 : mc->n[1];
+			mc->d[0] = (max_x - 0) / mc->n[0];
+			mc->d[1] = (max_y - 0) / mc->n[1];
+			mc->offset[0] = 0;
+			mc->offset[1] = 0;
 			break;
 		case ResolutionCalculation::BOXRES:
-			mc->nx = sc->boxX / mc->dx;
-			mc->ny = sc->boxY / mc->dy;
-			mc->nx = (mc->nx % 2 != 0) ? mc->nx + 1 : mc->nx;
-			mc->ny = (mc->ny % 2 != 0) ? mc->ny + 1 : mc->ny;
+			mc->n[0] = sc->box[0] / mc->d[0];
+			mc->n[1] = sc->box[1] / mc->d[1];
+			mc->n[0] = (mc->n[0] % 2 != 0) ? mc->n[0] + 1 : mc->n[0];
+			mc->n[1] = (mc->n[1] % 2 != 0) ? mc->n[1] + 1 : mc->n[1];
 			if (mc->CenterSample) {
-				mc->xOffset = sc->boxX / 2 - (max_x - 0) / 2;
-				mc->yOffset = sc->boxY / 2 - (max_y - 0) / 2;
+				mc->offset[0] = sc->box[0] / 2 - (max_x - 0) / 2;
+				mc->offset[1] = sc->box[1] / 2 - (max_y - 0) / 2;
 			} else {
-				mc->xOffset = 0;
-				mc->yOffset = 0;
+				mc->offset[0] = 0;
+				mc->offset[1] = 0;
 			}
 			break;
 		case ResolutionCalculation::BOXN:
-			mc->nx = (mc->nx % 2 != 0) ? mc->nx + 1 : mc->nx;
-			mc->ny = (mc->ny % 2 != 0) ? mc->ny + 1 : mc->ny;
-			mc->dx = sc->boxX / mc->nx;
-			mc->dy = sc->boxY / mc->ny;
+			mc->n[0] = (mc->n[0] % 2 != 0) ? mc->n[0] + 1 : mc->n[0];
+			mc->n[1] = (mc->n[1] % 2 != 0) ? mc->n[1] + 1 : mc->n[1];
+			mc->d[0] = sc->box[0] / mc->n[0];
+			mc->d[1] = sc->box[1] / mc->n[1];
 			if (mc->CenterSample) {
-				mc->xOffset = sc->boxX / 2 - (max_x - 0) / 2;
-				mc->yOffset = sc->boxY / 2 - (max_y - 0) / 2;
+				mc->offset[0] = sc->box[0] / 2 - (max_x - 0) / 2;
+				mc->offset[1] = sc->box[1] / 2 - (max_y - 0) / 2;
 			} else {
-				mc->xOffset = 0;
-				mc->yOffset = 0;
+				mc->offset[0] = 0;
+				mc->offset[1] = 0;
 			}
 			break;
 
 	}
-	if (_c->ExperimentType != ExperimentType::PTYC) {
-		wc->nx = mc->nx;
-		wc->ny = mc->ny;
-		dc->nx = mc->nx;
-		dc->ny = mc->ny;
+	if (_c->ExperimentType != PTYCHO) {
+		wc->nx = mc->n[0];
+		wc->ny = mc->n[1];
+		dc->nx = mc->n[0];
+		dc->ny = mc->n[1];
 	}
 }
 void BaseExperiment::SetSliceThickness(superCellBoxPtr b) {
 	float_tt max_x = b->ax, max_y = b->by, max_z = b->cz, zTotal = b->cz;
 	auto mc = _c->Model;
 
-	switch (mc->SliceThicknessCalculation) {
+	switch (mc->SliceCalcType) {
 		case SliceThicknessCalculation::Auto:
-			mc->dz = (zTotal / ((int) zTotal)) + 0.01 * (zTotal / ((int) zTotal));
-			mc->nSlices = (int) zTotal + 1;
+			mc->d[2] = (zTotal / ((int) zTotal)) + 0.01 * (zTotal / ((int) zTotal));
+			mc->n[2] = (int) zTotal + 1;
 			break;
 		case SliceThicknessCalculation::NumberOfSlices:
-			mc->dz = (zTotal / mc->nSlices) + 0.01 * (zTotal / mc->nSlices);
+			mc->d[2] = (zTotal / mc->n[2]) + 0.01 * (zTotal / mc->n[2]);
 			break;
 		case SliceThicknessCalculation::SliceThickness:
-			mc->nSlices = (int) (zTotal / mc->dz);
+			mc->n[2] = (int) (zTotal / mc->d[2]);
 			break;
 		default:
 			break;
 	}
-	int atomRadiusSlices = ceil(mc->ratom / mc->dz);
+	int atomRadiusSlices = ceil(mc->ratom / mc->d[2]);
 }
 void BaseExperiment::DisplayProgress(int flag) {
 	// static double timer;
@@ -253,15 +253,15 @@ int BaseExperiment::RunMultislice(af::array t_af) {
 	cztot = 0.0;
 
 	if (printFlag) {
-		for (islice = 0; islice < _c->Model->nSlices; islice++) {
-			cztot += _c->Model->dz;
+		for (islice = 0; islice < _c->Model->n[2]; islice++) {
+			cztot += _c->Model->d[2];
 		}
 		BOOST_LOG_TRIVIAL(info)<< format("Specimen thickness: %g Angstroms\n") % cztot;
 	}
 
 	BOOST_LOG_TRIVIAL(info)<< "Propagating through slices ...";
 	af::timer time = af::timer::start();
-	for (islice = 0; islice < _c->Model->nSlices; islice++) {
+	for (islice = 0; islice < _c->Model->n[2]; islice++) {
 
 		auto slice = _pot->GetSlice(t_af, islice);
 		_wave->Transmit(slice);
@@ -285,12 +285,12 @@ int BaseExperiment::RunMultislice(af::array t_af) {
 		PostSliceProcess(islice);
 
 		if (_c->Output->LogLevel <= 2) { ///info
-			if (islice % (int) ceil(_c->Model->nSlices / 10.0) == 0)
-				loadbar(islice + 1, _c->Model->nSlices);
+			if (islice % (int) ceil(_c->Model->n[2] / 10.0) == 0)
+				loadbar(islice + 1, _c->Model->n[2]);
 		}
 	} /* end for(islice...) */
 	BOOST_LOG_TRIVIAL(info)<< format( "%g ms used for wave propagation (%g us per slice)")
-	% (af::timer::stop(time)*1000) %( af::timer::stop(time)*1e6 / _c->Model->nSlices);
+	% (af::timer::stop(time)*1000) %( af::timer::stop(time)*1e6 / _c->Model->n[2]);
 	return 0;
 } // end of runMulsSTEM
 

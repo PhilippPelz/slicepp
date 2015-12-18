@@ -33,7 +33,7 @@ CBaseWave::CBaseWave(const boost::shared_ptr<WaveConfig> wc, const boost::shared
 	_wavlen = Wavelength(_E);
 }
 void CBaseWave::InitializePropagators() {
-	float_tt scale = _mc->dz * PI * GetWavelength();
+	float_tt scale = _mc->d[2] * PI * GetWavelength();
 	//t = exp(-i pi lam k^2 dz)
 	af::array s, kx2D, ky2D;
 // Tile the arrays to create 2D versions of the k vectors
@@ -92,7 +92,7 @@ CBaseWave::CBaseWave(const CBaseWave &other) :
 		CBaseWave(other._wc, other._mc, other._persist) {
 	// TODO: make sure arrays are deep copied
 	other.GetSizePixels(_wc->nx, _wc->ny);
-	other.GetResolution(_mc->dx, _mc->dy);
+	other.GetResolution(_mc->d[0], _mc->d[1]);
 	_E = other.GetVoltage();
 }
 
@@ -100,8 +100,8 @@ CBaseWave::~CBaseWave() {
 }
 
 void CBaseWave::InitializeKVectors() {
-	float_tt ax = _mc->dx * _wc->nx;
-	float_tt by = _mc->dy * _wc->ny;
+	float_tt ax = _mc->d[0] * _wc->nx;
+	float_tt by = _mc->d[1] * _wc->ny;
 
 	m_kx = (af::range(_wc->nx) - _wc->nx / 2) / ax;
 	m_kx2 = m_kx * m_kx;
@@ -142,14 +142,14 @@ void CBaseWave::DisplayParams() {
 	BOOST_LOG_TRIVIAL(info) <<
 	"**************************************************************************************************";
 	BOOST_LOG_TRIVIAL(info)<<format("* Real space res.:      %gA (=%gmrad)")% (1.0/m_k2max)%(GetWavelength()*m_k2max*1000.0);
-	BOOST_LOG_TRIVIAL(info)<<format("* Reciprocal space res: dkx=%g, dky=%g (1/A)")% (1.0/(_wc->nx*_mc->dx))%(1.0/(_wc->ny*_mc->dy));
+	BOOST_LOG_TRIVIAL(info)<<format("* Reciprocal space res: dkx=%g, dky=%g (1/A)")% (1.0/(_wc->nx*_mc->d[0]))%(1.0/(_wc->ny*_mc->d[1]));
 
 	BOOST_LOG_TRIVIAL(info)<<format("* Beams:                %d x %d ")%_wc->nx%_wc->ny;
 
 	BOOST_LOG_TRIVIAL(info)<<format("* Acc. voltage:         %g (lambda=%gA)")%_E%(Wavelength(_E));
 
 	BOOST_LOG_TRIVIAL(info)<<format("* Probe array:          %d x %d pixels")%_wc->nx%_wc->ny;
-	BOOST_LOG_TRIVIAL(info)<<format("*                       %g x %gA")%(_wc->nx*_mc->dx)%(_wc->ny*_mc->dy);
+	BOOST_LOG_TRIVIAL(info)<<format("*                       %g x %gA")%(_wc->nx*_mc->d[0])%(_wc->ny*_mc->d[1]);
 }
 
 /*
@@ -165,8 +165,8 @@ void CBaseWave::GetSizePixels(int &x, int &y) const {
 }
 
 void CBaseWave::GetResolution(float_tt &x, float_tt &y) const {
-	x = _mc->dx;
-	y = _mc->dy;
+	x = _mc->d[0];
+	y = _mc->d[1];
 }
 
 void CBaseWave::GetK2() {

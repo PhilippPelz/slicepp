@@ -42,7 +42,7 @@ void CoherentSinglePositionExperiment::Run()
 	int ix,iy,i,pCount,result;
 	double timer,timerTot ;
 	float_tt t=0;
-	FloatArray2D avgPendelloesung(boost::extents[_nbout][_c->Model->nSlices]);
+	FloatArray2D avgPendelloesung(boost::extents[_nbout][_c->Model->n[2]]);
 	std::map<std::string, double> params;
 	std::vector<unsigned> position(1);         // Used to indicate the number of averages
 
@@ -88,9 +88,9 @@ void CoherentSinglePositionExperiment::Run()
 //			sprintf(systStr,"%s/pendelloesung.dat",m_outputLocation.c_str());
 //			if ((fp=fopen(systStr,"w")) !=NULL) {
 //				BOOST_LOG_TRIVIAL(info) << "Writing Pendelloesung data";
-//				for (iy=0;iy<_c->Model->nSlices ;iy++) {
+//				for (iy=0;iy<_c->Model->n[2] ;iy++) {
 //					/* write the thicknes in the first column of the file */
-//					fprintf(fp,"%g",iy*_c->Model->dz);//((float)(m_potential->GetNSlices()*_c->Potential->NSubSlabs)));
+//					fprintf(fp,"%g",iy*_c->Model->dz);//((float)(m_potential->Getn[2]()*_c->Potential->NSubSlabs)));
 //					/* write the beam intensities in the following columns */
 //					for (ix=0;ix<_nbout;ix++) {
 //						fprintf(fp,"\t%g",avgPendelloesung[ix][iy]);
