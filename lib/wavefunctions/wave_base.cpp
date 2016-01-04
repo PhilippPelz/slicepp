@@ -101,6 +101,8 @@ void CBaseWave::InitializeKVectors() {
 
 	af::array kx2D = af::tile(kx2, 1, _wc->ny);
 	af::array ky2D = af::tile(ky2.T(), _wc->nx);
+	_kx = af::tile(_kx, 1, _wc->ny);
+	_ky = af::tile(_ky.T(), _wc->nx);
 	_k2 = kx2D + ky2D;
 }
 

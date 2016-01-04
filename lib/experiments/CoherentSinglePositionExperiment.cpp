@@ -29,6 +29,7 @@ namespace slicepp
 
 CoherentSinglePositionExperiment::CoherentSinglePositionExperiment(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p, const DetPtr& d, const PersistenceManagerPtr& pers) : BaseExperiment(c,s,w,p,d,pers)
 {
+	printf("wp40\n");
 	_lbeams = false;
 }
 
@@ -49,10 +50,10 @@ void CoherentSinglePositionExperiment::Run()
 	m_chisq.resize(_c->Model->TDSRuns);
 	timerTot = 0; /* cputim();*/
 	DisplayProgress(-1);
-
+	printf("wp41\n");
 	time(&time0);
 	auto box = _structureBuilder->Build();
-
+	printf("wp5\n");
 	SetResolution(box);
 	SetSliceThickness(box);
 	time(&time1);
@@ -76,32 +77,7 @@ void CoherentSinglePositionExperiment::Run()
 		RunMultislice(_pot->GetPotential());
 
 		if (_lbeams) {
-			/**************************************************************
-			 * The diffraction spot intensities of the selected
-			 * diffraction spots are now stored in the 2 dimensional array
-			 * m_pendelloesung[beam][slice].
-			 * We can write the array to a file and display it, just for
-			 * demonstration purposes
-			 *************************************************************/
 			char systStr[255];
-			//TODO rewrite saving of pendelloesung
-//			sprintf(systStr,"%s/pendelloesung.dat",m_outputLocation.c_str());
-//			if ((fp=fopen(systStr,"w")) !=NULL) {
-//				BOOST_LOG_TRIVIAL(info) << "Writing Pendelloesung data";
-//				for (iy=0;iy<_c->Model->n[2] ;iy++) {
-//					/* write the thicknes in the first column of the file */
-//					fprintf(fp,"%g",iy*_c->Model->dz);//((float)(m_potential->Getn[2]()*_c->Potential->NSubSlabs)));
-//					/* write the beam intensities in the following columns */
-//					for (ix=0;ix<_nbout;ix++) {
-//						fprintf(fp,"\t%g",avgPendelloesung[ix][iy]);
-//					}
-//					fprintf(fp,"\n");
-//				}
-//				fclose(fp);
-//			}
-//			else {
-//				BOOST_LOG_TRIVIAL(error) << "Could not open file for pendelloesung plot";
-//			}
 		}
 	}
 	time(&time0);

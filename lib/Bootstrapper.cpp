@@ -37,11 +37,14 @@ Bootstrapper::Bootstrapper(){}
 Bootstrapper::~Bootstrapper() {}
 
 void Bootstrapper::Initialize(c_Config* conf){
+	printf("wp3 %d\n",(int)conf->ExpType);
 	ConfigPtr c = ConfigPtr(new Config(*conf));
 
 	fftw_init_threads();
 	fftw_plan_with_nthreads(c->nThreads);
 	omp_set_num_threads(c->nThreads);
+
+	printf("wp\n");
 
 	af::info();
 
@@ -75,20 +78,22 @@ void Bootstrapper::Initialize(c_Config* conf){
 				keywords::auto_flush = true
 			);
 
-	boost::filesystem::path p(c->Structure->structureFilename);
-
-	std::string str = c->Model->PotentialType;
- 	std::transform(str.begin(), str.end(),str.begin(), ::toupper);
-
+	boost::filesystem::path p(c->Structure->StructureFilename);
+	printf("wp %s\n",c->Structure->StructureFilename);
 	auto sreader = StructureReaderPtr(_structureReaderFactory[".cif"](p));
 	auto structureBuilder = StructureBuilderPtr(_structureBuilderFactory[p.extension().string()](sreader,c->Structure,c->Model,c->Output));
 	auto persist = PersistenceManagerPtr(new PersistenceManager(c));
 	auto w = WaveConfPtr(c->Wave);
+	printf("wp\n");
 	auto m = ModelConfPtr(c->Model);
 	auto wave = WavePtr(_waveFactory[c->Wave->type](w,m,persist));
+	printf("wp1\n");
 	auto detector = DetPtr(_detectorFactory[c->Detector->type](c->Detector,persist));
-	auto potential = PotPtr(_potentialFactory[str](c->Model,c->Output,persist));
-	_e = ExperimentPtr( _experimentFactory[c->ExperimentType](c,structureBuilder,wave,potential,detector, persist));
+	printf("wp2\n");
+	auto potential = PotPtr(_potentialFactory[c->Model->PotType](c->Model,c->Output,persist));
+	printf("wp3 %d\n",(int)c->ExpType);
+	_e = ExperimentPtr( _experimentFactory[c->ExpType](c,structureBuilder,wave,potential,detector, persist));
+	printf("wp\n");
 }
 void Bootstrapper::Initialize(){
 
@@ -131,11 +136,9 @@ void Bootstrapper::Initialize(){
 				keywords::auto_flush = true
 			);
 
-	boost::filesystem::path p(c->Structure->structureFilename);
+	boost::filesystem::path p(c->Structure->StructureFilename);
 
-	std::string str = c->Model->PotentialType;
- 	std::transform(str.begin(), str.end(),str.begin(), ::toupper);
-
+ 	printf("path: %s",c->Structure->StructureFilename);
 	auto sreader = StructureReaderPtr(_structureReaderFactory[".cif"](p));
 	auto structureBuilder = StructureBuilderPtr(_structureBuilderFactory[p.extension().string()](sreader,c->Structure,c->Model,c->Output));
 	auto persist = PersistenceManagerPtr(new PersistenceManager(c));
@@ -143,8 +146,8 @@ void Bootstrapper::Initialize(){
 	auto m = ModelConfPtr(c->Model);
 	auto wave = WavePtr(_waveFactory[c->Wave->type](w,m,persist));
 	auto detector = DetPtr(_detectorFactory[c->Detector->type](c->Detector,persist));
-	auto potential = PotPtr(_potentialFactory[str](c->Model,c->Output,persist));
-	_e = ExperimentPtr( _experimentFactory[c->ExperimentType](c,structureBuilder,wave,potential,detector, persist));
+	auto potential = PotPtr(_potentialFactory[c->Model->PotType](c->Model,c->Output,persist));
+	_e = ExperimentPtr( _experimentFactory[c->ExpType](c,structureBuilder,wave,potential,detector, persist));
 }
 
 ExperimentPtr Bootstrapper::GetExperiment(){
@@ -168,11 +171,11 @@ void Bootstrapper::RegisterExperimentTypes(){
 	_experimentFactory[PTYCHO] = boost::factory<Ptychograph*>();
 }
 void Bootstrapper::RegisterPotentialTypes(){
-	_potentialFactory["3DFFT"]= boost::factory<C3DFFTPotential*>();
-	_potentialFactory["2DFFT"]= boost::factory<C2DFFTPotential*>();
-	_potentialFactory["3D"]= boost::factory<C3DPotential*>();
-	_potentialFactory["2D"]= boost::factory<C2DPotential*>();
-	_potentialFactory["CUDA"]= boost::factory<CUDA2DPotential*>();
+	_potentialFactory[FFT3D]= boost::factory<C3DFFTPotential*>();
+	_potentialFactory[FFT2D]= boost::factory<C2DFFTPotential*>();
+	_potentialFactory[Real3D]= boost::factory<C3DPotential*>();
+	_potentialFactory[Real2D]= boost::factory<C2DPotential*>();
+	_potentialFactory[CUDA2D]= boost::factory<CUDA2DPotential*>();
 }
 
 void Bootstrapper::RegisterDetectorTypes(){

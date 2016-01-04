@@ -72,15 +72,17 @@ void CUDAFunctions::SetComplex2D(cufftComplex* a, float real, float imag){
 	const int bS = myBSize(slicePixels);
     int af_id = af::getDevice();
     cudaStream_t af_stream = afcu::getStream(af_id);
-	initialValues<<< gS, bS , 0, af_stream >>> ( a, slicePixels, 0.f, 0.f);
+    printf("pixels: %d	gs: %d,		bs: %d a: %#08x\n",slicePixels,gS,bS,a);
+	initialValues<<< gS, bS , 0,  af_stream>>> ( a, slicePixels, 0.f, 0.f);
 }
 void CUDAFunctions::SetComplex3D(cufftComplex* a, float real, float imag){
 	int slicePixels = _mc->n[0] * _mc->n[1];
-	const int gS = myGSize(slicePixels);
+	const int gS = myGSize(slicePixels * _mc->n[2]);
 	const int bS = myBSize(slicePixels * _mc->n[2]);
     int af_id = af::getDevice();
     cudaStream_t af_stream = afcu::getStream(af_id);
-	initialValues<<< gS, bS , 0, af_stream >>> ( a, slicePixels, 0.f, 0.f);
+
+	initialValues<<< gS, bS , 0,  af_stream>>> ( a, slicePixels * _mc->n[2], 0.f, 0.f);
 }
 void CUDAFunctions::GetAtomicPotential(cufftComplex* V, int Z) {
 	int slicePixels = _mc->n[0] * _mc->n[1];

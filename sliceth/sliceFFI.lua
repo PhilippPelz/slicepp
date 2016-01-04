@@ -29,8 +29,16 @@ typedef enum  {
   Scintillator = 1, Direct = 2
 } DetectorType;
 
+typedef enum  {
+  FFT2D = 1,
+  FFT3D = 2,
+  Real2D = 3,
+  Real3D = 4,
+  CUDA2D = 5
+} PotentialType;
+
 typedef struct StructureConfig {
-  const char* StructureFilename;
+  char StructureFilename[1000];
 
   float T_Kelvin;
 
@@ -73,7 +81,7 @@ typedef struct ModelConfig {
 
   //atom radius in angstrom
   float ratom;
-  const char* PotentialType;
+  PotentialType PotType;
   float EnergykeV;
   float wavelength;
   float sigma;
@@ -147,10 +155,11 @@ typedef struct OutputConfig {
   bool ComputeFromProjectedPotential, SaveAtomDeltas;
   bool SaveAtomConv;
 
-  const char* LogFileName;
-  const char* SavePath;
-  const char* ConfigPath;
+  char LogFileName[1000];
+  char SavePath[1000];
+  char ConfigPath[1000];
 
+  // TODO: deprecated
   bool PendelloesungPlot;
   bool readPotential;
 
@@ -163,8 +172,7 @@ typedef struct DetectorConfig {
   float mtfD;
   float DwellTimeMsec;
   DetectorType type;
-  int nx;
-  int ny;
+  int n[2];
   float MaxElectronCounts;
 } DetectorConfig;
 
@@ -178,7 +186,7 @@ typedef struct ScanConfig {
 
 typedef struct c_Config {
   int nThreads;
-  int ExperimentType;
+  ExperimentType ExpType;
 
   StructureConfig* Structure;
   ModelConfig* Model;
@@ -205,6 +213,7 @@ void OutputConfig_delete(OutputConfig* c);
 void DetectorConfig_delete(DetectorConfig* c);
 void ScanConfig_delete(ScanConfig* c);
 void c_Config_delete(c_Config* c);
+
 
 void run_simulation(c_Config* conf);
 ]])

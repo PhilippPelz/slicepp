@@ -1,9 +1,11 @@
 require "paths"
-local s = require 'sliceth'
-local c = s.config
+local c = require 'sliceth.config'
+local v = require 'sliceth.vectors'
 local module = {}
 
 local default = c.Config()
+default.ExpType = "CBED"
+default.nThreads = 1
 
 local mc = c.ModelConfig()
 mc.TiltBack = false
@@ -12,9 +14,9 @@ mc.CenterSample = false
 mc.UseTDS = false
 mc.TDSRuns = 1
 
-mc.n = s.int3(1024,1024,10)
-mc.d = s.int3(0.5,0.5,0.5)
-mc.offset = s.int3(0,0,0)
+mc.n = v.int3(1024,1024,10)
+mc.d = v.float3(0.5,0.5,0.5)
+mc.offset = v.float3(0,0,0)
 
 mc.beamTiltX = 0.0
 mc.beamTiltY = 0.0
@@ -29,11 +31,11 @@ mc.UseQPotentialOffsets = false
 
 mc.StructFactorType = "Rez"
 mc.SliceCalcType = "SliceThickness"
-mc.ResCalcType = "FILLRes"
+mc.ResCalcType = "FILLRES"
 mc.DisplaceType = "None"
 
 mc.ratom = 5.0
-mc.PotentialType = "CUDA"
+mc.PotType = "CUDA2D"
 mc.EnergykeV = 200
 mc.ImagPot = 0.0
 
@@ -114,16 +116,16 @@ dc.mtfC = 5
 dc.mtfD = 0
 dc.DwellTimeMsec = 1 
 dc.type = "Scintillator"
-dc.n = s.int2(1024,1024)
+dc.n = v.int2(1024,1024)
 dc.MaxElectronCounts = 5e4
 
 local sc = c.StructureConfig()
 sc.StructureFilename = "test"
 sc.T_Kelvin = 300
-sc.crystalTilt = s.float3(0,0,0)
-sc.box = s.float3(0,0,0)
-sc.zoneAxis = s.int3(1,0,0)
-sc.nCells = s.int3(1,1,1)
+sc.crystalTilt = v.float3(0,0,0)
+sc.box = v.float3(0,0,0)
+sc.zoneAxis = v.int3(1,0,0)
+sc.nCells = v.int3(1,1,1)
 
 sc.isBoxed = false
 sc.rotateToZoneAxis = false
@@ -137,9 +139,9 @@ default.Detector = dc
 
 local Builder = {}
 local Builder_mt = {}
-function Builder_mt.__call()
-  -- no copy of the config is being made -- careful  
-  self.c = module.DefaultConfig
+function Builder_mt:__call()
+--  print(module.DefaultConfig)
+  self.c = module.DefaultConfig:copy()
   return self
 end
 

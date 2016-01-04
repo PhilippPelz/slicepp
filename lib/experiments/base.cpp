@@ -52,7 +52,7 @@ void BaseExperiment::DisplayParams() {
 	BOOST_LOG_TRIVIAL(info)<<
 	"**************************************************************************************************";
 	BOOST_LOG_TRIVIAL(info)<< format("* Running program slice++ (version %s) in %d mode") % VERSION %
-	static_cast<int>(_c->ExperimentType);
+	static_cast<int>(_c->ExpType);
 	BOOST_LOG_TRIVIAL(info)<< format("* Date: %s, Time: %s") % Date % Time;
 	BOOST_LOG_TRIVIAL(info)<< format("* Output file/folder:          %s") % _c->Output->SavePath;
 	BOOST_LOG_TRIVIAL(info)<< format("* TDS:                         %d runs") % _c->Model->TDSRuns;
@@ -121,7 +121,7 @@ void BaseExperiment::SetResolution(superCellBoxPtr b) {
 			break;
 
 	}
-	if (_c->ExperimentType != PTYCHO) {
+	if (_c->ExpType != PTYCHO) {
 		wc->nx = mc->n[0];
 		wc->ny = mc->n[1];
 		dc->n[0] = mc->n[0];

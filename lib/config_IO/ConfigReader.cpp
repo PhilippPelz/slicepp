@@ -10,7 +10,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
-
+#include <cstring>
 
 namespace slicepp {
 
@@ -35,8 +35,10 @@ Config::Config(c_Config& c) {
 	Detector = boost::shared_ptr<DetectorConfig>(c.Detector);
 
 	SavePath = boost::filesystem::path(c.Output->SavePath);
-	StructureFilename = boost::filesystem::path(c.Structure->structureFilename);
+	StructureFilename = boost::filesystem::path(c.Structure->StructureFilename);
 	ConfigPath = boost::filesystem::path(c.Output->ConfigPath);
+	ExpType = c.ExpType;
+	nThreads = c.nThreads;
 }
 
 ConfigReader::ConfigReader() {
@@ -51,8 +53,9 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
 	ptree t;
 	boost::property_tree::json_parser::read_json(configFile.string().c_str(),t);
 
-	c->Output->ConfigPath = configFile.parent_path().string().c_str();
-	c->ExperimentType = t.get<int>("mode");
+	auto parent = configFile.parent_path().string();
+	std::memcpy(c->Output->ConfigPath,parent.c_str(),parent.length());
+	c->ExpType = (ExperimentType)t.get<int>("mode");
 	c->nThreads = t.get<int>("nthreads");
 
 	c->Detector->type = (DetectorType)t.get<int>("detector.type");
@@ -111,7 +114,6 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
 	c->Wave->nx = t.get<int>("wave.nx");
 	c->Wave->ny = t.get<int>("wave.ny");
 
-
 	c->Output->LogLevel = t.get<int>("output.loglevel");
 	c->Output->SaveWaveIterations = t.get<int>("output.SaveWaveAfterNSlices");
 	c->Output->PendelloesungPlot = t.get<bool>("output.pendelloesungPlot");
@@ -128,10 +130,12 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
 	c->Output->readPotential = t.get<bool>("output.readPotential");
 //	string p = t.get<string>("output.savePath").c_str();
 //	c->Output->savePath = boost::filesystem::path(p);
-	c->Output->SavePath = t.get<string>("output.savePath").c_str();
+	auto sp1 = t.get<string>("output.savePath");
+	std::memcpy(c->Output->SavePath,sp1.c_str(),sp1.length());
 //	string p1 = t.get<string>("output.logFileName");
 //	c->Output->LogFileName = boost::filesystem::path(p1);
-	c->Output->LogFileName = t.get<string>("output.logFileName").c_str();;
+	auto lfn = t.get<string>("output.logFileName");
+	std::memcpy(c->Output->LogFileName,lfn.c_str(),lfn.length());
 	c->Output->WriteLogFile = t.get<bool>("output.writeLogFile");
 	c->Output->ComputeFromProjectedPotential = t.get<bool>("output.ComputeFromProjectedPotential");
 
@@ -159,7 +163,7 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
 	c->Model->periodicXY = t.get<bool>("model.periodicXY");
 	c->Model->periodicZ = t.get<bool>("model.periodicZ");
 
-	c->Model->PotentialType = t.get<std::string>("model.type").c_str();
+	c->Model->PotType = (PotentialType)t.get<int>("model.type");
 	c->Model->ratom = t.get<float_tt>("model.atomRadiusAngstrom");
 	c->Model->DoZInterpolation = t.get<bool>("model.DoZInterpolation");
 	c->Model->UseQPotentialOffsets = t.get<bool>("model.UseQPotentialOffsets");
@@ -181,7 +185,8 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
     c->Model->wavelength = h / sqrt ( 2.f * m0 * e ) * 1e-9f / sqrt ( E0 * ( 1.f + E0 * e / 2.f / m0 / c0 / c0 * 1e-4f ) ); // electron wavelength (m), see De Graef p. 92
     c->Model->sigma =  2.f * pi * c->Model->_gamma * c->Model->wavelength * m0 * e / h / h * 1e18f; // interaction constant (1/(Vm))
 
-    c->Structure->structureFilename = t.get<string>("structure.structure_filename").c_str();
+    auto s = t.get<string>("structure.StructureFilename");
+    std::memcpy(c->Structure->StructureFilename,s.c_str(),s.length());
     c->Structure->nCells[0] = t.get<int>("structure.ncellx");
     c->Structure->nCells[1] = t.get<int>("structure.ncelly");
     c->Structure->nCells[2] = t.get<int>("structure.ncellz");
@@ -207,15 +212,18 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
 	}
 	auto sp = boost::filesystem::path(c->Output->SavePath);
 	auto lf = boost::filesystem::path(c->Output->LogFileName);
-	auto sf = boost::filesystem::path(c->Structure->structureFilename);
+	auto sf = boost::filesystem::path(c->Structure->StructureFilename);
 	if(sp.has_relative_path()){
-		c->Output->SavePath = (configFile.parent_path() / c->Output->SavePath).string().c_str();
+		auto s = (configFile.parent_path() / c->Output->SavePath).string();
+		std::memcpy(c->Output->SavePath,s.c_str(),s.length());
 	}
 	if(lf.has_relative_path()){
-		c->Output->LogFileName = (configFile.parent_path() / c->Output->LogFileName).string().c_str();
+		auto s = (configFile.parent_path() / c->Output->LogFileName).string();
+		std::memcpy(c->Output->LogFileName,s.c_str(),s.length());
 	}
 	if(sf.has_relative_path()){
-		c->Structure->structureFilename = (configFile.parent_path() / c->Structure->structureFilename).string().c_str();
+		auto s = (configFile.parent_path() / c->Structure->StructureFilename).string();
+		std::memcpy(c->Structure->StructureFilename,s.c_str(),s.length());
 	}
 
 	return c;

@@ -24,7 +24,7 @@ SuperstructureBuilder::SuperstructureBuilder(StructureReaderPtr r,cStructureConf
 	_atRad.resize(100);
 	_covRad.resize(100);
 	_nGrains = 0;
-	_filePath = sc->structureFilename;
+	_filePath = sc->StructureFilename;
 	_superCell = superCellBoxPtr(new superCellBox());
 	/* Let's set the radii of certain elements by hand:*/
 	_atRad[39-1]=2.27; _covRad[39-1]=2.62;  // Y
@@ -62,7 +62,7 @@ superCellBoxPtr SuperstructureBuilder::Build(){
 
 	BOOST_LOG_TRIVIAL(info) << format("Starting to build superstructure...");
 
-	if (!readParams(_sc->structureFilename))
+	if (!readParams(_sc->StructureFilename))
 		exit(0);
 	if (_nGrains > 0) {
 		// loop, until we find crystalline grains:
@@ -347,10 +347,11 @@ int SuperstructureBuilder::readParams(const char *datFileName){
 				p = _oc->ConfigPath / p;
 			}
 			auto sc = StructureConfig_clone(_sc.get());
-			sc->structureFilename = p.string().c_str();
+			std::memset(sc->StructureFilename,0,1000);
+			std::memcpy(sc->StructureFilename,p.string().c_str(),p.string().length());
 			CrystalBuilder cryst(_r,cStructureConfPtr(sc),_mc,_oc);
 			cryst.ReadFromFile();
-			free(sc);
+//			free(sc);
 			auto atoms = cryst.GetUnitCellAtoms();
 			auto unique = cryst.GetUniqueAtoms();
 			for(int Znum : unique){
@@ -398,14 +399,15 @@ int SuperstructureBuilder::readParams(const char *datFileName){
 			boost::filesystem::path p(unitCellFile);
 			BOOST_LOG_TRIVIAL(info) << "before replace " << p;
 			if(p.has_relative_path()){
-				BOOST_LOG_TRIVIAL(info) << "in replace " << _oc->ConfigPath << p;
 				p = _oc->ConfigPath / p;
+				BOOST_LOG_TRIVIAL(info) << "after replace " << p;
 			}
 			auto sc = StructureConfig_clone(_sc.get());
-			sc->structureFilename = p.string().c_str();
+			std::memset(sc->StructureFilename,0,1000);
+			std::memcpy(sc->StructureFilename,p.string().c_str(),p.string().length());
 			CrystalBuilder cryst(_r,cStructureConfPtr(sc),_mc,_oc);
 			cryst.ReadFromFile();
-			free(sc);
+//			free(sc);
 			auto atoms = cryst.GetUnitCellAtoms();
 			auto unique = cryst.GetUniqueAtoms();
 			for(int Znum : unique){

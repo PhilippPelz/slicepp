@@ -16,8 +16,6 @@
 
 namespace slicepp {
 
-
-
 typedef boost::shared_ptr<const ModelConfig> cModelConfPtr;
 typedef boost::shared_ptr<ModelConfig> ModelConfPtr;
 
@@ -42,7 +40,7 @@ public:
 	Config(c_Config& c);
 
 	int nThreads;
-	int ExperimentType;
+	ExperimentType ExpType;
 
 	boost::filesystem::path StructureFilename;
 	boost::filesystem::path SavePath;

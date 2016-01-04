@@ -14,7 +14,7 @@ IStructureBuilder::IStructureBuilder(StructureReaderPtr r,cStructureConfPtr sc, 
 	_sc = sc;
 	_mc = mc;
 	_oc = oc;
-	_r->SetFilePath(sc->structureFilename);
+	_r->SetFilePath(sc->StructureFilename);
 }
 
 IStructureBuilder::~IStructureBuilder() {

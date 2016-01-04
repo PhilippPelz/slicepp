@@ -48,8 +48,16 @@ typedef enum  {
 	Scintillator = 1, Direct = 2
 } DetectorType;
 
+typedef enum  {
+	FFT2D = 1,
+	FFT3D = 2,
+	Real2D = 3,
+	Real3D = 4,
+	CUDA2D = 5
+} PotentialType;
+
 typedef struct StructureConfig {
-	const char* StructureFilename;
+	char StructureFilename[1000];
 
 	float T_Kelvin;
 
@@ -92,7 +100,7 @@ typedef struct ModelConfig {
 
 	//atom radius in angstrom
 	float ratom;
-	const char* PotentialType;
+	PotentialType PotType;
 	float EnergykeV;
 	float wavelength;
 	float sigma;
@@ -166,9 +174,9 @@ typedef struct OutputConfig {
 	bool ComputeFromProjectedPotential, SaveAtomDeltas;
 	bool SaveAtomConv;
 
-	const char* LogFileName;
-	const char* SavePath;
-	const char* ConfigPath;
+	char LogFileName[1000];
+	char SavePath[1000];
+	char ConfigPath[1000];
 
 	// TODO: deprecated
 	bool PendelloesungPlot;
@@ -197,7 +205,7 @@ typedef struct ScanConfig {
 
 typedef struct c_Config {
 	int nThreads;
-	int ExperimentType;
+	ExperimentType ExpType;
 
 	StructureConfig* Structure;
 	ModelConfig* Model;

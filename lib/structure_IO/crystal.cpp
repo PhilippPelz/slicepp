@@ -468,7 +468,7 @@ void CrystalBuilder::DisplayParams() {
 	"***************************** Structure Parameters ***********************************************";
 	BOOST_LOG_TRIVIAL(info) <<
 	"**************************************************************************************************";
-	BOOST_LOG_TRIVIAL(info)<<format("* Input file:           %s") % _sc->structureFilename;
+	BOOST_LOG_TRIVIAL(info)<<format("* Input file:           %s") % _sc->StructureFilename;
 
 	if (_sc->isBoxed == false)
 	BOOST_LOG_TRIVIAL(info)<<format(" Unit cell:            ax=%g by=%g cz=%g")% m_ax% m_by% m_cz;

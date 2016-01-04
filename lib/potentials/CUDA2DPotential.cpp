@@ -7,6 +7,8 @@
 
 #include "CUDA2DPotential.hpp"
 #include <stdio.h>
+#include <thread>
+#include <chrono>
 //#include <thrust/fill.h>
 //#include <thrust/copy.h>
 
@@ -24,13 +26,14 @@ CUDA2DPotential::~CUDA2DPotential() {
 }
 void CUDA2DPotential::initPotArrays() {
 	_slicePixels = _mc->n[0] * _mc->n[1];
-
+//	printf("pot elem: %d\n",_mc->n[2] * _slicePixels);
 	cuda_assert(cudaMalloc((void**) &_t_d_ptr, _mc->n[2] * _slicePixels * sizeof(cufftComplex)));
 	cuda_assert(cudaMalloc((void**) &_V_elem_ptr, _slicePixels * sizeof(cufftComplex)));
 	cuda_assert(cudaMalloc((void**) &_V_accum_ptr, _slicePixels * sizeof(cufftComplex)));
+	cuda_assert(cudaDeviceSynchronize());
+	std::this_thread::sleep_for (std::chrono::seconds(1));
+//	_cf->SetComplex3D(_t_d_ptr, 0.f, 0.f);
 
-	_cf->SetComplex3D(_t_d_ptr, 0.f, 0.f);
-//	cuda_assert(cudaDeviceSynchronize());
 }
 void CUDA2DPotential::ComputeAtPot(superCellBoxPtr info) {
 	for (int Z : info->uniqueZ) {
@@ -98,12 +101,16 @@ void CUDA2DPotential::MakeSlices(superCellBoxPtr info) {
 	auto elapsed = af::timer::stop(time) * 1000;
 	BOOST_LOG_TRIVIAL(info)<< format( "%g msec used for potential calculation (%g msec per atom)")
 	% elapsed % (elapsed / info->atoms.size());
-
+	printf("wp 100\n");
 	_cf->releaseArrays();
+	printf("wp 101\n");
 	_t_d = af::array(_mc->n[1], _mc->n[0], _mc->n[2],(afcfloat*)_t_d_ptr,afDevice);
+	printf("wp 102\n");
 	af::sync();
+	printf("wp 103\n");
 	if (_oc->SavePotential)
 		SavePotential();
+	printf("wp 104\n");
 }
 
 

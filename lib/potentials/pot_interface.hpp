@@ -37,7 +37,7 @@ namespace slicepp
 class IPotential;
 typedef boost::shared_ptr<IPotential> PotPtr;
 typedef boost::function<IPotential*(cModelConfPtr mc, cOutputConfPtr oc , PersistenceManagerPtr persist) > potentialCreator;
-typedef std::map<string,potentialCreator> PotentialFactory;
+typedef std::map<PotentialType,potentialCreator> PotentialFactory;
 typedef PotPtr (*CreatePotentialFn)(ConfigPtr);
 
 
