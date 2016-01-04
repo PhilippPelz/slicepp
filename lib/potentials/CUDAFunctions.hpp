@@ -31,7 +31,7 @@
 #include "config_IO/ConfigReader.hpp"
 #include "af/cuda.h"
 
-namespace QSTEM {
+namespace slicepp {
 class CUDAFunctions{
 public:
 	CUDAFunctions(superCellBoxPtr info, cModelConfPtr mc);
@@ -71,5 +71,5 @@ __global__ void multiplyWithProjectedPotential_d ( cufftComplex* V1, cufftComple
 __global__ void initialValues ( cuComplex* V, int size, float_tt initRe, float_tt initIm );
 __global__ void potential2Transmission ( cufftComplex* t, cufftComplex* V, int size );
 __device__ int sign( float x );
-} /* namespace QSTEM */
+} /* namespace slicepp */
 #endif /* CUDAFUNCTIONS_HPP_ */

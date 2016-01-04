@@ -7,7 +7,7 @@
 
 #include "IStructureBuilder.hpp"
 
-namespace QSTEM {
+namespace slicepp {
 
 IStructureBuilder::IStructureBuilder(StructureReaderPtr r,cStructureConfPtr sc, cModelConfPtr mc, cOutputConfPtr oc) {
 	_r = r;
@@ -21,4 +21,4 @@ IStructureBuilder::~IStructureBuilder() {
 	// TODO Auto-generated destructor stub
 }
 
-} /* namespace QSTEM */
+} /* namespace slicepp */

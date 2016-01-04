@@ -29,7 +29,7 @@ using boost::format;
 #define PI 3.1415926535898
 #define PI180 1.7453292519943e-2
 
-namespace QSTEM
+namespace slicepp
 {
 
 void ludcmp(float_tt **a, int n, int *indx, float_tt *d);
@@ -64,6 +64,6 @@ float_tt vectLength(float_tt *vect);
 void matrixProduct(const FloatArray2D& a,int Nxa, int Nya,const FloatArray2D& b,int Nxb, int Nyb, FloatArray2D& c);
 void matrixProductInt(float_tt **a,int Nxa, int Nya, int **b,int Nxb, int Nyb, float_tt **c);
 
-} // end namespace QSTEM
+} // end namespace slicepp
 
 #endif

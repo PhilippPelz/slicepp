@@ -19,7 +19,7 @@
 
 #include "pot_base.hpp"
 
-namespace QSTEM
+namespace slicepp
 {
 
 class C2DFFTPotential : public CPotential

@@ -22,7 +22,7 @@
 #include <boost/log/trivial.hpp>
 using boost::format;
 
-namespace QSTEM {
+namespace slicepp {
 
 BaseExperiment::BaseExperiment(ConfigPtr c, StructureBuilderPtr s, WavePtr w, PotPtr p, DetPtr d, PersistenceManagerPtr pers) :
 		IExperiment() {
@@ -32,8 +32,6 @@ BaseExperiment::BaseExperiment(ConfigPtr c, StructureBuilderPtr s, WavePtr w, Po
 	_wave = w;
 	_pot = p;
 	_det = d;
-	m_equalDivs = true;
-	m_avgArray = RealVector();
 
 	DisplayParams();
 }
@@ -57,7 +55,6 @@ void BaseExperiment::DisplayParams() {
 	static_cast<int>(_c->ExperimentType);
 	BOOST_LOG_TRIVIAL(info)<< format("* Date: %s, Time: %s") % Date % Time;
 	BOOST_LOG_TRIVIAL(info)<< format("* Output file/folder:          %s") % _c->Output->SavePath;
-	(m_equalDivs ? "equal" : "non-equal");
 	BOOST_LOG_TRIVIAL(info)<< format("* TDS:                         %d runs") % _c->Model->TDSRuns;
 	BOOST_LOG_TRIVIAL(info)<<
 	"**************************************************************************************************\n";
@@ -127,8 +124,8 @@ void BaseExperiment::SetResolution(superCellBoxPtr b) {
 	if (_c->ExperimentType != PTYCHO) {
 		wc->nx = mc->n[0];
 		wc->ny = mc->n[1];
-		dc->nx = mc->n[0];
-		dc->ny = mc->n[1];
+		dc->n[0] = mc->n[0];
+		dc->n[1] = mc->n[1];
 	}
 }
 void BaseExperiment::SetSliceThickness(superCellBoxPtr b) {
@@ -212,20 +209,6 @@ void BaseExperiment::DisplayProgress(int flag) {
 	//  timer = cputim();
 }
 
-/*
- // TODO: this is very broken.  displaced here from Crystal because I want to handle averages outside of the
- //     lower level classes.
- void CExperimentBase::ComputeAverageU2()
- {
-
- (*z)->second /= u2Count[(*z)->first];
- if (runCount > 0)
- m_u2avg[(*z)] = sqrt(((runCount-1)*(m_u2avg[(*z)]*m_u2avg[(*z)])+u2[(*z)])/runCount);
- else
- m_u2avg[(*z)] = sqrt(m_u2[(*z)]);
- }
- */
-
 int BaseExperiment::RunMultislice(af::array t_af) {
 	int printFlag = 0;
 	int showEverySlice = 1;
@@ -238,16 +221,9 @@ int BaseExperiment::RunMultislice(af::array t_af) {
 	double fftScale;
 	int nx, ny, xpos, ypos;
 
-	_wave->GetSizePixels(nx, ny);
-
 	printFlag = (_c->Output->LogLevel > 3);
-	fftScale = 1.0 / (nx * ny);
-
-	wavlen = _wave->GetWavelength();
 
 	int nx1, ny1;
-	_wave->GetExtents(nx1, ny1);
-	m_avgArray.resize(nx1 * ny1);
 
 	/*  calculate the total specimen thickness and echo */
 	cztot = 0.0;
@@ -294,69 +270,8 @@ int BaseExperiment::RunMultislice(af::array t_af) {
 	return 0;
 } // end of runMulsSTEM
 
-void BaseExperiment::AddDPToAvgArray(const WavePtr& wave) {
-	int nx, ny;
-	wave->GetExtents(nx, ny);
-	unsigned px = nx * ny;
-	// get the pointer to the first data element, and do 1D addressing (it's faster)
-	float_tt chisq;
-
-//	const float_tt* dp = wave->GetDPPointer();
-// TODO replace this
-	for (unsigned i = 0; i < px; i++) {
-//		float_tt t = m_avgArray[i] * _runCount + dp[i] / (_runCount + 1);
-//		chisq += (m_avgArray[i] - t) * (m_avgArray[i] - t);
-//		m_avgArray[i] = t;
-		// TODO see what this does and fix it
-	}
-#pragma omp atomic
-	m_chisq[_runCount] += chisq / px;
-}
-
-void BaseExperiment::_WriteAvgArray(std::string& fileName, std::string& comment, std::map<std::string, double>& params,
-		std::vector<unsigned>& position) {
-	// params["dx"]=1.0/(m_nx*m_dx);
-	// params["dy"]=1.0/(m_ny*m_dy);
-	params["Thickness"] = m_thickness;
-	// TODO use persist _WriteAvgArray
-	//		m_imageIO->WriteImage(m_avgArray, fileName, params, comment, position);
-}
-
-void BaseExperiment::ReadAvgArray() {
-	std::vector<unsigned> position;
-	// TODO use persist
-	//		m_imageIO->ReadImage(m_avgArray, avgFilePrefix, position);
-}
-
-void BaseExperiment::ReadAvgArray(unsigned navg) {
-	std::vector<unsigned> position(1);
-	position[0] = navg;
-	// TODO use persist
-	//		m_imageIO->ReadImage(m_avgArray, avgFilePrefix, position);
-}
-
-void BaseExperiment::ReadAvgArray(unsigned positionx, unsigned positiony) {
-	std::vector<unsigned> position(2);
-	position[0] = positionx;
-	position[1] = positiony;
-	// TODO use persist
-	//		m_imageIO->ReadImage(m_avgArray, avgFilePrefix, position);
-}
-
-void BaseExperiment::fft_normalize(WavePtr wave) {
-	ComplexArray2DPtr w = wave->GetWave();
-	int nx, ny;
-	wave->GetExtents(nx, ny);
-
-	float_tt fftScale = 1.0 / (nx * ny);
-	for (unsigned i = 0; i < nx; i++)
-		for (unsigned j = 0; j < ny; j++) {
-			w[i][j] = complex_tt(w[i][j].real() * fftScale, w[i][j].imag() * fftScale);
-		}
-}
-
 void BaseExperiment::PostSpecimenProcess() {
 	_det->RecordImage(_wave);
 }
 
-} // end namespace QSTEM
+} // end namespace slicepp

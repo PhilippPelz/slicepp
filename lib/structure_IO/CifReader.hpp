@@ -15,7 +15,7 @@
 
 using namespace OpenBabel;
 
-namespace QSTEM {
+namespace slicepp {
 
 class CifReader: public IStructureReader {
 public:

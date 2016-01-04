@@ -28,7 +28,7 @@ using boost::format;
 
 const int BUF_LEN = 256;
 
-namespace QSTEM {
+namespace slicepp {
 
 CPotential::CPotential(const ConfigPtr& c, const PersistenceManagerPtr& persist) :
 <<<<<<< HEAD
@@ -660,4 +660,4 @@ af:: array CPotential::GetSlice(unsigned idx){
 void CPotential::ResizeSlices() {
 }
 
-} // end namespace QSTEM
+} // end namespace slicepp

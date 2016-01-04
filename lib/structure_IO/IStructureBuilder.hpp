@@ -13,7 +13,7 @@
 
 #include<list>
 
-namespace QSTEM {
+namespace slicepp {
 
 class IStructureBuilder {
 public:
@@ -38,6 +38,6 @@ typedef boost::shared_ptr<IStructureBuilder> StructureBuilderPtr;
 typedef boost::function<IStructureBuilder*(StructureReaderPtr r,cStructureConfPtr sc, cModelConfPtr mc, cOutputConfPtr oc)> structureBuilderCreator;
 typedef std::map<string,structureBuilderCreator> StructureBuilderFactory;
 
-} /* namespace QSTEM */
+} /* namespace slicepp */
 
 #endif /* LIBS_STRUCTURE_IO_ISTRUCTUREBUILDER_HPP_ */

@@ -36,7 +36,7 @@
 #define OVERSAMPLING 2
 #define OVERSAMPLINGZ 3*OVERSAMPLING
 
-namespace QSTEM
+namespace slicepp
 {
 class CPotential : public IPotential
 {

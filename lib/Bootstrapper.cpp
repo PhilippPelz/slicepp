@@ -8,7 +8,7 @@
 #include "Bootstrapper.hpp"
 #include "fftw3.h"
 #include "arrayfire.h"
-namespace QSTEM {
+namespace slicepp {
 
 //Initial sampling suggestions for calculating images of thin specimens
 //1. The transmission function t (x ) (5.25) should be symmetrically
@@ -33,11 +33,63 @@ Bootstrapper::Bootstrapper(int argc, char *argv[]) {
 	logging::add_console_log(std::cout, keywords::format = ">> %Message%");
 
 }
+Bootstrapper::Bootstrapper(){}
+Bootstrapper::~Bootstrapper() {}
 
-Bootstrapper::~Bootstrapper() {
-	// TODO Auto-generated destructor stub
+void Bootstrapper::Initialize(c_Config* conf){
+	ConfigPtr c = ConfigPtr(new Config(*conf));
+
+	fftw_init_threads();
+	fftw_plan_with_nthreads(c->nThreads);
+	omp_set_num_threads(c->nThreads);
+
+	af::info();
+
+	RegisterWaveTypes();
+	RegisterPotentialTypes();
+	RegisterStructureTypes();
+	RegisterExperimentTypes();
+	RegisterStructureReaders();
+	RegisterStructureBuilders();
+	RegisterDetectorTypes();
+
+	logging::core::get()->set_filter
+	(
+	    logging::trivial::severity >= static_cast<logging::trivial::severity_level>(c->Output->LogLevel)
+	);
+
+	if(c->Output->WriteLogFile)
+		logging::add_file_log
+			(
+				keywords::file_name = std::string(c->Output->LogFileName),
+				// This makes the sink to write log records that look like this:
+				// 1: <normal> A normal severity message
+				// 2: <error> An error severity message
+				keywords::format =
+				(
+					expr::stream
+						<< expr::attr< unsigned int >("LineID")
+						<< ": <" << logging::trivial::severity
+						<< "> " << expr::smessage
+				),
+				keywords::auto_flush = true
+			);
+
+	boost::filesystem::path p(c->Structure->structureFilename);
+
+	std::string str = c->Model->PotentialType;
+ 	std::transform(str.begin(), str.end(),str.begin(), ::toupper);
+
+	auto sreader = StructureReaderPtr(_structureReaderFactory[".cif"](p));
+	auto structureBuilder = StructureBuilderPtr(_structureBuilderFactory[p.extension().string()](sreader,c->Structure,c->Model,c->Output));
+	auto persist = PersistenceManagerPtr(new PersistenceManager(c));
+	auto w = WaveConfPtr(c->Wave);
+	auto m = ModelConfPtr(c->Model);
+	auto wave = WavePtr(_waveFactory[c->Wave->type](w,m,persist));
+	auto detector = DetPtr(_detectorFactory[c->Detector->type](c->Detector,persist));
+	auto potential = PotPtr(_potentialFactory[str](c->Model,c->Output,persist));
+	_e = ExperimentPtr( _experimentFactory[c->ExperimentType](c,structureBuilder,wave,potential,detector, persist));
 }
-
 void Bootstrapper::Initialize(){
 
 	auto cr = ConfigReader();
@@ -131,4 +183,4 @@ void Bootstrapper::RegisterStructureTypes(){
 
 }
 
-} /* namespace QSTEM */
+} /* namespace slicepp */

@@ -27,7 +27,7 @@
 const int k_fftMeasureFlag = FFTW_ESTIMATE;
 using boost::format;
 
-namespace QSTEM {
+namespace slicepp {
 
 C3DFFTPotential::C3DFFTPotential(cModelConfPtr mc, cOutputConfPtr oc , PersistenceManagerPtr p) :
 		_ndiaAtomZ(0),
@@ -604,5 +604,5 @@ void C3DFFTPotential::GetAtomPotentialOffset3D(unsigned Znum, float_tt B,
 //	output = _atPotOffset[Znum];
 }
 
-}// end namespace QSTEM
+}// end namespace slicepp
 

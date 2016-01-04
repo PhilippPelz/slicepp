@@ -31,7 +31,7 @@
 #include "math.h"
 using boost::format;
 
-namespace QSTEM
+namespace slicepp
 {
 
 Ptychograph::Ptychograph(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p, const DetPtr& d, const PersistenceManagerPtr& pers):BaseExperiment(c,s,w,p,d,pers)
@@ -117,7 +117,7 @@ void Ptychograph::SaveImages()
 {
 
 }
-} // end namespace QSTEM
+} // end namespace slicepp
 
 
 

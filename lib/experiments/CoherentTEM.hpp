@@ -10,7 +10,7 @@
 
 #include "CoherentSinglePositionExperiment.hpp"
 
-namespace QSTEM {
+namespace slicepp {
 
 class CoherentTEM: public CoherentSinglePositionExperiment {
 public:
@@ -19,6 +19,6 @@ public:
 	virtual void PostSpecimenProcess();
 };
 
-} /* namespace QSTEM */
+} /* namespace slicepp */
 
 #endif /* LIBS_EXPERIMENTS_COHERENTTEM_HPP_ */

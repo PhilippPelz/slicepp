@@ -24,7 +24,7 @@
 
 #ifndef CUDA2DPOTENTIAL_HPP_
 #define CUDA2DPOTENTIAL_HPP_
-namespace QSTEM {
+namespace slicepp {
 
 class SliceBySliceCUDA2DPotential: public CPotential {
 
@@ -58,6 +58,6 @@ protected:
 	superCellBoxPtr _info;
 	af::array xyzPos, occupancy, znums;
 };
-} /* namespace QSTEM */
+} /* namespace slicepp */
 
 #endif /* CUDA2DPOTENTIAL_HPP_ */

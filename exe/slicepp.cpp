@@ -36,7 +36,7 @@ QSTEM - image simulation for TEM/STEM/CBED
 #include <iostream>
 
 using boost::property_tree::ptree;
-using namespace QSTEM;
+using namespace slicepp;
 using boost::property_tree::info_parser::read_info;
 
 int main(int argc, char *argv[])

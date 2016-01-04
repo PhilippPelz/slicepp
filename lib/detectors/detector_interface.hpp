@@ -21,7 +21,7 @@
 
 using boost::format;
 
-namespace QSTEM{
+namespace slicepp{
 
 class IDetector;
 typedef boost::shared_ptr<IDetector> DetPtr;

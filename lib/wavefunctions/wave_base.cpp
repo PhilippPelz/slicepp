@@ -21,31 +21,25 @@
 #include "wave_base.hpp"
 using boost::format;
 
-namespace QSTEM {
+namespace slicepp {
 
-CBaseWave::CBaseWave(const boost::shared_ptr<WaveConfig> wc, const boost::shared_ptr<ModelConfig> mc, const PersistenceManagerPtr p) :
+CBaseWave::CBaseWave(cWaveConfPtr wc, cModelConfPtr mc, PersistenceManagerPtr p) :
 		IWave(wc, mc, p) {
-	_E = _mc->EnergykeV;
-	m_realSpace = true;
-	_pixelDose = _wc->pixelDose;
-	// TODO: where does this belong?
-	//m_electronScale = m_beamCurrent*m_dwellTime*MILLISEC_PICOAMP;
-	_wavlen = Wavelength(_E);
+	_realSpace = true;
 }
 void CBaseWave::InitializePropagators() {
-	float_tt scale = _mc->d[2] * PI * GetWavelength();
+	float_tt scale = _mc->d[2] * PI * _mc->wavelength;
 	//t = exp(-i pi lam k^2 dz)
-	af::array s, kx2D, ky2D;
-// Tile the arrays to create 2D versions of the k vectors
-	kx2D = af::tile(m_kx2, 1, _wc->ny);
-	ky2D = af::tile(m_ky2.T(), _wc->nx);
-	s = scale * (kx2D + ky2D);
-	_prop = af::complex(af::cos(s), af::sin(s));
 
-//	TODO:
+	auto s = scale * _k2;
+	_prop = af::complex(af::cos(s), af::sin(s));
 	_prop = fftShift(_prop);
+
+	af::array ck2max = af::constant(_k2max, _wc->nx, _wc->ny);
+	af::array bandwidthLimit = (_k2 < ck2max);
+	bandwidthLimit = fftShift(bandwidthLimit);
+	_prop *= bandwidthLimit;
 	_persist->Save2DDataSet(_prop, "Propagator");
-	//_prop = fftShift(_prop);
 }
 
 af::array CBaseWave::fftShift(af::array& wave) {
@@ -79,22 +73,12 @@ void CBaseWave::ApplyTransferFunction() {
 	ToRealSpace();
 }
 void CBaseWave::PropagateToNextSlice() {
-	//_wave_af = fftShift(_wave_af);
-	_wave_af = _condition * (_wave_af * _prop);
-	//_wave_af = ifftShift(_wave_af);
+	_wave_af = _wave_af * _prop;
 } /* end propagate */
 
 void CBaseWave::Transmit(af::array& t_af) {
 	_wave_af *= t_af;
 } /* end transmit() */
-/** Copy constructor - make sure arrays are deep-copied */
-CBaseWave::CBaseWave(const CBaseWave &other) :
-		CBaseWave(other._wc, other._mc, other._persist) {
-	// TODO: make sure arrays are deep copied
-	other.GetSizePixels(_wc->nx, _wc->ny);
-	other.GetResolution(_mc->d[0], _mc->d[1]);
-	_E = other.GetVoltage();
-}
 
 CBaseWave::~CBaseWave() {
 }
@@ -103,31 +87,24 @@ void CBaseWave::InitializeKVectors() {
 	float_tt ax = _mc->d[0] * _wc->nx;
 	float_tt by = _mc->d[1] * _wc->ny;
 
-	m_kx = (af::range(_wc->nx) - _wc->nx / 2) / ax;
-	m_kx2 = m_kx * m_kx;
+	_kx = (af::range(_wc->nx) - _wc->nx / 2) / ax;
+	af::array kx2 = _kx * _kx;
 
-	m_ky = (af::range(_wc->ny) - _wc->ny / 2) / ax;
-	m_ky2 = m_ky * m_ky;
+	_ky = (af::range(_wc->ny) - _wc->ny / 2) / ax;
+	af::array ky2 = _ky * _ky;
 
-	m_k2max = _wc->nx / (2.0F * ax);
-	if (_wc->ny / (2.0F * by) < m_k2max)
-		m_k2max = _wc->ny / (2.0F * by);
-	m_k2max = 2.0 / 3.0 * m_k2max;
-	m_k2max = m_k2max * m_k2max;
+	_k2max = _wc->nx / (2.0F * ax);
+	if (_wc->ny / (2.0F * by) < _k2max)
+		_k2max = _wc->ny / (2.0F * by);
+	_k2max = 2.0 / 3.0 * _k2max;
+	_k2max = _k2max * _k2max;
 
-	GetK2();
-	_k2max = af::constant(m_k2max, _wc->nx, _wc->ny);
-	_condition = (m_k2 < _k2max);
-	_condition = fftShift(_condition);
+	af::array kx2D = af::tile(kx2, 1, _wc->ny);
+	af::array ky2D = af::tile(ky2.T(), _wc->nx);
+	_k2 = kx2D + ky2D;
 }
 
-void CBaseWave::GetExtents(int& nx, int& ny) const {
-	nx = _wc->nx;
-	ny = _wc->ny;
-}
 void CBaseWave::FormProbe() {
-	_zero = af::constant(0, _wc->nx, _wc->ny);
-	_wave_af = af::complex(_zero, _zero);
 	_wave.resize(boost::extents[_wc->nx][_wc->ny]);
 	InitializeKVectors();
 }
@@ -141,40 +118,18 @@ void CBaseWave::DisplayParams() {
 	"*****************************  Wave  Parameters **************************************************";
 	BOOST_LOG_TRIVIAL(info) <<
 	"**************************************************************************************************";
-	BOOST_LOG_TRIVIAL(info)<<format("* Real space res.:      %gA (=%gmrad)")% (1.0/m_k2max)%(GetWavelength()*m_k2max*1000.0);
+	BOOST_LOG_TRIVIAL(info)<<format("* Real space res.:      %gA (=%gmrad)")% (1.0/_k2max)%(_mc->wavelength*_k2max*1000.0);
 	BOOST_LOG_TRIVIAL(info)<<format("* Reciprocal space res: dkx=%g, dky=%g (1/A)")% (1.0/(_wc->nx*_mc->d[0]))%(1.0/(_wc->ny*_mc->d[1]));
 
 	BOOST_LOG_TRIVIAL(info)<<format("* Beams:                %d x %d ")%_wc->nx%_wc->ny;
 
-	BOOST_LOG_TRIVIAL(info)<<format("* Acc. voltage:         %g (lambda=%gA)")%_E%(Wavelength(_E));
+	BOOST_LOG_TRIVIAL(info)<<format("* Acc. voltage:         %g kV (lambda=%gA)")%_mc->EnergykeV%_mc->wavelength;
 
 	BOOST_LOG_TRIVIAL(info)<<format("* Probe array:          %d x %d pixels")%_wc->nx%_wc->ny;
 	BOOST_LOG_TRIVIAL(info)<<format("*                       %g x %gA")%(_wc->nx*_mc->d[0])%(_wc->ny*_mc->d[1]);
 }
 
-/*
- //TODO: where does this belong?
- inline void CBaseWave::GetElectronScale(float_tt &electronScale)
- {
- electronScale=m_electronScale;
- }
- */
-void CBaseWave::GetSizePixels(int &x, int &y) const {
-	x = _wc->nx;
-	y = _wc->ny;
-}
 
-void CBaseWave::GetResolution(float_tt &x, float_tt &y) const {
-	x = _mc->d[0];
-	y = _mc->d[1];
-}
-
-void CBaseWave::GetK2() {
-	af::array kx2D, ky2D;
-	kx2D = af::tile(m_kx2, 1, _wc->ny);
-	ky2D = af::tile(m_ky2.T(), _wc->nx);
-	m_k2 = kx2D + ky2D;
-}
 
 float_tt CBaseWave::GetIntegratedIntensity() const {
 	float_tt intensity;
@@ -183,43 +138,20 @@ float_tt CBaseWave::GetIntegratedIntensity() const {
 	return (intensity) / (_wc->nx * _wc->ny);
 }
 
-/*--------------------- wavelength() -----------------------------------*/
-/*
- return the electron wavelength (in Angstroms)
- keep this is one place so I don't have to keep typing in these
- constants (that I can never remember anyhow)
-
- ref: Physics Vade Mecum, 2nd edit, edit. H. L. Anderson
- (The American Institute of Physics, New York) 1989
- page 4.
-
- kev = electron energy in keV
-
- */
-float_tt CBaseWave::Wavelength(float_tt kev) {
-	double w;
-	const double emass = 510.99906; /* electron rest mass in keV */
-	const double hc = 12.3984244; /* Planck's const x speed of light*/
-
-	/* electron wavelength in Angstroms */
-	return hc / sqrt(kev * (2 * emass + kev));
-} /* end wavelength() */
-
 // FFT to Fourier space, but only if we're current in real space
 void CBaseWave::ToFourierSpace() {
 	if (IsRealSpace()) {
-		m_realSpace = false;
-		_wave_af = af::fft2(_wave_af);
-
+		_realSpace = false;
+		af::fft2InPlace(_wave_af);
 	}
 }
 
 // FFT back to realspace, but only if we're currently in Fourier space
 void CBaseWave::ToRealSpace() {
 	if (!IsRealSpace()) {
-		m_realSpace = true;
-		_wave_af = af::ifft2(_wave_af);
+		_realSpace = true;
+		af::ifft2InPlace(_wave_af);
 	}
 }
 
-} //end namespace QSTEM
+} //end namespace slicepp

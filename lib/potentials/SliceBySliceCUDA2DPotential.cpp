@@ -8,7 +8,7 @@
 #include "SliceBySliceCUDA2DPotential.hpp"
 #include <stdio.h>
 
-namespace QSTEM {
+namespace slicepp {
 SliceBySliceCUDA2DPotential::SliceBySliceCUDA2DPotential(cModelConfPtr mc, cOutputConfPtr oc, PersistenceManagerPtr p) :
 		CPotential(mc, oc, p) {
 }
@@ -108,5 +108,5 @@ void SliceBySliceCUDA2DPotential::progressCounter(int j, int jTot) {
 		loadbar(j, jTot);
 }
 
-} /* namespace QSTEM */
+} /* namespace slicepp */
 

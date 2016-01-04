@@ -15,7 +15,7 @@ using namespace std;
 using namespace OpenBabel;
 using boost::format;
 
-namespace QSTEM {
+namespace slicepp {
 CifReader::CifReader(const boost::filesystem::path &file) : _atomsAfterFillUC(0), _atomsBeforeFillUC(0), IStructureReader(file){
 }
 

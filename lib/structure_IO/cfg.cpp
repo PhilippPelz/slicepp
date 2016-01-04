@@ -28,7 +28,7 @@
 #include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
 using boost::format;
-namespace QSTEM
+namespace slicepp
 {
 
 CCfgReader::CCfgReader(const boost::filesystem::path &filename)
@@ -305,4 +305,4 @@ int CCfgWriter::WriteFractCubic(double *pos,int *Znum,double *dw,int natoms,char
 	return 1;
 }
 
-} // end namespace QSTEM
+} // end namespace slicepp

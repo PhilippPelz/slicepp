@@ -20,7 +20,7 @@
 #include "pot_2d_fft.hpp"
 #include <boost/format.hpp>
 using boost::format;
-namespace QSTEM {
+namespace slicepp {
 
 C2DFFTPotential::C2DFFTPotential(const ConfigPtr& c,
 		const PersistenceManagerPtr& p) :
@@ -332,4 +332,4 @@ complex_tt *C2DFFTPotential::GetAtomPotential2D(int Znum, float_tt B) {
 #undef PHI_SCALE
 #undef SHOW_SINGLE_POTENTIAL
 
-} // end namespace QSTEM
+} // end namespace slicepp

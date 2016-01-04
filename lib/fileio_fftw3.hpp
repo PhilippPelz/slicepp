@@ -22,7 +22,7 @@ QSTEM - image simulation for TEM/STEM/CBED
 
 #include "stemtypes_fftw3.hpp"
 
-namespace QSTEM
+namespace slicepp
 {
 
 //atom *readUnitCell(int *natom,char *fileName,MULS *muls,int handleVacancies);

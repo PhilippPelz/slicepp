@@ -12,7 +12,7 @@
 #include <vector>
 
 
-namespace QSTEM {
+namespace slicepp {
 
 
 class RealSpacePotential : public CPotential

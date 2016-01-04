@@ -3,7 +3,7 @@
 
 #include "RealSpacePotential.hpp"
 
-namespace QSTEM {
+namespace slicepp {
 
 class C2DPotential: public RealSpacePotential {
 public:

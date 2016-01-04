@@ -6,8 +6,11 @@
  */
 
 #include "exported.hpp"
-#include<stdio.h>
+#include "Bootstrapper.hpp"
 
 void run_simulation(c_Config* conf){
-    printf("type: %d",conf->ExperimentType);
+    slicepp::Bootstrapper b;
+    b.Initialize(conf);
+    auto e = b.GetExperiment();
+    e->Run();
 }

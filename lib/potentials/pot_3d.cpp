@@ -20,7 +20,7 @@
 
 #include "pot_3d.hpp"
 
-namespace QSTEM
+namespace slicepp
 {
 
 C3DPotential::C3DPotential(cModelConfPtr mc, cOutputConfPtr oc , PersistenceManagerPtr p) : RealSpacePotential(mc,oc,p)
@@ -170,4 +170,4 @@ void C3DPotential::CenterAtomZ(std::vector<atom>::iterator &atom, float_tt &z)
 }
 
 
-} // end namespace QSTEM
+} // end namespace slicepp

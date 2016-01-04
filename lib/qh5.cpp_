@@ -22,7 +22,7 @@
 #include <sstream>
 #include <stdexcept>
 
-namespace QSTEM
+namespace slicepp
 {
 
 QH5::QH5() :
@@ -228,4 +228,4 @@ void QH5::WriteParameters(hid_t dataset,
     }
 }
 
-}  // end namespace QSTEM
+}  // end namespace slicepp

@@ -7,7 +7,7 @@
 
 #include "CoherentCBED.hpp"
 
-namespace QSTEM {
+namespace slicepp {
 
 CoherentCBED::CoherentCBED(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p, const DetPtr& d, const PersistenceManagerPtr& pers) :
 				CoherentSinglePositionExperiment(c,s,w,p,d,pers){
@@ -19,4 +19,4 @@ CoherentCBED::~CoherentCBED() {
 //	_wave->ToFourierSpace();
 //	_wave->fftShift(_wave->GetWaveAF());
 //}
-} /* namespace QSTEM */
+} /* namespace slicepp */

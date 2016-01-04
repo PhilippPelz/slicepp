@@ -31,7 +31,7 @@ using boost::format;
 #ifndef POTENTIAL_INTERFACE_H
 #define POTENTIAL_INTERFACE_H
 
-namespace QSTEM
+namespace slicepp
 {
 
 class IPotential;

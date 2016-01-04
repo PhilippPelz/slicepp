@@ -14,7 +14,7 @@
 #include <boost/filesystem.hpp>
 #include "stemtypes_fftw3.hpp"
 
-namespace QSTEM {
+namespace slicepp {
 
 
 
@@ -65,6 +65,6 @@ public:
 	ConfigPtr Read(boost::filesystem::path configPath);
 } ConfigReader;
 
-} /* namespace QSTEM */
+} /* namespace slicepp */
 
 #endif /* CONFIGREADER_HPP_ */

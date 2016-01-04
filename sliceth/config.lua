@@ -3,12 +3,48 @@ local ffi = require 'ffi'
 
 local c = {}
 
-local StructureConfig_mt = {}
-local ModelConfig_mt = {}
-local WaveConfig_mt = {}
-local OutputConfig_mt = {}
-local DetectorConfig_mt = {}
-local ScanConfig_mt = {}
+local StructureConfig_mt = {
+  __call = function ()
+              local sc = ffi.new("StructureConfig")
+              ffi.gc(sc,C.StructureConfig_delete)
+              return sc
+           end            
+}
+local ModelConfig_mt = {
+  __call = function ()
+              local sc = ffi.new("ModelConfig")
+              ffi.gc(sc,C.StructureConfig_delete)
+              return sc
+           end
+}
+local WaveConfig_mt = {
+  __call = function ()
+              local sc = ffi.new("WaveConfig")
+              ffi.gc(sc,C.StructureConfig_delete)
+              return sc
+           end
+}
+local OutputConfig_mt = {
+  __call = function ()
+              local sc = ffi.new("OutputConfig")
+              ffi.gc(sc,C.StructureConfig_delete)
+              return sc
+           end
+}
+local DetectorConfig_mt = {
+  __call = function ()
+              local sc = ffi.new("DetectorConfig")
+              ffi.gc(sc,C.StructureConfig_delete)
+              return sc
+           end
+}
+local ScanConfig_mt = {
+  __call = function ()
+              local sc = ffi.new("ScanConfig")
+              ffi.gc(sc,C.StructureConfig_delete)
+              return sc
+           end
+}
 
 c.StructureConfig = ffi.metatype("StructureConfig",StructureConfig_mt)
 c.ModelConfig = ffi.metatype("ModelConfig",ModelConfig_mt)

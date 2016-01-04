@@ -43,7 +43,7 @@ const float_tt PI = 2*acos((float_tt)0.0);
 #include "CoordinateArithmetics.hpp"
 
 
-namespace QSTEM {
+namespace slicepp {
 	__global__ void createAtomicPotential ( cufftComplex* V, int Z, int nx, int ny, float_tt dx, float_tt dy, float_tt sigma);
 	__device__ void parametersKirkland_d ( float* a, float* b, float* c, float* d, int Z, int i );
 	void normalizeProjectedPotential ( cufftComplex* V, int size, int gS, int bS );

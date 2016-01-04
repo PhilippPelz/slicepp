@@ -23,7 +23,7 @@
 
 #ifndef CUDA2DPOTENTIAL_HPP_
 #define CUDA2DPOTENTIAL_HPP_
-namespace QSTEM {
+namespace slicepp {
 
 class CUDA2DPotential: public CPotential {
 
@@ -63,6 +63,6 @@ protected:
 
 	std::map<int, cufftComplex*> _atomPot_d;
 };
-} /* namespace QSTEM */
+} /* namespace slicepp */
 
 #endif /* CUDA2DPOTENTIAL_HPP_ */

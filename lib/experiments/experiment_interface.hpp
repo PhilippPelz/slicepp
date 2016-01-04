@@ -22,7 +22,7 @@
 #ifndef EXPERIMENT_INTERFACE_H
 #define EXPERIMENT_INTERFACE_H
 
-namespace QSTEM
+namespace slicepp
 {
 
 class IExperiment

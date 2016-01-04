@@ -22,17 +22,11 @@
 static std::string imageFilePrefix="image";
 using boost::format;
 
-namespace QSTEM
+namespace slicepp
 {
 
-CPlaneWave::CPlaneWave(const boost::shared_ptr<WaveConfig> wc, const boost::shared_ptr<ModelConfig> mc,	const PersistenceManagerPtr& p) : CBaseWave(wc,mc,p)
+CPlaneWave::CPlaneWave(cWaveConfPtr wc, cModelConfPtr mc, PersistenceManagerPtr p) : CBaseWave(wc,mc,p)
 {
-}
-
-/** Copy constructor - used to copy wave just before dispatching multiple threads for STEM simulations */
-CPlaneWave::CPlaneWave(const CPlaneWave& other) : CBaseWave(other)
-{
-	// TODO: need to copy arrays and anything pointed to - anything that needs to be thread-local
 }
 
 WavePtr CPlaneWave::Clone()
@@ -73,8 +67,8 @@ void CPlaneWave::TiltBeam(bool tiltBack)
 		int direction = tiltBack ? -1 : 1;
 
 		// produce a tilted wave function (btiltx,btilty):
-		float_tt ktx = direction*2.0*M_PI*sin(_wc->tiltX)/GetWavelength();
-		float_tt kty = direction*2.0*M_PI*sin(_wc->tiltY)/GetWavelength();
+		float_tt ktx = direction*2.0*M_PI*sin(_wc->tiltX)/_mc->wavelength;
+		float_tt kty = direction*2.0*M_PI*sin(_wc->tiltY)/_mc->wavelength;
 		unsigned px=_wc->nx*_wc->ny;
 		af::array x = _mc->d[0]*(af::range(_wc->nx) - _wc->nx/2);
 		af::array y = _mc->d[1]*(af::range(_wc->ny) - _wc->ny/2);
@@ -97,4 +91,4 @@ void CPlaneWave::TiltBack()
 }
 
 
-} // end namespace QSTEM
+} // end namespace slicepp

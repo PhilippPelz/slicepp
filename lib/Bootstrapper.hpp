@@ -56,13 +56,15 @@ namespace bpt = boost::property_tree;
 
 //#define BOOST_FUNCTIONAL_FACTORY_SUPPORT_NONE_T
 
-namespace QSTEM {
+namespace slicepp {
 
 class Bootstrapper {
 public:
 	Bootstrapper(int argc, char *argv[]);
+	Bootstrapper();
 	virtual ~Bootstrapper();
 	void Initialize();
+	void Initialize(c_Config* c);
 	ExperimentPtr GetExperiment();
 protected:
 	ExperimentPtr _e;
@@ -82,6 +84,6 @@ protected:
 	boost::filesystem::path _configFile;
 };
 
-} /* namespace QSTEM */
+} /* namespace slicepp */
 
 #endif /* STEM3_BOOTSTRAPPER_H_ */

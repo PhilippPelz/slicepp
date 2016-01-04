@@ -38,7 +38,7 @@ using namespace nlopt;
 // 4.46677327584453 /* 1e10/sqrt(THz*amu/(pi*hbar)) */
 #define THZ_HBAR_KB 1.90963567802059 /* THz*hbar/kB */
 
-namespace QSTEM {
+namespace slicepp {
 
 static const float_tt k_wobScale = 1.0 / (8 * M_PI * M_PI);
 static const float_tt k_sq3 = 1.0 / sqrt(3.0); /* sq3 is an additional needed factor which stems from
@@ -1114,7 +1114,7 @@ void CrystalBuilder::GetCrystalBoundaries(float_tt &min_x, float_tt &max_x, floa
 std::vector<int> CrystalBuilder::GetUniqueAtoms() {
 	return _uniqueAtoms;
 }
-} // end namespace QSTEM
+} // end namespace slicepp
 
 // *******************  Matrix manipulation ***********************
 //    For now, use our own internal routines as has been done always.
@@ -1122,7 +1122,7 @@ std::vector<int> CrystalBuilder::GetUniqueAtoms() {
 
 #include "matrixlib.hpp"
 
-namespace QSTEM {
+namespace slicepp {
 
 void CrystalBuilder::Inverse_3x3(FloatArray2D& res, const FloatArray2D& a) {
 // use function from matrixlib for now
@@ -1143,4 +1143,4 @@ void CrystalBuilder::RotateMatrix(const FloatArray2D& matrixIn, FloatArray2D& ma
 
 // ******************  end matrix manipulation
 
-}// end namespace QSTEM
+}// end namespace slicepp

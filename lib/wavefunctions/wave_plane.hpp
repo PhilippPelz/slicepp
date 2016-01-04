@@ -22,14 +22,13 @@
 
 #include "wave_base.hpp"
 
-namespace QSTEM
+namespace slicepp
 {
 
 class DLL_EXPORT CPlaneWave : public CBaseWave
 {
 public:
-  CPlaneWave(const boost::shared_ptr<WaveConfig> wc, const boost::shared_ptr<ModelConfig> mc,const PersistenceManagerPtr& p);
-  CPlaneWave(const CPlaneWave& other);
+  CPlaneWave(cWaveConfPtr wc, cModelConfPtr mc, PersistenceManagerPtr p);
   virtual void FormProbe();
   void TiltBeam(bool tiltBack=false);
   void TiltBack();

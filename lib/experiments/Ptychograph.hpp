@@ -3,7 +3,7 @@
 
 #include "base.hpp"
 #include "Scan.hpp"
-namespace QSTEM
+namespace slicepp
 {
 class Ptychograph : public BaseExperiment
 {

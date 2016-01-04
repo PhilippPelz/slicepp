@@ -11,7 +11,7 @@
 #include <string>
 using boost::format;
 using boost::algorithm::trim;
-namespace QSTEM {
+namespace slicepp {
 
 SuperstructureBuilder::SuperstructureBuilder(StructureReaderPtr r,cStructureConfPtr sc, cModelConfPtr mc, cOutputConfPtr oc) : IStructureBuilder(r,sc,mc,oc)
 {

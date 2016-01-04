@@ -17,7 +17,7 @@
 #include "cufft_assert.hpp"
 #include <arrayfire.h>
 
-namespace QSTEM {
+namespace slicepp {
 
 class PersistenceManager {
 public:
@@ -61,6 +61,6 @@ protected:
 	ComplexArray2D _probe;
 };
 typedef boost::shared_ptr<PersistenceManager> PersistenceManagerPtr;
-} /* namespace QSTEM */
+} /* namespace slicepp */
 
 #endif /* LIBS_DATA_IO_PERSISTENCEMANAGER_HPP_ */

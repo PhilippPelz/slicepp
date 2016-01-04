@@ -20,39 +20,30 @@
 #ifndef WAVE_BASE_H
 #define WAVE_BASE_H
 
-#include <stdio.h>
-#include <cstdlib>
-#include "stemtypes_fftw3.hpp"
-#include "wave_interface.hpp"
 #include "omp.h"
 #include "boost/format.hpp"
 #include <boost/log/trivial.hpp>
-#include "data_IO/PersistenceManager.hpp"
 #include <arrayfire.h>
 #include <af/util.h>
 
-namespace QSTEM
+#include "stemtypes_fftw3.hpp"
+#include "wave_interface.hpp"
+#include "data_IO/PersistenceManager.hpp"
+namespace slicepp
 {
 
 
 class DLL_EXPORT CBaseWave : public IWave
 {
 public:
-	CBaseWave(const boost::shared_ptr<WaveConfig> wc, const boost::shared_ptr<ModelConfig> mc,const PersistenceManagerPtr p);
-	CBaseWave( const CBaseWave& other );
-	bool IsRealSpace(){return m_realSpace;}
+	CBaseWave(cWaveConfPtr wc, cModelConfPtr mc, PersistenceManagerPtr p);
+	bool IsRealSpace(){return _realSpace;}
 	int GetTotalPixels() const {return _wc->nx*_wc->ny;}
 	void DisplayParams();
 	void ToRealSpace();
 	void ToFourierSpace();
-	void GetSizePixels(int &x, int &y) const ;
-	void GetResolution(float_tt &x, float_tt &y) const ;
-	virtual void GetK2();
-	inline float_tt GetVoltage()  const {return _E;}
-	inline float_tt GetWavelength()  const {return _wavlen;}
 	inline float_tt GetPixelIntensity(int i) const { return abs2(_wave.data()[i]); }
 	inline float_tt GetPixelIntensity(int x, int y) const  {return GetPixelIntensity(x+_wc->nx*y);}
-	inline float_tt GetPixelDose() const {return _pixelDose; }
 	inline ComplexArray2D GetWave() const {return  _wave;}
 
 	inline af::array GetPixelIntensity() const {return af::real(_wave_af)*af::real(_wave_af) + af::imag(_wave_af)*af::imag(_wave_af);}
@@ -66,7 +57,6 @@ public:
 	virtual WavePtr Clone()=0;
 	virtual void FormProbe();
 	virtual void ResetProbe();
-	virtual void GetExtents(int& nx, int& ny) const;
 	virtual void Transmit(af::array& t);
 	virtual void PropagateToNextSlice();
 	virtual void InitializePropagators();
@@ -76,30 +66,22 @@ public:
 
 protected:
 	ComplexArray2D _wave;
-	af::array _prop, _wave_af, _probe;
-	af::array _condition, _zero; //for propagation
-	std::vector<float_tt> m_propxr, m_propxi, m_propyr, m_propyi;
-	bool m_realSpace;
-	int m_detPosX, m_detPosY;
-	int m_Scherzer;
-	int slice_c;
-	float_tt m_k2max;
-	float_tt _E;
-	float_tt _wavlen;
-	float_tt _pixelDose;
+	af::array _prop;
+	af::array _wave_af;
+	af::array _probe;
+	bool _realSpace;
+	float_tt _k2max;
 
-	std::vector<int> m_position;
-	af::array m_kx2, m_ky2, m_kx, m_ky, m_k2, _k2max;
-	//float_tt **m_avgArray;
-	//float_tt m_thickness;
-	//float_tt m_intIntensity;
-	//float_tt m_electronScale;
-	//float_tt m_beamCurrent;
-	//float_tt m_dwellTime;
+	af::array _kx;
+	af::array _ky;
+	af::array _k2;
 
 	void Initialize(std::string input_ext, std::string output_ext);
 	void InitializeKVectors();
-	float_tt Wavelength(float_tt keV);
+
+	af::array GetKx();
+	af::array GetKy();
+	af::array GetK2();
 };
 }
 

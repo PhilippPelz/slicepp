@@ -11,7 +11,7 @@
 
 using boost::format;
 
-namespace QSTEM {
+namespace slicepp {
 PersistenceManager::PersistenceManager() :
 		_waveSlicesAfterFT(ComplexArray3D(boost::extents[1][1][1])), _waveSlicesAfterTransmit(ComplexArray3D(boost::extents[1][1][1])), _waveSlicesAfterProp(
 				ComplexArray3D(boost::extents[1][1][1])), _waveSlicesAfterSlice(ComplexArray3D(boost::extents[1][1][1])), _probe(
@@ -240,5 +240,5 @@ if (pos == 1) {
 }
 }
 
-} /* namespace QSTEM */
+} /* namespace slicepp */
 

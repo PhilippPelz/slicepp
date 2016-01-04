@@ -22,7 +22,7 @@
 
 #include "base.hpp"
 
-namespace QSTEM
+namespace slicepp
 {
 
 class CoherentSinglePositionExperiment : public BaseExperiment

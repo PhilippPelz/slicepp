@@ -21,7 +21,7 @@
 #include <map>
 
 
-namespace QSTEM {
+namespace slicepp {
 
 class C3DFFTPotential: public CPotential {
 public:

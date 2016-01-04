@@ -11,7 +11,7 @@
 #include "detector_interface.hpp"
 #include <string>
 
-namespace QSTEM{
+namespace slicepp{
 class DLL_EXPORT FlatAreaDetector: public IDetector {
 public:
 	FlatAreaDetector(cDetectorConfPtr dc,PersistenceManagerPtr p);

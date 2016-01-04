@@ -12,7 +12,7 @@
 #include <boost/log/trivial.hpp>
 
 
-namespace QSTEM {
+namespace slicepp {
 
 using boost::property_tree::ptree;
 
@@ -55,14 +55,15 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
 	c->ExperimentType = t.get<int>("mode");
 	c->nThreads = t.get<int>("nthreads");
 
-	c->Detector->type = t.get<int>("detector.type");
+	c->Detector->type = (DetectorType)t.get<int>("detector.type");
 	c->Detector->mtfA = t.get<float_tt>("detector.mtfA");
 	c->Detector->mtfB = t.get<float_tt>("detector.mtfB");
 	c->Detector->mtfC = t.get<float_tt>("detector.mtfC");
 	c->Detector->mtfD = t.get<float_tt>("detector.mtfD");
 	c->Detector->DwellTimeMsec = t.get<float_tt>("beam.dwellTimeMsec");
-	c->Detector->nx = t.get<int>("wave.nx");
-	c->Detector->ny = t.get<int>("wave.ny");
+	c->Detector->n[0] = t.get<int>("wave.nx");
+	c->Detector->n[1] = t.get<int>("wave.ny");
+	c->Detector->MaxElectronCounts = t.get<float_tt>("wave.pixel dose");
 
 	c->Scan->xPos = t.get<int>("scan.x Start Position");
 	c->Scan->yPos = t.get<int>("scan.y Start Position");
@@ -70,7 +71,7 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
 	c->Scan->yStep = t.get<int>("scan.yStep");
 	c->Scan->scanType = t.get<int>("scan.scanType");
 
-	c->Wave->type = t.get<int>("wave.type");
+	c->Wave->type = (WaveType)t.get<int>("wave.type");
 	c->Wave->Cs = t.get<float_tt>("wave.Cs");
 	c->Wave->C5 = t.get<float_tt>("wave.C5");
 	c->Wave->Cc = t.get<float_tt>("wave.Cc");
@@ -109,7 +110,7 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
 	c->Wave->tiltY = t.get<float_tt>("wave.tiltY");
 	c->Wave->nx = t.get<int>("wave.nx");
 	c->Wave->ny = t.get<int>("wave.ny");
-	c->Wave->pixelDose = t.get<float_tt>("wave.pixel dose");
+
 
 	c->Output->LogLevel = t.get<int>("output.loglevel");
 	c->Output->SaveWaveIterations = t.get<int>("output.SaveWaveAfterNSlices");
@@ -162,7 +163,7 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
 	c->Model->ratom = t.get<float_tt>("model.atomRadiusAngstrom");
 	c->Model->DoZInterpolation = t.get<bool>("model.DoZInterpolation");
 	c->Model->UseQPotentialOffsets = t.get<bool>("model.UseQPotentialOffsets");
-	c->Model->ImagPot = t.get<float>("wave.imaginary potential factor");
+	c->Model->ImagPot = t.get<float>("model.ImagPot");
 	c->Model->offset[0] = t.get<float_tt>("structure.xOffset");
 	c->Model->offset[1] = t.get<float_tt>("structure.yOffset");
 	c->Model->offset[2] = t.get<float_tt>("structure.zOffset");
@@ -220,4 +221,4 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
 	return c;
 }
 
-} /* namespace QSTEM */
+} /* namespace slicepp */

@@ -87,7 +87,7 @@ double massArray[MAX_MASS_INDEX]={1.008,                                        
 /* so far this list goes up to Xe (from Gerthsen) .. Ta (webelememts) */
 double chargeTable[MAX_MASS_INDEX];
 
-namespace QSTEM
+namespace slicepp
 {
 
 // #define NCINMAX 500
@@ -358,4 +358,4 @@ void writeAmorphous(FILE *fp,superCellBox superCell,int nstart,int nstop) {
 	}  // end of if fp != NULL
 }
 
-} // end namespace QSTEM
+} // end namespace slicepp

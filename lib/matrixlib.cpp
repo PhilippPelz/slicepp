@@ -40,7 +40,7 @@ static float sqrarg = 0.0f;
 #define SIGN(a,b) ((b) >= 0 ? (a) : -(a))    // Magnitude of a times sign of b.
 #define SQR(a) (((sqrarg=(a)) == 0.0) ? 0.0 : sqrarg*sqrarg)
 
-namespace QSTEM
+namespace slicepp
 {
 
 void ludcmp(float_tt **a, int n, int *indx, float_tt *d) {
@@ -768,4 +768,4 @@ void matrixProductInt(float_tt **a,int Nxa, int Nya, int **b,int Nxb, int Nyb, f
 	}
 }
 
-} // end namespace QSTEM
+} // end namespace slicepp

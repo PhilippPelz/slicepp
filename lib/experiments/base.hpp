@@ -27,7 +27,7 @@
 #include "data_IO/PersistenceManager.hpp"
 #include "potentials/pot_interface.hpp"
 
-namespace QSTEM {
+namespace slicepp {
 class DLL_EXPORT BaseExperiment: public IExperiment {
 public:
 	BaseExperiment(ConfigPtr c, StructureBuilderPtr s, WavePtr w, PotPtr p, DetPtr d, PersistenceManagerPtr pers);
@@ -42,34 +42,17 @@ public:
 	void SetSliceThickness(superCellBoxPtr);
 
 protected:
+	// Called in RunMuls after a slice is transmitted/propagated through.
 	virtual void PostSliceProcess(unsigned absoluteSlice) {
 	}
-	; // Called in RunMuls after a slice is transmitted/propagated through.  Override as desired.
+	;
 	virtual void CollectIntensity(unsigned absoluteSlice)=0;
+	// Called after the wave has propagated through all slices
 	virtual void PostSpecimenProcess();
+	// Run the multislice algorithm on the given potential array
 	virtual int RunMultislice(af::array t_af);
-	virtual void AddDPToAvgArray(const WavePtr &wave);
 
-	void ReadAvgArray();
-	void ReadAvgArray(unsigned navg);
-	void ReadAvgArray(unsigned posX, unsigned posY);
-
-	void _WriteAvgArray(std::string &fileName, std::string &comment, std::map<std::string, double> &params, std::vector<unsigned> &position);
-
-	inline void WriteAvgArray(std::string comment = "Average Array", std::map<std::string, double> params = std::map<std::string, double>()) {
-	}
-	inline void WriteAvgArray(unsigned navg, std::string comment = "Average Array",
-			std::map<std::string, double> params = std::map<std::string, double>()) {
-	}
-	inline void WriteAvgArray(unsigned posX, unsigned posY, std::string comment = "Average Array",
-			std::map<std::string, double> params = std::map<std::string, double>()) {
-	}
-
-	void fft_normalize(WavePtr wave);
-
-	bool m_tds;
-	unsigned m_avgRuns, _runCount;  // number of runs to average; runs currently averaged
-	unsigned m_printLevel;
+	unsigned _runCount;  // number of runs to average; runs currently averaged
 
 	ConfigPtr _c;
 	// the electron wavefunction
@@ -83,24 +66,12 @@ protected:
 	// detector
 	DetPtr _det;
 
-	float_tt m_intIntensity;  // Integrated intensity from experiment - if too low, your wave array is too small, and the beam is being scattered beyond it.
-
-	unsigned m_cellDiv;		// The number of sub-slabs that the supercell is divided into
-	bool m_equalDivs;			// Whether or not all sub-slabs are the same size
-	unsigned m_outputInterval;  // The number of slices between saving intermediate output files
-	unsigned m_totalSliceCount; // The total number of slices that we've progressed through (all sub-slabs included)
-	float_tt m_thickness;       // The total thickness of the sample at the current slice
-	float_tt m_dz;
+	float_tt m_intIntensity; // Integrated intensity from experiment - if too low, your wave array is too small, and the beam is being scattered beyond it.
 	RealVector m_chisq;
-	RealVector m_avgArray;   // The averaged diffraction pattern (m_avgCount says how many are averaged currently)
-	/* integer offset for positioning probe within potential array */
-
-	std::vector<float_tt> m_propxr, m_propxi, m_propyr, m_propyi;
 };
 
 typedef boost::function<
-		BaseExperiment*(const ConfigPtr& c, const StructureBuilderPtr& s, const WavePtr& w, const PotPtr& p, const DetPtr& d,
-				const PersistenceManagerPtr& pers)> experimentCreator;
+		BaseExperiment*(ConfigPtr c, StructureBuilderPtr s, WavePtr w, PotPtr p, DetPtr d, PersistenceManagerPtr pers)> experimentCreator;
 typedef std::map<int, experimentCreator> ExperimentFactory;
 
 }

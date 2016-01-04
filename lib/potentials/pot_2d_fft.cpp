@@ -24,7 +24,7 @@ const int k_fftMeasureFlag = FFTW_ESTIMATE;
 
 using boost::format;
 
-namespace QSTEM {
+namespace slicepp {
 
 C2DFFTPotential::C2DFFTPotential(cModelConfPtr mc, cOutputConfPtr oc, PersistenceManagerPtr p) :
 		CPotential(mc, oc, p) {
@@ -232,4 +232,4 @@ complex_tt *C2DFFTPotential::GetAtomPotential2D(int Znum, float_tt B) {
 #undef PHI_SCALE
 #undef SHOW_SINGLE_POTENTIAL
 
-} // end namespace QSTEM
+} // end namespace slicepp

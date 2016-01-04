@@ -26,7 +26,7 @@
 #include <malloc.h>
 #include "projectedPotential.hpp"
 
-namespace QSTEM {
+namespace slicepp {
 __global__ void createAtomicPotential(cufftComplex* V, int Z, int nx, int ny, float_tt dx, float_tt dy, float_tt sigma) // equation ??
 		{
 	const int i = blockIdx.x * blockDim.x + threadIdx.x;

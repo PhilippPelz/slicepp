@@ -31,7 +31,7 @@
 
 // This class provides utilities for opening hdf5 files and for creating default data sets.
 
-namespace QSTEM
+namespace slicepp
 {
 
 class QH5

@@ -68,7 +68,7 @@ typedef double float_tt;
 using namespace std;
 
 
-namespace QSTEM
+namespace slicepp
 {
 typedef boost::rational<unsigned> ratio;
 typedef Complex complex_tt;

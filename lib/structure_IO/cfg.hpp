@@ -22,7 +22,7 @@
 
 #include "structureInterface.hpp"
 #include <boost/filesystem.hpp>
-namespace QSTEM
+namespace slicepp
 {
 class DLL_EXPORT CCfgReader : public IStructureReader
 {

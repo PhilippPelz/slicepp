@@ -21,7 +21,7 @@
 #include "wave_base.hpp"
 using boost::format;
 
-namespace QSTEM
+namespace slicepp
 {
 
 void CreateWaveFunctionDataSets(int x, int y, std::vector<int> positions, std::string output_ext)
@@ -308,4 +308,4 @@ void CBaseWave::ToRealSpace()
 	}
 }
 
-} //end namespace QSTEM
+} //end namespace slicepp

@@ -26,7 +26,7 @@
 #include <cstring>
 #include <boost/function.hpp>
 
-namespace QSTEM
+namespace slicepp
 {
 
 class IStructureReader;

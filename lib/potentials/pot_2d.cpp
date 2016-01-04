@@ -19,7 +19,7 @@ QSTEM - image simulation for TEM/STEM/CBED
 
 #include "pot_2d.hpp"
 
-namespace QSTEM
+namespace slicepp
 {
 
 C2DPotential::C2DPotential(cModelConfPtr mc, cOutputConfPtr oc , PersistenceManagerPtr p)  : RealSpacePotential(mc,oc,p)
@@ -158,4 +158,4 @@ void C2DPotential::CenterAtomZ(atom& atom, float_tt &z)
   z += 0.5*_mc->d[2];
 }
 
-} // end namespace QSTEM
+} // end namespace slicepp

@@ -14,7 +14,7 @@
 #include <cstdlib>
 #include "experiments/base.hpp"
 
-namespace QSTEM{
+namespace slicepp{
 class Scan{
 public:
 	Scan(const ConfigPtr& c);

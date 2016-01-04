@@ -31,14 +31,14 @@
 #include <boost/function.hpp>
 #include <arrayfire.h>
 
-namespace QSTEM {
+namespace slicepp {
 class IWave;
 typedef boost::shared_ptr<IWave> WavePtr;
-typedef boost::function<IWave*(const boost::shared_ptr<WaveConfig> wc, const boost::shared_ptr<ModelConfig> mc, const PersistenceManagerPtr& p)> waveCreator;
+typedef boost::function<IWave*(cWaveConfPtr wc, cModelConfPtr mc, PersistenceManagerPtr p)> waveCreator;
 typedef std::map<int, waveCreator> WaveFactory;
 class IWave {
 public:
-	IWave(const boost::shared_ptr<WaveConfig> wc, const boost::shared_ptr<ModelConfig> mc, PersistenceManagerPtr p) {
+	IWave(cWaveConfPtr wc, cModelConfPtr mc, PersistenceManagerPtr p) {
 		_persist = p;
 		_wc = wc;
 		_mc = mc;
@@ -56,16 +56,8 @@ public:
 	virtual ComplexArray2D GetWave() const = 0;
 	virtual af::array& GetWaveAF() = 0;
 	virtual af::array& GetProbe() = 0;
-	virtual void GetSizePixels(int &x, int &y) const =0;
-	virtual void GetExtents(int& nx, int& ny) const =0;
-	virtual void GetResolution(float_tt &x, float_tt &y) const =0;
-	virtual void GetK2() =0;
-	virtual float_tt GetVoltage() const =0;
-	virtual float_tt GetWavelength() const =0;
 	virtual float_tt GetPixelIntensity(int i) const =0;
 	virtual float_tt GetPixelIntensity(int x, int y) const =0;
-	virtual float_tt GetPixelDose() const =0;
-//	virtual void ApplyTransferFunction(shared_array<complex_tt> &wave)=0;type filter text
 	virtual float_tt GetIntegratedIntensity() const =0;
 	virtual void Transmit(af::array& t)=0;
 	virtual void PropagateToNextSlice()=0;
@@ -73,8 +65,8 @@ public:
 	virtual void ResetProbe()=0;
 protected:
 	PersistenceManagerPtr _persist;
-	boost::shared_ptr<WaveConfig> _wc;
-	boost::shared_ptr<ModelConfig> _mc;
+	cWaveConfPtr _wc;
+	cModelConfPtr _mc;
 };
 
 }

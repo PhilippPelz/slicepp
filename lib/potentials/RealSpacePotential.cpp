@@ -7,7 +7,7 @@
 
 #include "RealSpacePotential.hpp"
 using boost::format;
-namespace QSTEM {
+namespace slicepp {
 /****************************************************************************
  * function: atomBoxLookUp - looks up potential at position x, y, z, relative to atom center
  *
@@ -170,4 +170,4 @@ RealSpacePotential::~RealSpacePotential() {
 	// TODO Auto-generated destructor stub
 }
 
-} /* namespace QSTEM */
+} /* namespace slicepp */

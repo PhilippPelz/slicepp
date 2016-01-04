@@ -29,7 +29,7 @@
 #include <armadillo>
 #include <boost/filesystem.hpp>
 
-namespace QSTEM
+namespace slicepp
 {
 
 struct zoneAxisOptParams{

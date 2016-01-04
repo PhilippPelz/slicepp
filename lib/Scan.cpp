@@ -6,7 +6,7 @@
  */
 
 #include "Scan.hpp"
-namespace QSTEM{
+namespace slicepp{
 Scan::Scan(const ConfigPtr& c) {
 	_xStart = c->Scan->xPos;
 	_yStart = c->Scan->yPos;

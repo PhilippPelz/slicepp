@@ -10,7 +10,7 @@
 //#include <thrust/fill.h>
 //#include <thrust/copy.h>
 
-namespace QSTEM {
+namespace slicepp {
 CUDA2DPotential::CUDA2DPotential(cModelConfPtr mc, cOutputConfPtr oc, PersistenceManagerPtr p) :
 		CPotential(mc, oc, p) {
 	cufft_assert(cufftPlan2d(&_fftPlan, _mc->n[0], _mc->n[1], CUFFT_C2C));
@@ -135,5 +135,5 @@ void CUDA2DPotential::progressCounter(int j, int jTot) {
 	loadbar(j, jTot);
 }
 
-} /* namespace QSTEM */
+} /* namespace slicepp */
 

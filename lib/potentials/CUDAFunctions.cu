@@ -13,7 +13,7 @@
 
 #include <thrust/complex.h>
 using boost::format;
-namespace QSTEM {
+namespace slicepp {
 
 CUDAFunctions::CUDAFunctions(superCellBoxPtr info, cModelConfPtr mc) {
 	_info = info;

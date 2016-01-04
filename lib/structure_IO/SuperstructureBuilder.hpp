@@ -22,7 +22,7 @@
 #include "readparams.hpp"
 #include "crystal.hpp"
 
-namespace QSTEM {
+namespace slicepp {
 #define NAME_BUF_LEN 64
 #define CRYSTALLINE 0
 #define AMORPHOUS 1
@@ -61,6 +61,6 @@ protected:
 	int _nGrains = 0;
 };
 
-} /* namespace QSTEM */
+} /* namespace slicepp */
 
 #endif /* LIBS_STRUCTURE_IO_SUPERSTRUCTURECREATOR_H_ */

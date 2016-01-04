@@ -40,8 +40,16 @@ typedef enum  {
 	Einstein = 1, Phonon = 2, None = 3
 } DisplacementType;
 
+typedef enum  {
+	Plane = 1, Convergent =2
+} WaveType;
+
+typedef enum  {
+	Scintillator = 1, Direct = 2
+} DetectorType;
+
 typedef struct StructureConfig {
-	const char* structureFilename;
+	const char* StructureFilename;
 
 	float T_Kelvin;
 
@@ -132,11 +140,11 @@ typedef struct WaveConfig {
 	float AISaperture;
 	float tiltX;
 	float tiltY;
-	float pixelDose;
 
 	bool Smooth;
 	bool Gaussian;
-	int type;
+
+	WaveType type;
 	int nx;
 	int ny;
 
@@ -174,9 +182,9 @@ typedef struct DetectorConfig {
 	float mtfC;
 	float mtfD;
 	float DwellTimeMsec;
-	int type;
-	int nx;
-	int ny;
+	DetectorType type;
+	int n[2];
+	float MaxElectronCounts;
 } DetectorConfig;
 
 typedef struct ScanConfig {

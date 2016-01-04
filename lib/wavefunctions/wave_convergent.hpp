@@ -21,14 +21,13 @@
 #define CONVERGENT_WAVE_H
 
 #include "wave_base.hpp"
-namespace QSTEM
+namespace slicepp
 {
 
 class DLL_EXPORT CConvergentWave : public CBaseWave
 {
 public:
-	CConvergentWave(const boost::shared_ptr<WaveConfig> wc, const boost::shared_ptr<ModelConfig> mc,const PersistenceManagerPtr& p);
-	CConvergentWave( const CConvergentWave& other );
+	CConvergentWave(cWaveConfPtr wc, cModelConfPtr mc, PersistenceManagerPtr p);
 
 	virtual void DisplayParams();
 	virtual ~CConvergentWave(){};
