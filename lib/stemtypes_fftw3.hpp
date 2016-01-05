@@ -86,7 +86,9 @@ typedef ComplexArray3D::array_view<3>::type ComplexArray3DView;
 typedef FloatArray2D::array_view<2>::type FloatArray2DView;
 typedef FloatArray3D::array_view<3>::type FloatArray3DView;
 typedef boost::multi_array_ref<complex_tt,3> ComplexArray3DPtr;
+typedef boost::multi_array_ref<float_tt,3> FloatArray3DPtr;
 typedef boost::multi_array_ref<complex_tt,2> ComplexArray2DPtr;
+typedef boost::multi_array_ref<float_tt,2> FloatArray2DPtr;
 
 #define SHOW_SINGLE_POTENTIAL 0
 

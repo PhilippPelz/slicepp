@@ -43,7 +43,9 @@ protected:
 	virtual void SavePotential();
 	virtual af::array GetSlice(af::array t, unsigned idx);
 	void initPotArrays();
-	void ComputeAtPot(superCellBoxPtr info);
+	void ComputeAtomicPotential(superCellBoxPtr info);
+	void printAfMem();
+	void printCudaMem();
 
 	void fft(cufftComplex* V);
 	void ifft(cufftComplex* V);

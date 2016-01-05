@@ -38,12 +38,12 @@ class DLL_EXPORT CBaseWave : public IWave
 public:
 	CBaseWave(cWaveConfPtr wc, cModelConfPtr mc, PersistenceManagerPtr p);
 	bool IsRealSpace(){return _realSpace;}
-	int GetTotalPixels() const {return _wc->nx*_wc->ny;}
+	int GetTotalPixels() const {return _wc->n[0]*_wc->n[1];}
 	void DisplayParams();
 	void ToRealSpace();
 	void ToFourierSpace();
 	inline float_tt GetPixelIntensity(int i) const { return abs2(_wave.data()[i]); }
-	inline float_tt GetPixelIntensity(int x, int y) const  {return GetPixelIntensity(x+_wc->nx*y);}
+	inline float_tt GetPixelIntensity(int x, int y) const  {return GetPixelIntensity(x+_wc->n[0]*y);}
 	inline ComplexArray2D GetWave() const {return  _wave;}
 
 	inline af::array GetPixelIntensity() const {return af::real(_wave_af)*af::real(_wave_af) + af::imag(_wave_af)*af::imag(_wave_af);}

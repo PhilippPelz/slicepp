@@ -75,6 +75,7 @@ protected:
 	void RegisterStructureTypes();
 	void RegisterStructureBuilders();
 	void RegisterStructureReaders();
+	void InitInternal(ConfigPtr c);
 	DetectorFactory _detectorFactory;
 	WaveFactory _waveFactory;
 	ExperimentFactory _experimentFactory;

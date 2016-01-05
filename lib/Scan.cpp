@@ -12,8 +12,8 @@ Scan::Scan(const ConfigPtr& c) {
 	_yStart = c->Scan->yPos;
 	_xStep = c->Scan->xStep;
 	_yStep = c->Scan->yStep;
-	_probeX = c->Wave->nx;
-	_probeY = c->Wave->ny;
+	_probeX = c->Wave->n[0];
+	_probeY = c->Wave->n[1];
 	_scanType = c->Scan->scanType;
 	_c = ConfigPtr(c);
 }

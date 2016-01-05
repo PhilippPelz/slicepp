@@ -66,7 +66,7 @@ void Ptychograph::Run()
 	_wave->FormProbe();
 	scanPositions = _scan->GetScanPositions();
 //	_persist->InitStorage();
-	_persist->ResizeStorage(_c->Wave->nx, _c->Wave->ny);
+	_persist->ResizeStorage(_c->Wave->n[0], _c->Wave->n[1]);
 	_wave->InitializePropagators();
 	_wave->DisplayParams();
 	_pot->DisplayParams();
@@ -83,7 +83,7 @@ void Ptychograph::Run()
 
 			int xp = scanPositions[i].first, yp = scanPositions[i].second;
 			BOOST_LOG_TRIVIAL(info) << format("\n==== Position %.lf (%.lf, %.lf) ====") % (i + 1) % xp % yp;
-			RunMultislice(_pot->GetSubPotential(xp, yp, _c->Wave->nx, _c->Wave->ny));
+			RunMultislice(_pot->GetSubPotential(xp, yp, _c->Wave->n[0], _c->Wave->n[1]));
 
 			PostSpecimenProcess();
 

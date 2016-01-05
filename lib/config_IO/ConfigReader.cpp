@@ -111,8 +111,8 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
 	c->Wave->AISaperture = t.get<float_tt>("wave.AISaperture");
 	c->Wave->tiltX = t.get<float_tt>("wave.tiltX");
 	c->Wave->tiltY = t.get<float_tt>("wave.tiltY");
-	c->Wave->nx = t.get<int>("wave.nx");
-	c->Wave->ny = t.get<int>("wave.ny");
+	c->Wave->n[0] = t.get<int>("wave.nx");
+	c->Wave->n[1] = t.get<int>("wave.ny");
 
 	c->Output->LogLevel = t.get<int>("output.loglevel");
 	c->Output->SaveWaveIterations = t.get<int>("output.SaveWaveAfterNSlices");

@@ -153,9 +153,7 @@ typedef struct WaveConfig {
 	bool Gaussian;
 
 	WaveType type;
-	int nx;
-	int ny;
-
+	int n[2];
 } WaveConfig;
 
 typedef struct OutputConfig {

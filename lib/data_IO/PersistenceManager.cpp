@@ -132,17 +132,31 @@ void PersistenceManager::SaveProjectedPotential(af::array& data) {
 	SaveProjectedPotential(a);
 }
 
-void PersistenceManager::Save3DDataSet(ComplexArray3DPtr a, string name) {
+void PersistenceManager::SaveCx3DDataSet(ComplexArray3DPtr a, string name) {
 	_file.SaveComplexArray3D(ComplexArray3D(a), name);
 }
-void PersistenceManager::Save2DDataSet(ComplexArray2DPtr a, string name) {
+void PersistenceManager::SaveF3DDataSet(FloatArray3DPtr a, string name) {
+	_file.SaveRealArray3D(FloatArray3D(a), name);
+}
+void PersistenceManager::SaveCx2DDataSet(ComplexArray2DPtr a, string name) {
 	_file.SaveComplexArray2D(ComplexArray2D(a), name);
 }
+void PersistenceManager::SaveF2DDataSet(FloatArray2DPtr a, string name) {
+	_file.SaveRealArray2D(FloatArray2D(a), name);
+}
 
-void PersistenceManager::Save2DDataSet(af::array& data, string name) {
-	ComplexArray2D a(boost::extents[data.dims(0)][data.dims(1)]);
-	data.host(a.data());
-	Save2DDataSet(a, name);
+void PersistenceManager::Save2DDataSet(af::array& d, string name) {
+	printf("Saving %s: dims(%d,%d)\n",name.c_str(),d.dims(0),d.dims(1));
+	if(d.type() == f32){
+		FloatArray2D a(boost::extents[d.dims(0)][d.dims(1)]);
+		d.host(a.data());
+		SaveF2DDataSet(a, name);
+	}
+	else if (d.type() == c32){
+		ComplexArray2D b(boost::extents[d.dims(0)][d.dims(1)]);
+		d.host(b.data());
+		SaveCx2DDataSet(b, name);
+	}
 }
 
 void PersistenceManager::InitStorage() {

@@ -285,16 +285,20 @@ class SliceGUI(QtGui.QMainWindow):
                 self.v1Label.setText(self.labelText[1][0])
                 self.v2Label.setText(self.labelText[1][1])
         if self.selected.shape[0] > 1:
-            if self.resultsRadio1.isChecked():
-                self.view1.setImage(np.abs(self.selected), autoRange=True, autoLevels=True, levels=None, axes=None, \
-                                        xvals=None, pos=None, scale=None, transform=None, autoHistogramRange=True)
-                self.view2.setImage(np.angle(self.selected), autoRange=True, autoLevels=True, levels=None, axes=None, \
-                                        xvals=None, pos=None, scale=None, transform=None, autoHistogramRange=True)
+            if 'float' in self.selected.dtype.name:
+                self.view1.setImage(self.selected, autoRange=True, autoLevels=True, levels=None, axes=None, \
+                                            xvals=None, pos=None, scale=None, transform=None, autoHistogramRange=True)
             else:
-                self.view1.setImage(np.real(self.selected), autoRange=True, autoLevels=True, levels=None, axes=None, \
-                                        xvals=None, pos=None, scale=None, transform=None, autoHistogramRange=True)
-                self.view2.setImage(np.imag(self.selected), autoRange=True, autoLevels=True, levels=None, axes=None, \
-                                        xvals=None, pos=None, scale=None, transform=None, autoHistogramRange=True)
+                if self.resultsRadio1.isChecked():
+                    self.view1.setImage(np.abs(self.selected), autoRange=True, autoLevels=True, levels=None, axes=None, \
+                                            xvals=None, pos=None, scale=None, transform=None, autoHistogramRange=True)
+                    self.view2.setImage(np.angle(self.selected), autoRange=True, autoLevels=True, levels=None, axes=None, \
+                                            xvals=None, pos=None, scale=None, transform=None, autoHistogramRange=True)
+                else:
+                    self.view1.setImage(np.real(self.selected), autoRange=True, autoLevels=True, levels=None, axes=None, \
+                                            xvals=None, pos=None, scale=None, transform=None, autoHistogramRange=True)
+                    self.view2.setImage(np.imag(self.selected), autoRange=True, autoLevels=True, levels=None, axes=None, \
+                                            xvals=None, pos=None, scale=None, transform=None, autoHistogramRange=True)
 
 if __name__ == '__main__':
 

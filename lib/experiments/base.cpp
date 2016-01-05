@@ -122,8 +122,8 @@ void BaseExperiment::SetResolution(superCellBoxPtr b) {
 
 	}
 	if (_c->ExpType != PTYCHO) {
-		wc->nx = mc->n[0];
-		wc->ny = mc->n[1];
+		wc->n[0] = mc->n[0];
+		wc->n[1] = mc->n[1];
 		dc->n[0] = mc->n[0];
 		dc->n[1] = mc->n[1];
 	}

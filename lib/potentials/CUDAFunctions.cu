@@ -72,7 +72,7 @@ void CUDAFunctions::SetComplex2D(cufftComplex* a, float real, float imag){
 	const int bS = myBSize(slicePixels);
     int af_id = af::getDevice();
     cudaStream_t af_stream = afcu::getStream(af_id);
-    printf("pixels: %d	gs: %d,		bs: %d a: %#08x\n",slicePixels,gS,bS,a);
+//    printf("pixels: %d	gs: %d,		bs: %d a: %#08x\n",slicePixels,gS,bS,a);
 	initialValues<<< gS, bS , 0,  af_stream>>> ( a, slicePixels, 0.f, 0.f);
 }
 void CUDAFunctions::SetComplex3D(cufftComplex* a, float real, float imag){
@@ -150,13 +150,26 @@ void CUDAFunctions::printIntArray(int* p, int size) {
 	free(f_host);
 }
 void CUDAFunctions::initArrays(){
-    cudaMalloc((void**)&xyzPos_d, _info->xyzPos.size()*sizeof(float_tt));
-    cudaMalloc((void**)&occupancy_d, _info->occupancy.size()*sizeof(float_tt));
-    cudaMalloc((void**)&znums_d, _info->znums.size()*sizeof(int));
 
-    cudaMemcpy(xyzPos_d, _info->xyzPos.data(), _info->xyzPos.size()*sizeof(float_tt), cudaMemcpyHostToDevice);
-    cudaMemcpy(occupancy_d, _info->occupancy.data(),  _info->occupancy.size()*sizeof(float_tt), cudaMemcpyHostToDevice);
-    cudaMemcpy(znums_d, _info->znums.data(), _info->znums.size()*sizeof(int), cudaMemcpyHostToDevice);
+	auto t1 = af::array(_info->xyzPos.size(),f32);
+	auto t2 = af::array(_info->occupancy.size(),f32);
+	auto t3 = af::array(_info->znums.size(),s32);
+
+	xyzPos_d = t1.device<float>();
+	occupancy_d = t2.device<float>();
+	znums_d = t3.device<int>();
+
+//	cuda_assert(cudaMalloc((void**)&xyzPos_d, _info->xyzPos.size()*sizeof(float_tt)));
+//	cuda_assert(cudaMalloc((void**)&occupancy_d, _info->occupancy.size()*sizeof(float_tt)));
+//	cuda_assert(cudaMalloc((void**)&znums_d, _info->znums.size()*sizeof(int)));
+
+	printf("znums_d:  %#08x\n", znums_d);
+	printf("occupancy_d:  %#08x\n", occupancy_d);
+	printf("xyzPos_d:  %#08x\n", xyzPos_d);
+
+	cuda_assert(cudaMemcpy(xyzPos_d, _info->xyzPos.data(), _info->xyzPos.size()*sizeof(float_tt), cudaMemcpyHostToDevice));
+	cuda_assert(cudaMemcpy(occupancy_d, _info->occupancy.data(),  _info->occupancy.size()*sizeof(float_tt), cudaMemcpyHostToDevice));
+	cuda_assert(cudaMemcpy(znums_d, _info->znums.data(), _info->znums.size()*sizeof(int), cudaMemcpyHostToDevice));
 
 //	xyzPos = af::array(_info->xyzPos.size(),_info->xyzPos.data());
 //	occupancy = af::array(_info->occupancy.size(),_info->occupancy.data());

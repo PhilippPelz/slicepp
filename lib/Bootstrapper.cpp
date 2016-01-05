@@ -35,119 +35,64 @@ Bootstrapper::Bootstrapper(int argc, char *argv[]) {
 }
 Bootstrapper::Bootstrapper(){}
 Bootstrapper::~Bootstrapper() {}
+void Bootstrapper::InitInternal(ConfigPtr c){
+	fftw_init_threads();
+	fftw_plan_with_nthreads(c->nThreads);
+	omp_set_num_threads(c->nThreads);
+
+	af::info();
+	af::setDevice(0);
+
+	RegisterWaveTypes();
+	RegisterPotentialTypes();
+	RegisterStructureTypes();
+	RegisterExperimentTypes();
+	RegisterStructureReaders();
+	RegisterStructureBuilders();
+	RegisterDetectorTypes();
+
+	logging::core::get()->set_filter
+	(
+	    logging::trivial::severity >= static_cast<logging::trivial::severity_level>(c->Output->LogLevel)
+	);
+
+	if(c->Output->WriteLogFile)
+		logging::add_file_log
+			(
+				keywords::file_name = std::string(c->Output->LogFileName),
+				// This makes the sink to write log records that look like this:
+				// 1: <normal> A normal severity message
+				// 2: <error> An error severity message
+				keywords::format =
+				(
+					expr::stream
+						<< expr::attr< unsigned int >("LineID")
+						<< ": <" << logging::trivial::severity
+						<< "> " << expr::smessage
+				),
+				keywords::auto_flush = true
+			);
+
+	boost::filesystem::path p(c->Structure->StructureFilename);
+	auto sreader = StructureReaderPtr(_structureReaderFactory[".cif"](p));
+	auto structureBuilder = StructureBuilderPtr(_structureBuilderFactory[p.extension().string()](sreader,c->Structure,c->Model,c->Output));
+	auto persist = PersistenceManagerPtr(new PersistenceManager(c));
+	auto w = WaveConfPtr(c->Wave);
+	auto m = ModelConfPtr(c->Model);
+	auto wave = WavePtr(_waveFactory[c->Wave->type](w,m,persist));
+	auto detector = DetPtr(_detectorFactory[c->Detector->type](c->Detector,persist));
+	auto potential = PotPtr(_potentialFactory[c->Model->PotType](c->Model,c->Output,persist));
+	_e = ExperimentPtr( _experimentFactory[c->ExpType](c,structureBuilder,wave,potential,detector, persist));
+}
 
 void Bootstrapper::Initialize(c_Config* conf){
-	printf("wp3 %d\n",(int)conf->ExpType);
 	ConfigPtr c = ConfigPtr(new Config(*conf));
-
-	fftw_init_threads();
-	fftw_plan_with_nthreads(c->nThreads);
-	omp_set_num_threads(c->nThreads);
-
-	printf("wp\n");
-
-	af::info();
-
-	RegisterWaveTypes();
-	RegisterPotentialTypes();
-	RegisterStructureTypes();
-	RegisterExperimentTypes();
-	RegisterStructureReaders();
-	RegisterStructureBuilders();
-	RegisterDetectorTypes();
-
-	logging::core::get()->set_filter
-	(
-	    logging::trivial::severity >= static_cast<logging::trivial::severity_level>(c->Output->LogLevel)
-	);
-
-	if(c->Output->WriteLogFile)
-		logging::add_file_log
-			(
-				keywords::file_name = std::string(c->Output->LogFileName),
-				// This makes the sink to write log records that look like this:
-				// 1: <normal> A normal severity message
-				// 2: <error> An error severity message
-				keywords::format =
-				(
-					expr::stream
-						<< expr::attr< unsigned int >("LineID")
-						<< ": <" << logging::trivial::severity
-						<< "> " << expr::smessage
-				),
-				keywords::auto_flush = true
-			);
-
-	boost::filesystem::path p(c->Structure->StructureFilename);
-	printf("wp %s\n",c->Structure->StructureFilename);
-	auto sreader = StructureReaderPtr(_structureReaderFactory[".cif"](p));
-	auto structureBuilder = StructureBuilderPtr(_structureBuilderFactory[p.extension().string()](sreader,c->Structure,c->Model,c->Output));
-	auto persist = PersistenceManagerPtr(new PersistenceManager(c));
-	auto w = WaveConfPtr(c->Wave);
-	printf("wp\n");
-	auto m = ModelConfPtr(c->Model);
-	auto wave = WavePtr(_waveFactory[c->Wave->type](w,m,persist));
-	printf("wp1\n");
-	auto detector = DetPtr(_detectorFactory[c->Detector->type](c->Detector,persist));
-	printf("wp2\n");
-	auto potential = PotPtr(_potentialFactory[c->Model->PotType](c->Model,c->Output,persist));
-	printf("wp3 %d\n",(int)c->ExpType);
-	_e = ExperimentPtr( _experimentFactory[c->ExpType](c,structureBuilder,wave,potential,detector, persist));
-	printf("wp\n");
+	InitInternal(c);
 }
 void Bootstrapper::Initialize(){
-
 	auto cr = ConfigReader();
 	auto c = cr.Read(_configFile);
-
-	fftw_init_threads();
-	fftw_plan_with_nthreads(c->nThreads);
-	omp_set_num_threads(c->nThreads);
-
-	af::info();
-
-	RegisterWaveTypes();
-	RegisterPotentialTypes();
-	RegisterStructureTypes();
-	RegisterExperimentTypes();
-	RegisterStructureReaders();
-	RegisterStructureBuilders();
-	RegisterDetectorTypes();
-
-	logging::core::get()->set_filter
-	(
-	    logging::trivial::severity >= static_cast<logging::trivial::severity_level>(c->Output->LogLevel)
-	);
-
-	if(c->Output->WriteLogFile)
-		logging::add_file_log
-			(
-				keywords::file_name = std::string(c->Output->LogFileName),
-				// This makes the sink to write log records that look like this:
-				// 1: <normal> A normal severity message
-				// 2: <error> An error severity message
-				keywords::format =
-				(
-					expr::stream
-						<< expr::attr< unsigned int >("LineID")
-						<< ": <" << logging::trivial::severity
-						<< "> " << expr::smessage
-				),
-				keywords::auto_flush = true
-			);
-
-	boost::filesystem::path p(c->Structure->StructureFilename);
-
- 	printf("path: %s",c->Structure->StructureFilename);
-	auto sreader = StructureReaderPtr(_structureReaderFactory[".cif"](p));
-	auto structureBuilder = StructureBuilderPtr(_structureBuilderFactory[p.extension().string()](sreader,c->Structure,c->Model,c->Output));
-	auto persist = PersistenceManagerPtr(new PersistenceManager(c));
-	auto w = WaveConfPtr(c->Wave);
-	auto m = ModelConfPtr(c->Model);
-	auto wave = WavePtr(_waveFactory[c->Wave->type](w,m,persist));
-	auto detector = DetPtr(_detectorFactory[c->Detector->type](c->Detector,persist));
-	auto potential = PotPtr(_potentialFactory[c->Model->PotType](c->Model,c->Output,persist));
-	_e = ExperimentPtr( _experimentFactory[c->ExpType](c,structureBuilder,wave,potential,detector, persist));
+	InitInternal(c);
 }
 
 ExperimentPtr Bootstrapper::GetExperiment(){

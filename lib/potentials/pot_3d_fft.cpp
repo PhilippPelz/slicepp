@@ -415,7 +415,7 @@ void C3DFFTPotential::ComputeAtomPotential(int Znum) {
 			}
 		}
 
-		_persist->Save2DDataSet(_atPot[Znum], "atompotK_" + std::to_string(Znum));
+		_persist->SaveCx2DDataSet(_atPot[Znum], "atompotK_" + std::to_string(Znum));
 
 		// This converts the 2D kx-kz map of the scattering factor to a 2D real space map.
 		time_t time0, time1;
@@ -431,7 +431,7 @@ void C3DFFTPotential::ComputeAtomPotential(int Znum) {
 		fftw_destroy_plan(plan);
 #endif
 
-		_persist->Save2DDataSet(_atPot[Znum], "atompotR_" + std::to_string(Znum));
+		_persist->SaveCx2DDataSet(_atPot[Znum], "atompotR_" + std::to_string(Znum));
 
 
 //		for (unsigned ix = 0; ix < _nrAtomTrans; ix++) {
@@ -471,7 +471,7 @@ void C3DFFTPotential::SaveAtomicPotential(int znum) {
 	std::stringstream str;
 	str << "atomicPotential_";
 	str << znum;
-	_persist->Save2DDataSet(_atPot[znum], str.str());
+	_persist->SaveCx2DDataSet(_atPot[znum], str.str());
 }
 /********************************************************************************
  * TODO: not implemented yet

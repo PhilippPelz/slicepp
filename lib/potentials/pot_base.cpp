@@ -224,7 +224,7 @@ void CPotential::SaveAtomicPotential(int znum) {
 	std::stringstream str;
 	str << "atomicPotential_";
 	str << znum;
-	_persist->Save2DDataSet(_atomPot[znum], str.str());
+	_persist->SaveCx2DDataSet(_atomPot[znum], str.str());
 }
 
 /*------------------ splinh() -----------------------------*/
