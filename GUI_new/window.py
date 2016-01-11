@@ -21,7 +21,7 @@ projectPath1 = projectPath + '/Examples/configs/'
 defaultResultsPath= projectPath1 + 'gold.h5'
 defaultLoadConfigPath= projectPath1 + 'goldballs.json'
 defaultSaveConfigPath= projectPath1 + 'goldballs.json'
-defaultExePath= projectPath + 'build/release/bin/stem3'
+defaultExePath= projectPath + 'build/debug/bin/slicepp'
 
 class SliceGUI(QtGui.QMainWindow):
     def __init__(self):
@@ -109,6 +109,7 @@ class SliceGUI(QtGui.QMainWindow):
         self.btnRun.setEnabled(True)
         self.tabs.setCurrentIndex(2)
         self.loadResultFileClicked()
+        
     def addConsoleItems(self):
 
         self.process.started.connect(lambda: self.btnRun.setEnabled(False))
@@ -117,9 +118,9 @@ class SliceGUI(QtGui.QMainWindow):
         self.process.setProcessChannelMode(QtCore.QProcess.MergedChannels);
 
         self.consolelayout.addWidget(self.consoleOutput)
-        self.consoleOutput.setFontPointSize(12.0)
+        self.consoleOutput.setFontPointSize(16.0)
         font = QtGui.QFont("Monospace")
-        font.setPointSize(6)
+        font.setPointSize(12)
         self.consoleOutput.setFont(font)
 
     def addTopLevel(self):

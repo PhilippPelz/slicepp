@@ -28,15 +28,16 @@ CBaseWave::CBaseWave(cWaveConfPtr wc, cModelConfPtr mc, PersistenceManagerPtr p)
 	_realSpace = true;
 }
 void CBaseWave::InitializePropagators() {
-	float_tt scale = _mc->d[2] * PI * _mc->wavelength;
+	float_tt scale = - _mc->d[2] * PI * (_mc->wavelength*1e10);
 	//t = exp(-i pi lam k^2 dz)
 
 	auto s = scale * _k2;
 	_prop = af::complex(af::cos(s), af::sin(s));
 
-	af::array ck2max = af::constant(_k2max, _wc->n[0], _wc->n[1]);
-	af::array bandwidthLimit = (_k2 < ck2max);
-	_prop *= bandwidthLimit;
+	af::array bandwidthLimit = (_k2 > _k2max);
+	auto tm = bandwidthLimit.as(f32).copy();
+	_persist->Save2DDataSet(tm, "bandwidthLimit");
+	_prop(bandwidthLimit) = 0;
 	_persist->Save2DDataSet(_prop, "Propagator");
 }
 
@@ -58,12 +59,12 @@ void CBaseWave::ApplyTransferFunction() {
 	ToRealSpace();
 }
 void CBaseWave::PropagateToNextSlice() {
-	_wave_af = _wave_af * _prop;
-} /* end propagate */
+	_wave_af *= _prop;
+}
 
 void CBaseWave::Transmit(af::array& t_af) {
 	_wave_af *= t_af;
-} /* end transmit() */
+}
 
 CBaseWave::~CBaseWave() {
 }
@@ -72,13 +73,11 @@ void CBaseWave::InitializeKVectors() {
 	float_tt ax = _mc->d[0] * _wc->n[0];
 	float_tt by = _mc->d[1] * _wc->n[1];
 
-//	printf("dx: %f , lambda:%g", _mc->d[0], _mc->wavelength);
-
-	auto kx = (af::range(_wc->n[0]) - _wc->n[0] / 2) * (_mc->wavelength * 1e10) / ax;
+	auto kx = (af::range(_wc->n[0]) - _wc->n[0] / 2) / ax;
 	kx = af::shift(kx, kx.dims(0) / 2);
 	_kx = af::tile(kx, 1, _wc->n[1]);
 
-	auto ky = (af::range(_wc->n[1]) - _wc->n[1] / 2) * (_mc->wavelength * 1e10) / ax;
+	auto ky = (af::range(_wc->n[1]) - _wc->n[1] / 2) / ax;
 	ky = af::shift(ky, ky.dims(0) / 2);
 	_ky = af::tile(ky.T(), _wc->n[0], 1);
 
@@ -89,9 +88,6 @@ void CBaseWave::InitializeKVectors() {
 	_k2max = _k2max * _k2max;
 
 	_k2 = _kx * _kx + _ky * _ky;
-	_persist->Save2DDataSet(_kx, "_kx");
-	_persist->Save2DDataSet(_ky, "_ky");
-	_persist->Save2DDataSet(_k2, "_k2");
 }
 
 void CBaseWave::FormProbe() {
@@ -100,7 +96,7 @@ void CBaseWave::FormProbe() {
 }
 
 void CBaseWave::ResetProbe() {
-	_wave_af = af::array(_probe);
+	_wave_af = _probe;
 }
 
 void CBaseWave::DisplayParams() {
@@ -122,8 +118,7 @@ void CBaseWave::DisplayParams() {
 float_tt CBaseWave::GetIntegratedIntensity() const {
 	float_tt intensity;
 	intensity = af::sum<float_tt>(af::sqrt(af::real(_wave_af) * af::real(_wave_af) + af::imag(_wave_af) * af::imag(_wave_af)));
-	// TODO: divide by px or not?
-	return (intensity) / (_wc->n[0] * _wc->n[1]);
+	return (intensity);
 }
 
 // FFT to Fourier space, but only if we're current in real space

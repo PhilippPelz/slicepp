@@ -52,14 +52,14 @@ DetectorConfig* DetectorConfig_new(){
 	memset((void*)p,0,sizeof(DetectorConfig));
 	return p;
 }
-ScanConfig* ScanConfig_new(){
-	ScanConfig* p =  (ScanConfig*)malloc(sizeof(ScanConfig));
-	memset((void*)p,0,sizeof(ScanConfig));
+sScanConfig* sScanConfig_new(){
+	sScanConfig* p =  (sScanConfig*)malloc(sizeof(sScanConfig));
+	memset((void*)p,0,sizeof(sScanConfig));
 	return p;
 }
-c_Config* c_Config_new(){
-	c_Config* p =  (c_Config*)malloc(sizeof(c_Config));
-	memset((void*)p,0,sizeof(c_Config));
+sConfig* sConfig_new(){
+	sConfig* p =  (sConfig*)malloc(sizeof(sConfig));
+	memset((void*)p,0,sizeof(sConfig));
 	return p;
 }
 
@@ -83,11 +83,11 @@ void DetectorConfig_delete(DetectorConfig* c){
 	free(c);
 }
 
-void ScanConfig_delete(ScanConfig* c){
+void sScanConfig_delete(sScanConfig* c){
 	free(c);
 }
 
-void c_Config_delete(c_Config* c){
+void sConfig_delete(sConfig* c){
 	free(c);
 }
 

@@ -16,22 +16,33 @@ namespace slicepp {
 
 using boost::property_tree::ptree;
 
+ScanConfig::ScanConfig(sScanConfig* c){
+	if(c->type == Raster){
+		for (int i=0; i < c->nSteps[0]; i++) {
+			for (int j = 0; j < c->nSteps[1]; j++) {
+					positions.push_back({c->xPos+(i*c->xStep),c->yPos+(j*c->yStep)});
+			}
+		}
+	} else if (c->type == Custom){
+
+	}
+}
 
 Config::Config() {
 	Structure = boost::shared_ptr<StructureConfig>(StructureConfig_new());
 	Model = boost::shared_ptr<ModelConfig>(ModelConfig_new());
 	Output = boost::shared_ptr<OutputConfig>(OutputConfig_new());
 	Wave = boost::shared_ptr<WaveConfig>(WaveConfig_new());
-	Scan = boost::shared_ptr<ScanConfig>(ScanConfig_new());
+//	Scan = boost::shared_ptr<ScanConfig>(new ScanConfig());
 	Detector = boost::shared_ptr<DetectorConfig>(DetectorConfig_new());
 }
 
-Config::Config(c_Config& c) {
+Config::Config(sConfig& c) {
 	Structure = boost::shared_ptr<StructureConfig>(c.Structure);
 	Model = boost::shared_ptr<ModelConfig>(c.Model);
 	Output = boost::shared_ptr<OutputConfig>(c.Output);
 	Wave = boost::shared_ptr<WaveConfig>(c.Wave);
-	Scan = boost::shared_ptr<ScanConfig>(c.Scan);
+
 	Detector = boost::shared_ptr<DetectorConfig>(c.Detector);
 
 	SavePath = boost::filesystem::path(c.Output->SavePath);
@@ -39,13 +50,14 @@ Config::Config(c_Config& c) {
 	ConfigPath = boost::filesystem::path(c.Output->ConfigPath);
 	ExpType = c.ExpType;
 	nThreads = c.nThreads;
+	Device = c.Device;
+	Scan = boost::shared_ptr<ScanConfig>(new ScanConfig(c.Scan));
 }
 
 ConfigReader::ConfigReader() {
 	// TODO Auto-generated constructor stub
 
 }
-
 
 ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
 	ConfigPtr c = ConfigPtr(new Config());
@@ -57,6 +69,8 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
 	std::memcpy(c->Output->ConfigPath,parent.c_str(),parent.length());
 	c->ExpType = (ExperimentType)t.get<int>("mode");
 	c->nThreads = t.get<int>("nthreads");
+	c->Device = t.get<int>("Device");
+
 
 	c->Detector->type = (DetectorType)t.get<int>("detector.type");
 	c->Detector->mtfA = t.get<float_tt>("detector.mtfA");
@@ -68,11 +82,13 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
 	c->Detector->n[1] = t.get<int>("wave.ny");
 	c->Detector->MaxElectronCounts = t.get<float_tt>("wave.pixel dose");
 
-	c->Scan->xPos = t.get<int>("scan.x Start Position");
-	c->Scan->yPos = t.get<int>("scan.y Start Position");
-	c->Scan->xStep = t.get<int>("scan.xStep");
-	c->Scan->yStep = t.get<int>("scan.yStep");
-	c->Scan->scanType = t.get<int>("scan.scanType");
+	sScanConfig s;
+	s.xPos = t.get<int>("scan.x Start Position");
+	s.yPos = t.get<int>("scan.y Start Position");
+	s.xStep = t.get<int>("scan.xStep");
+	s.yStep = t.get<int>("scan.yStep");
+	s.type = (ScanType)t.get<int>("scan.scanType");
+	c->Scan = ScanConfPtr(new ScanConfig(&s));
 
 	c->Wave->type = (WaveType)t.get<int>("wave.type");
 	c->Wave->Cs = t.get<float_tt>("wave.Cs");
@@ -83,8 +99,8 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
 	c->Wave->Defocus = t.get<float_tt>("wave.defocus");
 	c->Wave->Astigmatism = t.get<float_tt>("wave.astigmatism");
 	c->Wave->AstigmatismAngle = t.get<float_tt>("wave.astigmatismAngle");
-	c->Wave->Smooth = t.get<bool>("wave.smooth");
-	c->Wave->Gaussian = t.get<bool>("wave.gaussian");
+	c->Wave->IsSmooth = t.get<bool>("wave.smooth");
+	c->Wave->IsGaussian = t.get<bool>("wave.gaussian");
 	c->Wave->a_33 = t.get<float_tt>("wave.a_33");
 	c->Wave->a_31 = t.get<float_tt>("wave.a_31");
 	c->Wave->a_44 = t.get<float_tt>("wave.a_44");
@@ -105,7 +121,7 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
 	c->Wave->phi_66 = t.get<float_tt>("wave.phi_66");
 	c->Wave->phi_64 = t.get<float_tt>("wave.phi_64");
 	c->Wave->phi_62 = t.get<float_tt>("wave.phi_62");
-	c->Wave->gaussScale = t.get<float_tt>("wave.gaussScale");
+	c->Wave->gaussFWHM = t.get<float_tt>("wave.gaussScale");
 	c->Wave->dI_I = t.get<float_tt>("wave.dI/I");
 	c->Wave->dE_E = t.get<float_tt>("wave.dE/E");
 	c->Wave->AISaperture = t.get<float_tt>("wave.AISaperture");
@@ -185,8 +201,8 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
     c->Model->wavelength = h / sqrt ( 2.f * m0 * e ) * 1e-9f / sqrt ( E0 * ( 1.f + E0 * e / 2.f / m0 / c0 / c0 * 1e-4f ) ); // electron wavelength (m), see De Graef p. 92
     c->Model->sigma =  2.f * pi * c->Model->_gamma * c->Model->wavelength * m0 * e / h / h * 1e18f; // interaction constant (1/(Vm))
 
-    auto s = t.get<string>("structure.StructureFilename");
-    std::memcpy(c->Structure->StructureFilename,s.c_str(),s.length());
+    auto sfn = t.get<string>("structure.StructureFilename");
+    std::memcpy(c->Structure->StructureFilename,sfn.c_str(),sfn.length());
     c->Structure->nCells[0] = t.get<int>("structure.ncellx");
     c->Structure->nCells[1] = t.get<int>("structure.ncelly");
     c->Structure->nCells[2] = t.get<int>("structure.ncellz");

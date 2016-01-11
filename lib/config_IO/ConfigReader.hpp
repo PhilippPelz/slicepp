@@ -13,8 +13,16 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/filesystem.hpp>
 #include "stemtypes_fftw3.hpp"
+#include "vector_types.h"
 
 namespace slicepp {
+
+class ScanConfig{
+public:
+	ScanConfig(sScanConfig* c);
+
+	std::vector<int2> positions;
+};
 
 typedef boost::shared_ptr<const ModelConfig> cModelConfPtr;
 typedef boost::shared_ptr<ModelConfig> ModelConfPtr;
@@ -34,13 +42,16 @@ typedef boost::shared_ptr<DetectorConfig> DetectorConfPtr;
 typedef boost::shared_ptr<const StructureConfig> cStructureConfPtr;
 typedef boost::shared_ptr<StructureConfig> StructureConfPtr;
 
-class DLL_EXPORT Config {
+
+
+class Config {
 public:
 	Config();
-	Config(c_Config& c);
+	Config(sConfig& c);
 
 	int nThreads;
 	ExperimentType ExpType;
+	int Device;
 
 	boost::filesystem::path StructureFilename;
 	boost::filesystem::path SavePath;
@@ -53,6 +64,8 @@ public:
 	ScanConfPtr Scan;
 	DetectorConfPtr Detector;
 };
+
+
 
 typedef boost::shared_ptr<const Config> cConfigPtr;
 typedef boost::shared_ptr<Config> ConfigPtr;

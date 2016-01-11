@@ -34,13 +34,15 @@
 namespace slicepp {
 class CUDAFunctions{
 public:
+	CUDAFunctions();
 	CUDAFunctions(superCellBoxPtr info, cModelConfPtr mc);
 //	void GetPhaseGrating(cufftComplex* V_d, int s,  std::map<int, af::array> & atomPot);
 
 	void GetSincAtomicPotential( cufftComplex* V, int Z);
 	void GetAtomicPotential( cufftComplex* V, int Z);
-	void GetAtomDeltaFunctions(cufftComplex* V, int Z,int slice);
+	void GetAtomDeltaFunctions(cufftComplex* V, int Z,int slice, float* xyzPos_d, float* occupancy_d, int* znums_d);
 	void PotentialToTransmission(cufftComplex* pot, cufftComplex* trans);
+	void limitBandwidth(cufftComplex* f);
 	void cmul(cufftComplex* a1, cufftComplex* a2);
 	void SetComplex2D(cufftComplex* a, float real, float imag);
 	void SetComplex3D(cufftComplex* a, float real, float imag);
@@ -63,8 +65,10 @@ protected:
 	af::array xyzPos, occupancy, znums;
 	float_tt *xyzPos_d, *occupancy_d;
 	int *znums_d;
-	int gS2D, slicePixels;
+	int _gS, _bS, _bS3D, _gS3D, slicePixels;
+	cudaStream_t _stream;
 };
+__global__ void zeroHighFreq ( cufftComplex* f, int dim1, int dim2 );
 __global__ void putAtomDeltas (  cufftComplex* V, int nAt, int *Z, int Z0, float_tt *xyz, float_tt imPot, float_tt *occ, int s, int nx, int ny, int nslice, float_tt dx, float_tt dy, float_tt dz );
 __global__ void divideBySinc ( cufftComplex* V, int nx, int ny, float_tt PI);
 __global__ void multiplyWithProjectedPotential_d ( cufftComplex* V1, cufftComplex* V2, int nx, int ny);

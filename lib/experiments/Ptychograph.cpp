@@ -36,8 +36,6 @@ namespace slicepp
 
 Ptychograph::Ptychograph(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p, const DetPtr& d, const PersistenceManagerPtr& pers):BaseExperiment(c,s,w,p,d,pers)
 {
-	_scan = ScanPtr(new Scan(c));
-	_lbeams = false;
 }
 
 void Ptychograph::DisplayParams()
@@ -46,50 +44,43 @@ void Ptychograph::DisplayParams()
 
 void Ptychograph::Run()
 {
-	int ix,iy,i,pCount,result;
-	double timer,timerTot ;
-	float_tt t=0;
-	FloatArray2D avgPendelloesung(boost::extents[_nbout][_c->Model->n[2]]);
-	std::map<std::string, double> params;
-	std::vector<unsigned> position(1);         // Used to indicate the number of averages
-	std::vector<std::pair<int, int>> scanPositions;
-
-	m_chisq.resize(_c->Model->TDSRuns);
-	timerTot = 0; /* cputim();*/
 	DisplayProgress(-1);
 
+	auto time = af::timer::start();
 	auto box = _structureBuilder->Build();
-
 	SetResolution(box);
 	SetSliceThickness(box);
+	auto elapsed = af::timer::stop(time) * 1000;
 
-	_wave->FormProbe();
-	scanPositions = _scan->GetScanPositions();
-//	_persist->InitStorage();
+	BOOST_LOG_TRIVIAL(info)<< format( "%g msec used for building structure.") % elapsed;
+
+	time = af::timer::start();
 	_persist->ResizeStorage(_c->Wave->n[0], _c->Wave->n[1]);
+	_wave->FormProbe();
 	_wave->InitializePropagators();
 	_wave->DisplayParams();
 	_pot->DisplayParams();
+	auto scanPositions = _c->Scan->positions;
+	elapsed = af::timer::stop(time) * 1000;
+
+	BOOST_LOG_TRIVIAL(info)<< format( "%g msec used for initialization.") % elapsed;
+
 	for (_runCount = 0;_runCount < _c->Model->TDSRuns;_runCount++) {
 		auto box = _structureBuilder->DisplaceAtoms();
-		//PotPtr p  _pot ;
-		//p ->MakeSlices(box);
-
 		_pot->MakeSlices(box);
 		if (_c->Output->SaveProbe) _persist->SaveProbe(_wave->GetProbe());
 		BOOST_LOG_TRIVIAL(info) << format("Calculating for %.1f position(s)") % scanPositions.size();
 		for(auto i = 0; i != scanPositions.size(); i++) {
-//			_wave->SetPositionOffset(scanPositions[i].first, scanPositions[i].second);
-
-			int xp = scanPositions[i].first, yp = scanPositions[i].second;
-			BOOST_LOG_TRIVIAL(info) << format("\n==== Position %.lf (%.lf, %.lf) ====") % (i + 1) % xp % yp;
+			int xp = scanPositions[i].x, yp = scanPositions[i].y;
+			BOOST_LOG_TRIVIAL(info) << format("==== Position %.lf (%.lf, %.lf) ====") % (i + 1) % xp % yp;
 			RunMultislice(_pot->GetSubPotential(xp, yp, _c->Wave->n[0], _c->Wave->n[1]));
 
 			PostSpecimenProcess();
 
 			_persist->StoreToDiscMP(i + 1, xp, yp);
 			_wave->ResetProbe();
-		}
+	}
+	_persist->SavePositions(scanPositions);
 	DisplayProgress(1);
 	BOOST_LOG_TRIVIAL(info) << "Saving to disc...";
 	BOOST_LOG_TRIVIAL(info) << "Finished saving...";
@@ -97,7 +88,11 @@ void Ptychograph::Run()
 	}
 
 }
-
+void Ptychograph::PostSpecimenProcess() {
+	_wave->ToFourierSpace();
+	auto dp = _wave->fftShift(_wave->GetWaveAF());
+	_det->RecordImage(dp);
+}
 
 void Ptychograph::WriteBeams(unsigned int absoluteSlice)
 {

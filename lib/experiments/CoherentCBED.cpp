@@ -15,8 +15,9 @@ CoherentCBED::CoherentCBED(const ConfigPtr& c,const StructureBuilderPtr& s,const
 
 CoherentCBED::~CoherentCBED() {
 }
-//void CoherentCBED::PostSpecimenProcess(){
-//	_wave->ToFourierSpace();
-//	_wave->fftShift(_wave->GetWaveAF());
-//}
+void CoherentCBED::PostSpecimenProcess(){
+	_wave->ToFourierSpace();
+	auto dp = _wave->fftShift(_wave->GetWaveAF());
+	_det->RecordImage(dp);
+}
 } /* namespace slicepp */

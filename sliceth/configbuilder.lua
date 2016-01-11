@@ -6,6 +6,7 @@ local module = {}
 local default = c.Config()
 default.ExpType = "CBED"
 default.nThreads = 1
+default.Device = 0
 
 local mc = c.ModelConfig()
 mc.TiltBack = false
@@ -105,8 +106,7 @@ wc.tiltY = 0
 wc.Smooth = false
 wc.Gaussian = false
 wc.type = "Plane"
-wc.nx = 512
-wc.ny = 512
+wc.n = v.int2(512,512)
 
 local dc = c.DetectorConfig()
 
@@ -130,12 +130,21 @@ sc.nCells = v.int3(1,1,1)
 sc.isBoxed = false
 sc.rotateToZoneAxis = false
 
+local scanc = c.ScanConfig()
+scanc.xPos = 0;
+scanc.yPos = 0;
+scanc.xStep = 1;
+scanc.yStep = 1;
+scanc.nSteps = v.int2(5,5);
+scanc.type = "Raster";
+--scanc.yaml = ;
+
 default.Model = mc
 default.Output = oc
 default.Structure = sc 
 default.Wave = wc
 default.Detector = dc
-
+default.Scan = scanc
 
 local Builder = {}
 local Builder_mt = {}

@@ -194,11 +194,6 @@ void BaseExperiment::DisplayProgress(int flag) {
 			(_runCount > 0 ? m_chisq[_runCount - 1] : 0);
 			BOOST_LOG_TRIVIAL(info)<< format("*");
 
-			/*
-			 // TODO: averaging should be handled on this class, not on lower level crystal class.
-			 atom = atomTypes.begin();
-			 while (atom!=end) printf(" %8f |",(float)(m_crystal->GetU2avg((*atom++))));
-			 */
 			BOOST_LOG_TRIVIAL(info)<< format(" %9f | %9f ") % intensityAvg % timeAvg;
 		} else {
 			BOOST_LOG_TRIVIAL(info) << format("Finished calculations after %.1f s") % curTime;
@@ -210,34 +205,13 @@ void BaseExperiment::DisplayProgress(int flag) {
 }
 
 int BaseExperiment::RunMultislice(af::array t_af) {
-	int printFlag = 0;
-	int showEverySlice = 1;
-	int islice, i, ix, iy, mRepeat;
-	float_tt cztot = 0.0;
-	float_tt wavlen, sum = 0.0; //,zsum=0.0
-	float_tt x, y;
-	int absolute_slice;
-	char outStr[64];
-	double fftScale;
-	int nx, ny, xpos, ypos;
-
-	printFlag = (_c->Output->LogLevel > 3);
-
-	int nx1, ny1;
-
-	/*  calculate the total specimen thickness and echo */
-	cztot = 0.0;
-
-	if (printFlag) {
-		for (islice = 0; islice < _c->Model->n[2]; islice++) {
-			cztot += _c->Model->d[2];
-		}
-		BOOST_LOG_TRIVIAL(info)<< format("Specimen thickness: %g Angstroms\n") % cztot;
+	if (_c->Output->LogLevel <= 2 ) {
+		BOOST_LOG_TRIVIAL(info)<< format("Specimen thickness: %g Angstroms\n") % ( _c->Model->n[2]* _c->Model->d[2]);
 	}
 
 	BOOST_LOG_TRIVIAL(info)<< "Propagating through slices ...";
 	af::timer time = af::timer::start();
-	for (islice = 0; islice < _c->Model->n[2]; islice++) {
+	for (int islice = 0; islice < _c->Model->n[2]; islice++) {
 
 		auto slice = _pot->GetSlice(t_af, islice);
 		_wave->Transmit(slice);
@@ -263,15 +237,17 @@ int BaseExperiment::RunMultislice(af::array t_af) {
 		if (_c->Output->LogLevel <= 2) { ///info
 			if (islice % (int) ceil(_c->Model->n[2] / 10.0) == 0)
 				loadbar(islice + 1, _c->Model->n[2]);
+			auto psi = _wave->GetIntegratedIntensity();
+			BOOST_LOG_TRIVIAL(info)<< format("slice %-3d I=%-3.3f") % islice % (psi*100);
 		}
 	} /* end for(islice...) */
 	BOOST_LOG_TRIVIAL(info)<< format( "%g ms used for wave propagation (%g us per slice)")
 	% (af::timer::stop(time)*1000) %( af::timer::stop(time)*1e6 / _c->Model->n[2]);
 	return 0;
-} // end of runMulsSTEM
+}
 
 void BaseExperiment::PostSpecimenProcess() {
-	_det->RecordImage(_wave);
+	_det->RecordImage(_wave->GetWaveAF());
 }
 
 } // end namespace slicepp

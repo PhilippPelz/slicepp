@@ -1,6 +1,6 @@
 box: 500 400 110
 
-special: amorphous 0   % random distribution of dopands in 1 nm thick film of anorthite glass
+special: 1   % random distribution of dopands in 1 nm thick film of anorthite glass
 
 %     Znum R[A] count concentration (in A^-3, will be used, if count == 0)
 atom: 6   0.77 0     1.084   % C - 1084 atoms per nm^3

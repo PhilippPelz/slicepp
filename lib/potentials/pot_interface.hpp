@@ -54,8 +54,8 @@ public:
 	virtual void WriteProjectedPotential()=0;
 	virtual complex_tt GetSlicePixel(unsigned iz, unsigned ix, unsigned iy)=0;
 	virtual af::array GetSlice(af::array& t, unsigned idx) =0;
-	virtual af::array GetSubPotential(int startx, int starty, int nx, int ny){};
-	virtual af::array& GetPotential(){};
+	virtual af::array GetSubPotential(int startx, int starty, int nx, int ny) = 0;
+	virtual af::array& GetPotential() = 0;
 	virtual ~IPotential(){};
 protected:
 	IPotential(){};

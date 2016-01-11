@@ -42,7 +42,7 @@ protected:
 	virtual void SaveAtomicPotential(int znum);
 	virtual void SavePotential();
 	virtual af::array GetSlice(af::array t, unsigned idx);
-	void initPotArrays();
+	void initPotArrays(superCellBoxPtr info);
 	void ComputeAtomicPotential(superCellBoxPtr info);
 	void printAfMem();
 	void printCudaMem();
@@ -50,13 +50,18 @@ protected:
 	void fft(cufftComplex* V);
 	void ifft(cufftComplex* V);
 	void XplusequY(cufftComplex* X, cufftComplex* Y);
+	void sync();
 
 	//pointer to device transmission matrix
 	cufftComplex *_t_d_ptr;
 	cufftComplex *_V_elem_ptr;
 	cufftComplex *_V_accum_ptr;
+	float_tt *xyzPos_d, *occupancy_d;
+	int *znums_d;
 
-	CUDAFunctions *_cf;
+	af::array znums,xyzPos,occupancy,t_d,V_elem,V_accum;
+
+	CUDAFunctions _cf;
 
 	cufftHandle  _fftPlan;
 	cublasHandle_t _cublasHandle;

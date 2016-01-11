@@ -64,7 +64,7 @@ public:
 	Bootstrapper();
 	virtual ~Bootstrapper();
 	void Initialize();
-	void Initialize(c_Config* c);
+	void Initialize(sConfig* c);
 	ExperimentPtr GetExperiment();
 protected:
 	ExperimentPtr _e;

@@ -10,6 +10,6 @@
 
 #include "config_IO/configs.hpp"
 
-extern "C" void run_simulation(c_Config* conf);
+extern "C" void run_simulation(sConfig* conf);
 
 #endif /* EXPORTED_HPP_ */

@@ -24,6 +24,7 @@ import numpy as np
 from traits.api import HasTraits, Dict, Float, Tuple, Int, Property, \
      cached_property, Array, Bool
 from matplotlib.pyplot import imshow, figure, title
+import matplotlib.pyplot as plt
 from numpy.fft import fft2, ifft2, fftshift, ifftshift
 
 import sys
@@ -383,9 +384,12 @@ class probe(HasTraits):
         dEdge = Nedge/(self.qmax/self.dk);  # fraction of aperture radius that will be smoothed
         # some fancy indexing: pull out array elements that are within
         #    our smoothing edges
+        f, ax = plt.subplots()
         ind = np.bitwise_and((self.ktheta/self.ktm > (1-dEdge)),
                              (self.ktheta/self.ktm < (1+dEdge)))
         arr[ind] = 0.5*(1-np.sin(np.pi/(2*dEdge)*(self.ktheta[ind]/self.ktm-1)))
+        ax.imshow(arr)
+        plt.show()
         # add in the complex part
         # MATLAB: probe = probe.*exp(i*chi);
         arr*=np.exp(1j*self.chi);

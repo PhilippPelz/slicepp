@@ -28,6 +28,8 @@ public:
 	void SaveWaveAfterTransform(ComplexArray2DPtr a, int slice);
 	void SaveWaveAfterSlice(ComplexArray2DPtr a, int slice);
 	void SaveWaveAfterPropagation(ComplexArray2DPtr a, int slice);
+	void SaveMeasurement(af::array& m, int n);
+	void SavePositions(std::vector<int2> pos);
 	void SaveProbe(af::array& a);
 	void SaveAtomDelta(cuComplex* delta, int slice, int Z);
 	void SaveAtomConv(cuComplex* delta, int slice, int Z);
@@ -61,6 +63,7 @@ protected:
 	std::map<int,boost::shared_ptr<ComplexArray3D>> _atomDeltas, _atomConv;
 	ComplexArray2D _projectedPotential;
 	ComplexArray2D _probe;
+	ComplexArray3D _measurements;
 };
 typedef boost::shared_ptr<PersistenceManager> PersistenceManagerPtr;
 } /* namespace slicepp */

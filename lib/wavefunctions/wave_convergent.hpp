@@ -51,14 +51,14 @@ protected:
 	float_tt m_dE_E;  // energy spread of emitted electrons
 	float_tt m_dV_V;  // acc. voltage fluctuations
 	float_tt m_dI_I;  // lens current fluctuations
-	float_tt m_alpha;   /* convergence angle */
+	float_tt _alpha_max;   /* convergence angle */
 	float_tt m_Cc;      /* chromatic aberration */
 	float_tt m_Cs;      /* spherical aberration */
 	float_tt m_df0;				/* defocus */
 
 	bool _smoothen;                          /* smoothen the probe wave function */
 	bool _isGaussian;
-	float_tt _gaussScale;
+	float_tt _sigma;
 
 	float_tt _CLA, m_rmin, m_rmax, m_aimin, m_aimax;
 

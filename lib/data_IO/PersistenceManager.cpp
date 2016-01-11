@@ -39,25 +39,31 @@ void PersistenceManager::SaveProbe(af::array& wave) {
 }
 void PersistenceManager::SaveAtomDelta(cuComplex* delta, int slice, int Z) {
 	auto a = _atomDeltas[Z];
-	if(a.get() == NULL){
+	if (a.get() == NULL) {
 		auto e3 = boost::extents[_c->Model->n[2]][_c->Model->n[0]][_c->Model->n[1]];
 		_atomDeltas[Z] = boost::shared_ptr<ComplexArray3D>(new ComplexArray3D(e3));
 		auto sh = _atomDeltas[Z]->shape();
 //		BOOST_LOG_TRIVIAL(info)<< format("%s shape: [%d,%d,%d]") % "_atomDeltas" % sh[0] % sh[1] % sh[2];
 	}
-	cuda_assert(cudaMemcpy( _atomDeltas[Z]->operator [](slice).origin(),delta, _c->Model->n[0] * _c->Model->n[1]* sizeof(cuComplex), cudaMemcpyDeviceToHost));
+	cuda_assert(
+			cudaMemcpy(_atomDeltas[Z]->operator [](slice).origin(), delta, _c->Model->n[0] * _c->Model->n[1] * sizeof(cuComplex),
+					cudaMemcpyDeviceToHost));
 }
 void PersistenceManager::SaveAtomConv(cuComplex* delta, int slice, int Z) {
 	auto a = _atomConv[Z];
-	if(a.get() == NULL){
+	if (a.get() == NULL) {
 		auto e3 = boost::extents[_c->Model->n[2]][_c->Model->n[0]][_c->Model->n[1]];
 		_atomConv[Z] = boost::shared_ptr<ComplexArray3D>(new ComplexArray3D(e3));
 		auto sh = _atomConv[Z]->shape();
 	}
-	cuda_assert(cudaMemcpy( _atomConv[Z]->operator [](slice).origin(),delta, _c->Model->n[0] * _c->Model->n[1]* sizeof(cuComplex), cudaMemcpyDeviceToHost));
+	cuda_assert(
+			cudaMemcpy(_atomConv[Z]->operator [](slice).origin(), delta, _c->Model->n[0] * _c->Model->n[1] * sizeof(cuComplex),
+					cudaMemcpyDeviceToHost));
+}
+void PersistenceManager::SaveMeasurement(af::array& m, int n) {
+	m.host(_measurements[n].origin());
 }
 void PersistenceManager::SaveWaveAfterTransmit(ComplexArray2DPtr a, int slice) {
-
 #pragma omp parallel for
 	for (int i = 0; i < a.size(); i++)
 		for (int j = 0; j < a.num_elements() / a.size(); j++) {
@@ -65,9 +71,7 @@ void PersistenceManager::SaveWaveAfterTransmit(ComplexArray2DPtr a, int slice) {
 		}
 }
 void PersistenceManager::SaveWaveAfterTransmit(af::array& wave, int slice) {
-	ComplexArray2D a(boost::extents[wave.dims(0)][wave.dims(1)]);
-	wave.host(a.data());
-	SaveWaveAfterTransmit(a, slice);
+	wave.host(_waveSlicesAfterTransmit[slice].origin());
 }
 void PersistenceManager::SaveWaveAfterTransform(ComplexArray2DPtr a, int slice) {
 
@@ -78,9 +82,7 @@ void PersistenceManager::SaveWaveAfterTransform(ComplexArray2DPtr a, int slice) 
 		}
 }
 void PersistenceManager::SaveWaveAfterTransform(af::array& wave, int slice) {
-	ComplexArray2D a(boost::extents[wave.dims(0)][wave.dims(1)]);
-	wave.host(a.data());
-	SaveWaveAfterTransform(a, slice);
+	wave.host(_waveSlicesAfterFT[slice].origin());
 }
 void PersistenceManager::SaveWaveAfterPropagation(ComplexArray2DPtr a, int slice) {
 #pragma omp parallel for
@@ -90,11 +92,7 @@ void PersistenceManager::SaveWaveAfterPropagation(ComplexArray2DPtr a, int slice
 		}
 }
 void PersistenceManager::SaveWaveAfterPropagation(af::array& wave, int slice) {
-	ComplexArray2D a(boost::extents[wave.dims(0)][wave.dims(1)]);
-
-	wave.host(a.data());
-
-	SaveWaveAfterPropagation(a, slice);
+	wave.host(_waveSlicesAfterProp[slice].origin());
 }
 void PersistenceManager::SaveWaveAfterSlice(ComplexArray2DPtr a, int slice) {
 
@@ -105,21 +103,22 @@ void PersistenceManager::SaveWaveAfterSlice(ComplexArray2DPtr a, int slice) {
 		}
 }
 void PersistenceManager::SaveWaveAfterSlice(af::array& wave, int slice) {
-	ComplexArray2D a(boost::extents[wave.dims(0)][wave.dims(1)]);
-
-	wave.host(a.data());
-
-	SaveWaveAfterSlice(a, slice);
+	wave.host(_waveSlicesAfterSlice[slice].origin());
 }
 void PersistenceManager::SavePotential(ComplexArray3D a) {
 	_potSaved = true;
 	_potential = a;
 }
-
+void PersistenceManager::SavePositions(std::vector<int2> pos){
+	FloatArray2D p(boost::extents[pos.size()][2]);
+	for(int i = 0; i < pos.size();i++){
+		p[i][0] = (float)pos[i].x;
+		p[i][1] = (float)pos[i].y;
+	}
+	_file.SaveRealArray2D(p,"positions");
+}
 void PersistenceManager::SavePotential(af::array& data) {
-	ComplexArray3D a(boost::extents[data.dims(2)][data.dims(0)][data.dims(1)]);
-	data.host(a.data());
-	SavePotential(a);
+	data.host(_potential.data());
 }
 
 void PersistenceManager::SaveProjectedPotential(ComplexArray2DPtr a) {
@@ -127,9 +126,7 @@ void PersistenceManager::SaveProjectedPotential(ComplexArray2DPtr a) {
 }
 
 void PersistenceManager::SaveProjectedPotential(af::array& data) {
-	ComplexArray2D a(boost::extents[data.dims(0)][data.dims(1)]);
-	data.host(a.data());
-	SaveProjectedPotential(a);
+	data.host(_projectedPotential.data());
 }
 
 void PersistenceManager::SaveCx3DDataSet(ComplexArray3DPtr a, string name) {
@@ -146,13 +143,12 @@ void PersistenceManager::SaveF2DDataSet(FloatArray2DPtr a, string name) {
 }
 
 void PersistenceManager::Save2DDataSet(af::array& d, string name) {
-	printf("Saving %s: dims(%d,%d)\n",name.c_str(),d.dims(0),d.dims(1));
-	if(d.type() == f32){
+	printf("Saving %s: dims(%d,%d)\n", name.c_str(), d.dims(0), d.dims(1));
+	if (d.type() == f32) {
 		FloatArray2D a(boost::extents[d.dims(0)][d.dims(1)]);
 		d.host(a.data());
 		SaveF2DDataSet(a, name);
-	}
-	else if (d.type() == c32){
+	} else if (d.type() == c32) {
 		ComplexArray2D b(boost::extents[d.dims(0)][d.dims(1)]);
 		d.host(b.data());
 		SaveCx2DDataSet(b, name);
@@ -182,6 +178,7 @@ void PersistenceManager::InitStorage() {
 			kv.second->resize(e3);
 	if (_c->Output->SaveProjectedPotential || _c->Output->ComputeFromProjectedPotential)
 		_projectedPotential.resize(e2);
+	_measurements.resize(boost::extents[1][_c->Model->n[0]][_c->Model->n[1]]);
 }
 
 void PersistenceManager::ResizeStorage(int xdim, int ydim) {
@@ -207,6 +204,7 @@ void PersistenceManager::ResizeStorage(int xdim, int ydim) {
 			kv.second->resize(e3);
 	if (_c->Output->SaveProjectedPotential || _c->Output->ComputeFromProjectedPotential)
 		_projectedPotential.resize(boost::extents[_c->Model->n[0]][_c->Model->n[1]]);
+	_measurements.resize(boost::extents[_c->Scan->positions.size()][xdim][ydim]);
 }
 
 void PersistenceManager::StoreToDisc() {
@@ -217,6 +215,7 @@ void PersistenceManager::StoreToDisc() {
 	_file.SaveComplexArray3D(_waveSlicesAfterProp, "waveSlicesAfterProp");
 	_file.SaveComplexArray3D(_waveSlicesAfterSlice, "waveSlicesAfterSlice");
 	_file.SaveComplexArray3D(_potential, "potentialSlices");
+	_file.SaveComplexArray3D(_measurements, "measurements");
 	for (auto& kv : _atomDeltas) {
 		string s = "atomDeltas_";
 		s += std::to_string(kv.first);
@@ -235,23 +234,22 @@ void PersistenceManager::StoreToDisc() {
 	}
 }
 
-
 void PersistenceManager::StoreToDiscMP(int pos, int x, int y) {
-std::string info = "_" + std::to_string(pos) + "_(" + to_string(x) + ", " + to_string(y) + ")";
-if (pos == 1) {
-	_file.SaveComplexArray2D(_probe, "probe");
-	_file.SaveComplexArray2D(_projectedPotential, "projectedPotential");
-	_file.SaveComplexArray3D(_waveSlicesAfterTransmit, "waveSlicesAfterTransmit" + info);
-	_file.SaveComplexArray3D(_waveSlicesAfterFT, "waveSlicesAfterFT" + info);
-	_file.SaveComplexArray3D(_waveSlicesAfterProp, "waveSlicesAfterProp" + info);
-	_file.SaveComplexArray3D(_waveSlicesAfterSlice, "waveSlicesAfterSlice" + info);
-	_file.SaveComplexArray3D(_potential, "potentialSlices");
-} else {
+	std::string info = "_" + std::to_string(pos) + "_(" + to_string(x) + ", " + to_string(y) + ")";
+	if (pos == 1) {
+		_file.SaveComplexArray2D(_probe, "probe");
+		_file.SaveComplexArray2D(_projectedPotential, "projectedPotential");
+		_file.SaveComplexArray3D(_waveSlicesAfterTransmit, "waveSlicesAfterTransmit" + info);
+		_file.SaveComplexArray3D(_waveSlicesAfterFT, "waveSlicesAfterFT" + info);
+		_file.SaveComplexArray3D(_waveSlicesAfterProp, "waveSlicesAfterProp" + info);
+		_file.SaveComplexArray3D(_waveSlicesAfterSlice, "waveSlicesAfterSlice" + info);
+		_file.SaveComplexArray3D(_potential, "potentialSlices");
+	} else {
 //		_file.SaveComplexArray3D(_waveSlicesAfterTransmit,"waveSlicesAfterTransmit" + info);
 //		_file.SaveComplexArray3D(_waveSlicesAfterFT, "waveSlicesAfterFT");
 //		_file.SaveComplexArray3D(_waveSlicesAfterProp, "waveSlicesAfterProp" + info);
-	_file.SaveComplexArray3D(_waveSlicesAfterSlice, "waveSlicesAfterSlice" + info);
-}
+//		_file.SaveComplexArray3D(_waveSlicesAfterSlice, "waveSlicesAfterSlice" + info);
+	}
 }
 
 } /* namespace slicepp */

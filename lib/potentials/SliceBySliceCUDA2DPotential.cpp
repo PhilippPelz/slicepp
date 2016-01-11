@@ -57,13 +57,13 @@ void SliceBySliceCUDA2DPotential::copyDataToGPU(superCellBoxPtr info) {
 }
 void SliceBySliceCUDA2DPotential::copyToDeviceInt(int *devdst, std::vector<int> src, int size) {
 	for (int i = 0; i < size; i++) {
-		cuda_assert(cudaMemcpy(&devdst[i], &src[i], sizeof(int), cudaMemcpyHostToDevice));
+		cuda_assert(cudaMemcpyAsync(&devdst[i], &src[i], sizeof(int), cudaMemcpyHostToDevice, afcu::getStream(af::getDevice())));
 	}
 }
 
 void SliceBySliceCUDA2DPotential::copyToDeviceFloat(float_tt *devdst, std::vector<float_tt> src, int size) {
 	for (int i = 0; i < size; i++) {
-		cuda_assert(cudaMemcpy(&devdst[i], &src.data()[i], sizeof(float_tt), cudaMemcpyHostToDevice));
+		cuda_assert(cudaMemcpyAsync(&devdst[i], &src.data()[i], sizeof(float_tt), cudaMemcpyHostToDevice, afcu::getStream(af::getDevice())));
 	}
 }
 

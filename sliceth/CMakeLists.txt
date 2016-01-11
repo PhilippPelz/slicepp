@@ -31,8 +31,8 @@ INSTALL(FILES
   DESTINATION "${Torch_DIR}/../../../include/sliceth"
 )
 
-set(slicelib ../build/release/bin/libslice.so)
-set(hdflib ../build/release/bin/libhdfboost.so)
+set(slicelib ../build/debug/bin/libslice.so)
+set(hdflib ../build/debug/bin/libhdfboost.so)
 
 if(NOT EXISTS ${slicelib} OR NOT EXISTS ${hdflib})
   MESSAGE(STATUS "Compile the slicepp project in release mode before building sliceth!")

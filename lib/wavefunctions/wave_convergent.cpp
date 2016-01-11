@@ -52,13 +52,13 @@ CConvergentWave::CConvergentWave(cWaveConfPtr wc, cModelConfPtr mc, PersistenceM
 	m_phi66 = wc->phi_66;
 	m_phi64 = wc->phi_64;
 	m_phi62 = wc->phi_62;
-	_smoothen = wc->Smooth;
-	_gaussScale = wc->gaussScale;
-	_isGaussian = wc->Gaussian;
+	_smoothen = wc->IsSmooth;
+	_sigma = wc->gaussFWHM / 2.35482;
+	_isGaussian = wc->IsGaussian;
 	m_dE_E = wc->dE_E;
 	m_dI_I = wc->dI_I;
 	m_dV_V = wc->dV_V;
-	m_alpha = wc->alpha;
+	_alpha_max = wc->alpha * 0.001;
 	_CLA = wc->AISaperture;
 }
 
@@ -69,7 +69,7 @@ WavePtr CConvergentWave::Clone() {
 void CConvergentWave::DisplayParams() {
 	CBaseWave::DisplayParams();
 
-	BOOST_LOG_TRIVIAL(info)<< format("* Aperture half angle:  %g mrad") % m_alpha;
+	BOOST_LOG_TRIVIAL(info)<< format("* Aperture half angle:  %g mrad") % (_alpha_max/1000);
 	BOOST_LOG_TRIVIAL(info)<< format("* AIS aperture:");
 	if (_CLA > 0)
 		BOOST_LOG_TRIVIAL(info)<< format("*                  %g A") % (_CLA);
@@ -107,83 +107,38 @@ void CConvergentWave::DisplayParams() {
 
 	BOOST_LOG_TRIVIAL(info)<< format("* C_c:                  %g mm") %(m_Cc*1e-7);
 	BOOST_LOG_TRIVIAL(info)<< format("* Damping dE/E: %g / %g ") % (sqrt(m_dE_E*m_dE_E+m_dV_V*m_dV_V+m_dI_I*m_dI_I)*_mc->EnergykeV*1e3) %(_mc->EnergykeV*1e3);
-
-	/*
-	 // TODO: where does beam current belong?
-	 printf("* beam current:         %g pA\n",m_beamCurrent);
-	 printf("* dwell time:           %g msec (%g electrons)\n",
-	 m_dwellTime,m_electronScale);
-	 */
 }
 
-/**********************************************
- * This function creates a incident STEM probe
- * at position (dx,dy)
- * with parameters given in muls
- *
- * The following Abberation functions are being used:
- * 1) ddf = Cc*dE/E + Cc2*(dE/E)^2,
- *    Cc, Cc2 = chrom. Abber. (1st, 2nd order) [1]
- * 2) chi(qx,qy) = (2*pi/lambda)*{0.5*C1*(qx^2+qy^2)+
- *                 0.5*C12a*(qx^2-qy^2)+
- *                 C12b*qx*qy+
- *                 C21a/3*qx*(qx^2+qy^2)+
- *                 ...
- *                 +0.5*C3*(qx^2+qy^2)^2
- *                 +0.125*C5*(qx^2+qy^2)^3
- *                 ... (need to finish)
- *
- *
- *    qx = acos(kx/K), qy = acos(ky/K)
- *
- * References:
- * [1] J. Zach, M. Haider,
- *    "Correction of spherical and Chromatic Abberation
- *     in a low Voltage SEM", Optik 98 (3), 112-118 (1995)
- * [2] O.L. Krivanek, N. Delby, A.R. Lupini,
- *    "Towards sub-Angstroem Electron Beams",
- *    Ultramicroscopy 78, 1-11 (1999)
- *
- *********************************************/
-#define SMOOTH_EDGE 5 // make a smooth edge on AIS aperture over +/-SMOOTH_EDGE pixels
 void CConvergentWave::FormProbe() {
 	CBaseWave::FormProbe();
 	ConstructWave();
-} /* end probe() */
+}
 
 void CConvergentWave::ConstructWave() {
-	unsigned iy, ixmid, iymid;
-	float_tt rmin, rmax, aimin, aimax;
-	float_tt ax = _wc->n[0] * _mc->d[0];
-	float_tt by = _wc->n[1] * _mc->d[1];
-	float_tt dx = ax - _wc->n[0] / 2 * _mc->d[0];
-	float_tt dy = by - _wc->n[1] / 2 * _mc->d[1];
-	float_tt avgRes = sqrt(0.5 * (_mc->d[0] * _mc->d[0] + _mc->d[1] * _mc->d[1]));
-	float_tt edge = SMOOTH_EDGE * avgRes;
-
-	/********************************************************
-	 * formulas from:
-	 * http://cimesg1.epfl.ch/CIOL/asu94/ICT_8.html
-	 *
-	 * dE_E = dE/E = energy spread of emitted electrons
-	 * dV_V = dV/V = acc. voltage fluctuations
-	 * dI_I = dI/I = lens current fluctuations
-	 * delta defocus in Angstroem (Cc in A)
-	 *******************************************************/
-	float_tt rx = 1.0 / ax;
-	float_tt rx2 = rx * rx;
-	float_tt ry = 1.0 / by;
-	float_tt ry2 = ry * ry;
-
-	// Start in Fourier space
 	_realSpace = false;
+	auto ones = af::constant(1, _wc->n[0], _wc->n[1], f32);
+	auto zeros = af::constant(0, _wc->n[0], _wc->n[1], f32);
+	auto weights = af::complex(ones, zeros);
+	float lambdaA = 1e10 * _mc->wavelength;
 
-	af::array k = af::sqrt(_k2);
-	af::array phi = af::atan2(_ky, _kx);
-	af::array chi = 0.5 * _k2 * (m_df0 + m_Cc * m_dE_E + (m_astigMag * af::cos(2.0 * (phi - m_astigAngle))));
-	_persist->Save2DDataSet(phi, "phi");
-	_persist->Save2DDataSet(chi, "chi");
+	auto kmax = sin(_alpha_max) / lambdaA;
+	auto k = af::sqrt(_k2) * lambdaA;
+	auto phi = af::atan2(_ky * lambdaA, _kx * lambdaA);
+	auto alpha = af::asin(k);
+	weights(alpha > _alpha_max) = 0;
 
+	if (_smoothen) {
+		auto dk = min(1 / (_wc->n[0] * _mc->d[0]), 1 / (_wc->n[1] * _mc->d[1]));
+		auto dEdge = 2 / (kmax / dk);
+		auto alpha_norm = alpha / _alpha_max;
+		auto ind = (alpha_norm > (1 - dEdge)) && (alpha_norm < (1 + dEdge));
+		auto tmp = (0.5 * (1 - af::sin(PI / (2 * dEdge) * (alpha_norm - 1))));
+		tmp = af::complex(tmp,zeros);
+		weights(ind) = tmp(ind);
+	}
+	_persist->Save2DDataSet(weights,"weights");
+	auto chi = zeros;
+	chi += 0.5 * af::pow(k, 2) * (m_df0 + m_Cc * m_dE_E + (m_astigMag * af::cos(2.0 * (phi - m_astigAngle))));
 	if ((m_a33 > 0) || (m_a31 > 0))
 		chi += af::pow(k, 3) * (m_a33 * af::cos(3.0 * (phi - m_phi33)) + m_a31 * af::cos(phi - m_phi31)) / 3.0;
 	if ((m_a44 > 0) || (m_a42 > 0) || (m_Cs != 0))
@@ -196,20 +151,24 @@ void CConvergentWave::ConstructWave() {
 				* (m_a66 * af::cos(6.0 * (phi - m_phi66)) + m_a64 * af::cos(4.0 * (phi - m_phi64)) + m_a62 * af::cos(2.0 * (phi - m_phi62)) + m_C5)
 				/ 6.0;
 
-	chi *= 2 * PI / _mc->wavelength;
-	_persist->Save2DDataSet(chi, "chi2");
+	chi *= 2 * PI / lambdaA;
 
-	auto real = af::cos(chi);
-	auto imag = af::sin(chi);
+	_wave_af = weights * af::complex(af::cos(chi), -af::sin(chi));
 
-	_wave_af = af::complex(real, imag);
-	_persist->Save2DDataSet(_wave_af, "_wave_af_FSpace");
 	/* Fourier transform into real space */
 	ToRealSpace();
-	_persist->Save2DDataSet(_wave_af, "_wave_af_RealSpace");
-	af::array r;
+	_wave_af = fftShift(_wave_af);
 	if (_isGaussian) {
-		r = af::exp((-1) * (_k2) / (_wc->n[0] * _wc->n[1] * _gaussScale));
+		auto ry = (af::range(_wc->n[1]) - _wc->n[1] / 2);
+//		ry = af::shift(ry, ry.dims(0) / 2);
+		ry = af::tile(ry.T(), _wc->n[0], 1);
+		auto rx = (af::range(_wc->n[0]) - _wc->n[0] / 2);
+//		rx = af::shift(rx, rx.dims(0) / 2);
+		rx = af::tile(rx.T(), _wc->n[1], 1);
+		auto r2 = rx*rx+ry*ry;
+
+		auto r = af::exp(-r2/2/(_sigma*_sigma));
+		auto gauss = af::complex(r,0);
 		_wave_af *= r;
 	}
 
@@ -218,21 +177,20 @@ void CConvergentWave::ConstructWave() {
 	_wave_af *= (float_tt) sqrt(scale_s);
 
 	sum = 0.0;
-	real = af::real(_wave_af);
-	imag = af::imag(_wave_af);
-	rmin = af::min<float_tt>(real);
-	rmax = af::max<float_tt>(real);
-	aimin = af::min<float_tt>(imag);
-	aimax = af::max<float_tt>(imag);
+	auto real = af::real(_wave_af);
+	auto imag = af::imag(_wave_af);
+	float_tt rmin = af::min<float_tt>(real);
+	float_tt rmax = af::max<float_tt>(real);
+	float_tt aimin = af::min<float_tt>(imag);
+	float_tt aimax = af::max<float_tt>(imag);
 
 	m_rmin = rmin;
 	m_rmax = rmax;
 	m_aimin = aimin;
 	m_aimax = aimax;
-	_probe = af::array(_wave_af);
+	_probe = _wave_af.copy();
 
 	BOOST_LOG_TRIVIAL(info)<<format("wave value range (%f .. %f,i %f ... %f)") % rmin % rmax % aimin % aimax;
-	/**********************************************************/
 }
 
 }

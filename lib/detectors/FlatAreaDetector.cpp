@@ -15,31 +15,36 @@ FlatAreaDetector::FlatAreaDetector(cDetectorConfPtr dc,PersistenceManagerPtr p):
 FlatAreaDetector::~FlatAreaDetector() {
 }
 
-void FlatAreaDetector::RecordImage(WavePtr w){
-	_image = af::array(w->GetWaveAF());
-	float_tt scale = 1/(float_tt)(_dc->n[0] *_dc->n[1]);
+void FlatAreaDetector::RecordImage(af::array& wave){
+	af::array image = wave;
+	_p->Save2DDataSet(image, "wave before noise");
 	if (_dc->MaxElectronCounts > FLT_EPSILON ){
-		anscombeNoise(_image, _dc->MaxElectronCounts);
+		image = anscombeNoise(image);
 	}
-	af::fft2InPlace(_image);
-	MultiplyMTF(_image);
-	af::ifft2InPlace(_image);
+	_p->Save2DDataSet(image, "wave after noise");
+	af::fft2InPlace(image);
+	image = MultiplyMTF(image);
+	af::ifft2InPlace(image);
+	_p->Save2DDataSet(image, "wave after mtf");
 	_numSaved++;
-	_p->Save2DDataSet(_image, "Detected Image_" + std::to_string(_numSaved));
+	image = af::pow2(af::abs(image));
+	_p->Save2DDataSet(image, "Detected Image_" + std::to_string(_numSaved));
 }
-
-void FlatAreaDetector::anscombeNoise(af::array wave, float_tt dose){
-	af::array wavem = af::real(wave) * dose;
-	af::array filter = wavem > 1e-2f;
-	af::array x = af::randn(wave.dims(0), wave.dims(1));
-	x = x * filter * af::sqrt( 1 - af::exp( (-1) * wavem / 0.777134f)) + x * (!filter);
-	x += filter * 2 * af::sqrt( wavem + 0.375f ) - 0.25 / af::sqrt( wavem);
-	x = af::round( 0.25f * x * x  - 0.375f );
-	filter = x >= FLT_MIN;
-	x *= filter;
-	wave = af::complex(x/dose, af::imag(wave));
+//https://en.wikipedia.org/wiki/Anscombe_transform#cite_note-3
+af::array FlatAreaDetector::anscombeNoise(af::array& wave){
+	af::array wavem = af::real(wave) * _dc->MaxElectronCounts;
+//	af::array filter = wavem > 1e-2f;
+	af::array y = af::randn(wave.dims(0), wave.dims(1)) * wavem;
+	auto poisson = 0.25*af::pow2(y) + 0.306186 * af::pow(y,-1) - 11.0/8*af::pow(y,-2) + 0.765465 * af::pow(y,-3) - 0.125;
+	poisson /= _dc->MaxElectronCounts;
+//	x = x * filter * af::sqrt( 1 - af::exp( (-1) * wavem / 0.777134f)) + wavem * (!filter);
+//	x += filter * 2 * af::sqrt( wavem + 0.375f ) - 0.25 / af::sqrt(wavem);
+//	x = af::round( 0.25f * x * x  - 0.375f );
+//	poisson = af::round(poisson);
+	poisson(poisson < FLT_MIN) = 0;
+	return af::complex(poisson, af::imag(wave));
 }
-void FlatAreaDetector::MultiplyMTF(af::array wave ){
+af::array FlatAreaDetector::MultiplyMTF(af::array& wave){
 	af::array ix, iy, temp, mtf;
 	ix = af::seq(_dc->n[0]);
 	iy = af::seq(_dc->n[1]);
@@ -54,6 +59,7 @@ void FlatAreaDetector::MultiplyMTF(af::array wave ){
 	ix *= PI;
 	iy *= PI;
 	mtf *= ((af::sin ( ix ) + FLT_EPSILON ) / ( ix + FLT_EPSILON ) ) * ( (af::sin ( iy ) + FLT_EPSILON ) / ( iy + FLT_EPSILON ) );
-	wave *= mtf;
+	_p->Save2DDataSet(mtf, "mtf");
+	return wave * mtf;
 }
 }

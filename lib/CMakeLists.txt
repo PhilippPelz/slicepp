@@ -51,7 +51,7 @@ foreach(dir ${dirs})
   message(STATUS "dir='${dir}'")
 endforeach()
 message(STATUS "HDF5_LIBRARIES in libslice: " ${HDF5_LIBRARIES})
-
+message(STATUS "ArrayFire_LIBRARIES in libslice: " ${ArrayFire_LIBRARIES})
 cuda_add_library(${PROJECT_NAME} SHARED ${LIBS_FILES} OPTIONS -G;-g)
 target_link_libraries(${PROJECT_NAME}
 		hdfboost

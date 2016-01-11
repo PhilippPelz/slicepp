@@ -69,6 +69,7 @@ protected:
 	af::array _prop;
 	af::array _wave_af;
 	af::array _probe;
+	af::array _condition;
 	bool _realSpace;
 	float_tt _k2max;
 

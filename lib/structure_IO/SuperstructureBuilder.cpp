@@ -341,9 +341,9 @@ int SuperstructureBuilder::readParams(const char *datFileName){
 
 			grains[gCount].planes.clear();
 			boost::filesystem::path p(unitCellFile);
-			BOOST_LOG_TRIVIAL(info) << "before replace " << p;
+//			BOOST_LOG_TRIVIAL(info) << "before replace " << p;
 			if(p.has_relative_path()){
-				BOOST_LOG_TRIVIAL(info) << "in replace " << _oc->ConfigPath << p;
+//				BOOST_LOG_TRIVIAL(info) << "in replace " << _oc->ConfigPath << p;
 				p = _oc->ConfigPath / p;
 			}
 			auto sc = StructureConfig_clone(_sc.get());
@@ -671,25 +671,25 @@ void SuperstructureBuilder::DisplayParams(){
 
 	for (g=0;g<_nGrains;g++) {
 		if (grains[g].amorphFlag == 0) {
-			BOOST_LOG_TRIVIAL(info) << format("%d: Grain %s (ax=%g, by=%g, cz=%g, alpha=%g, beta=%g, gamma=%g)") %
+			BOOST_LOG_TRIVIAL(trace) << format("%d: Grain %s (ax=%g, by=%g, cz=%g, alpha=%g, beta=%g, gamma=%g)") %
 					g%grains[g].name%grains[g].ax%grains[g].by%grains[g].cz%
 					grains[g].alpha%grains[g].beta%grains[g].gamma;
-			BOOST_LOG_TRIVIAL(info) << format("%d atoms in unit cell")%grains[g].unitCell.size();
-			BOOST_LOG_TRIVIAL(info) << format("tilt=(%g, %g, %g)rad shift=(%g, %g, %g)A") %
+			BOOST_LOG_TRIVIAL(trace) << format("%d atoms in unit cell")%grains[g].unitCell.size();
+			BOOST_LOG_TRIVIAL(trace) << format("tilt=(%g, %g, %g)rad shift=(%g, %g, %g)A") %
 					grains[g].tiltx%grains[g].tilty%grains[g].tiltz%
 					grains[g].shiftx%grains[g].shifty%grains[g].shiftz;
 		}
 		else {
-			BOOST_LOG_TRIVIAL(info) << format("%d: Grain %s (density=%g, rmin=%g, r-factor=%g")%
+			BOOST_LOG_TRIVIAL(trace) << format("%d: Grain %s (density=%g, rmin=%g, r-factor=%g")%
 					g%grains[g].name%grains[g].density%grains[g].rmin%grains[g].rFactor;
 		}
-		printf("planes:\n");
+		BOOST_LOG_TRIVIAL(trace) << "planes:";
 		for (auto& p : grains[g].planes)
-			printf("vect1=(%g %g %g) vect2=(%g %g %g) point=(%g %g %g) normal=(%g %g %g)\n",
-					p.v1[0],p.v1[1], p.v1[2],
-					p.v2[0],p.v2[1], p.v2[2],
-					p.p[0],p.p[1], p.p[2],
-					p.n[0],p.n[1], p.n[2]);
+			BOOST_LOG_TRIVIAL(trace) << format("vect1=(%g %g %g) vect2=(%g %g %g) point=(%g %g %g) normal=(%g %g %g)")
+					%p.v1[0]%p.v1[1]% p.v1[2]
+					%p.v2[0]%p.v2[1]% p.v2[2]
+					%p.p[0]%p.p[1]% p.p[2]
+					%p.n[0]%p.n[1]% p.n[2];
 	} // for g=0 ...
 }
 void SuperstructureBuilder::makeAmorphous(){
@@ -829,10 +829,12 @@ void SuperstructureBuilder::makeSpecial(int distPlotFlag) {
 	seed = -(long)(time(NULL));  // initialize random number generator.
 
 	for (g=0;g<_nGrains;g++) {
+		if(grains[g].amorphFlag == 0) continue;
 		trim(grains[g].name);
+		BOOST_LOG_TRIVIAL(info) << grains[g].name;
 		type = std::stoi(grains[g].name);
-		BOOST_LOG_TRIVIAL(info) << format("%s: distribution type: %d (%s)")%grains[g].name,type%
-				(type == 2) ? "double gaussian" : (type == 1 ? "single gaussian" : "random");
+		BOOST_LOG_TRIVIAL(info) << format("%s: distribution type: %d (%s)")%grains[g].name%type%
+				((type == 2) ? "double gaussian" : (type == 1 ? "single gaussian" : "random"));
 		/**************************************************************
 		 * We would like to calculate the Volume of this grain.
 		 * We do this by brute force, by simply checking, if randomly

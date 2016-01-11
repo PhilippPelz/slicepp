@@ -39,10 +39,8 @@ void Bootstrapper::InitInternal(ConfigPtr c){
 	fftw_init_threads();
 	fftw_plan_with_nthreads(c->nThreads);
 	omp_set_num_threads(c->nThreads);
-
+	af::setDevice(c->Device);
 	af::info();
-	af::setDevice(0);
-
 	RegisterWaveTypes();
 	RegisterPotentialTypes();
 	RegisterStructureTypes();
@@ -85,8 +83,8 @@ void Bootstrapper::InitInternal(ConfigPtr c){
 	_e = ExperimentPtr( _experimentFactory[c->ExpType](c,structureBuilder,wave,potential,detector, persist));
 }
 
-void Bootstrapper::Initialize(c_Config* conf){
-	ConfigPtr c = ConfigPtr(new Config(*conf));
+void Bootstrapper::Initialize(sConfig* cf){
+	ConfigPtr c = ConfigPtr(new Config(*cf));
 	InitInternal(c);
 }
 void Bootstrapper::Initialize(){

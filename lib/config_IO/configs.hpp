@@ -49,6 +49,10 @@ typedef enum  {
 } DetectorType;
 
 typedef enum  {
+	Raster = 1, Custom = 2
+} ScanType;
+
+typedef enum  {
 	FFT2D = 1,
 	FFT3D = 2,
 	Real2D = 3,
@@ -116,6 +120,7 @@ typedef struct WaveConfig {
 
 	float alpha;
 	float Defocus;
+	float defocspread;
 	float Astigmatism;
 	float AstigmatismAngle;
 
@@ -139,7 +144,7 @@ typedef struct WaveConfig {
 	float phi_66;
 	float phi_64;
 	float phi_62;
-	float gaussScale;
+	float gaussFWHM;
 
 	float dI_I;
 	float dE_E;
@@ -149,8 +154,8 @@ typedef struct WaveConfig {
 	float tiltX;
 	float tiltY;
 
-	bool Smooth;
-	bool Gaussian;
+	bool IsSmooth;
+	bool IsGaussian;
 
 	WaveType type;
 	int n[2];
@@ -169,7 +174,8 @@ typedef struct OutputConfig {
 	bool SaveWaveAfterPropagation;
 	bool SaveWaveAfterSlice;
 	bool SaveAtomicPotential;
-	bool ComputeFromProjectedPotential, SaveAtomDeltas;
+	bool ComputeFromProjectedPotential;
+	bool SaveAtomDeltas;
 	bool SaveAtomConv;
 
 	char LogFileName[1000];
@@ -193,25 +199,28 @@ typedef struct DetectorConfig {
 	float MaxElectronCounts;
 } DetectorConfig;
 
-typedef struct ScanConfig {
+typedef struct sScanConfig{
 	int xPos;
 	int yPos;
 	int xStep;
 	int yStep;
-	int scanType;
-} ScanConfig;
+	int nSteps[2];
+	ScanType type;
+	char* yaml;
+} sScanConfig;
 
-typedef struct c_Config {
+typedef struct sConfig {
 	int nThreads;
+	int Device;
 	ExperimentType ExpType;
 
 	StructureConfig* Structure;
 	ModelConfig* Model;
 	OutputConfig* Output;
 	WaveConfig* Wave;
-	ScanConfig* Scan;
+	sScanConfig* Scan;
 	DetectorConfig* Detector;
-} c_Config;
+} sConfig;
 
 StructureConfig* StructureConfig_clone(const StructureConfig* cloneMe);
 
@@ -220,15 +229,15 @@ ModelConfig* ModelConfig_new();
 WaveConfig* WaveConfig_new();
 OutputConfig* OutputConfig_new();
 DetectorConfig* DetectorConfig_new();
-ScanConfig* ScanConfig_new();
-c_Config* c_Config_new();
+sScanConfig* sScanConfig_new();
+sConfig* sConfig_new();
 
 void StructureConfig_delete(StructureConfig* c);
 void ModelConfig_delete(ModelConfig* c);
 void WaveConfig_delete(WaveConfig);
 void OutputConfig_delete(OutputConfig* c);
 void DetectorConfig_delete(DetectorConfig* c);
-void ScanConfig_delete(ScanConfig* c);
-void c_Config_delete(c_Config* c);
+void sScanConfig_delete(sScanConfig* c);
+void sConfig_delete(sConfig* c);
 
 #endif

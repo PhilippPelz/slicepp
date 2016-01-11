@@ -29,7 +29,6 @@ namespace slicepp
 
 CoherentSinglePositionExperiment::CoherentSinglePositionExperiment(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p, const DetPtr& d, const PersistenceManagerPtr& pers) : BaseExperiment(c,s,w,p,d,pers)
 {
-	printf("wp40\n");
 	_lbeams = false;
 }
 
@@ -39,36 +38,24 @@ void CoherentSinglePositionExperiment::DisplayParams()
 
 void CoherentSinglePositionExperiment::Run()
 {
-	time_t time0, time1;
-	int ix,iy,i,pCount,result;
-	double timer,timerTot ;
-	float_tt t=0;
-	FloatArray2D avgPendelloesung(boost::extents[_nbout][_c->Model->n[2]]);
-	std::map<std::string, double> params;
-	std::vector<unsigned> position(1);         // Used to indicate the number of averages
-
-	m_chisq.resize(_c->Model->TDSRuns);
-	timerTot = 0; /* cputim();*/
 	DisplayProgress(-1);
-	printf("wp41\n");
-	time(&time0);
+	auto time = af::timer::start();
 	auto box = _structureBuilder->Build();
-	printf("wp5\n");
 	SetResolution(box);
 	SetSliceThickness(box);
-	time(&time1);
-	BOOST_LOG_TRIVIAL(info)<< format( "%g sec used for building structure")
-	% difftime(time1, time0);
+	auto elapsed = af::timer::stop(time) * 1000;
 
-	time(&time0);
+	BOOST_LOG_TRIVIAL(info)<< format( "%g msec used for building structure.") % elapsed;
+
+	time = af::timer::start();
 	_persist->InitStorage();
 	_wave->FormProbe();
 	_wave->InitializePropagators();
 	_wave->DisplayParams();
 	_pot->DisplayParams();
-	time(&time1);
-	BOOST_LOG_TRIVIAL(info)<< format( "%g sec used for initialization")
-	% difftime(time1, time0);
+	elapsed = af::timer::stop(time) * 1000;
+
+	BOOST_LOG_TRIVIAL(info)<< format( "%g msec used for initialization.") % elapsed;
 
 	for (_runCount = 0;_runCount < _c->Model->TDSRuns;_runCount++) {
 		auto box = _structureBuilder->DisplaceAtoms();
@@ -80,11 +67,10 @@ void CoherentSinglePositionExperiment::Run()
 			char systStr[255];
 		}
 	}
-	time(&time0);
+	time = af::timer::start();
 	PostSpecimenProcess();
-	time(&time1);
-	BOOST_LOG_TRIVIAL(info)<< format( "%g sec used for post specimen process")
-	% difftime(time1, time0);
+	elapsed = af::timer::stop(time) * 1000;
+	BOOST_LOG_TRIVIAL(info)<< format( "%g msec used for post specimen process.") % elapsed;
 	DisplayProgress(1);
 	BOOST_LOG_TRIVIAL(info) << "Saving to disc...";
 	_persist->StoreToDisc();

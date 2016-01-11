@@ -63,6 +63,8 @@ public:
 	virtual void PropagateToNextSlice()=0;
 	virtual void InitializePropagators()=0;
 	virtual void ResetProbe()=0;
+	virtual af::array fftShift(af::array& _wave) =0;
+	virtual af::array ifftShift(af::array& _wave) =0;
 protected:
 	PersistenceManagerPtr _persist;
 	cWaveConfPtr _wc;

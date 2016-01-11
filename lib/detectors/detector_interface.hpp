@@ -32,8 +32,7 @@ class IDetector
 {
 public:
 	IDetector(cDetectorConfPtr dc,PersistenceManagerPtr p) : _dc(dc), _p(p){};
-	virtual void RecordImage(WavePtr w)=0;
-	virtual void MultiplyMTF(af::array wave)=0;
+	virtual void RecordImage(af::array& wave)=0;
 	virtual ~IDetector(){};
 
 protected:

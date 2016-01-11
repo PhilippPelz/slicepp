@@ -8,7 +8,7 @@
 #include "exported.hpp"
 #include "Bootstrapper.hpp"
 
-void run_simulation(c_Config* conf){
+void run_simulation(sConfig* conf){
     slicepp::Bootstrapper b;
     b.Initialize(conf);
     auto e = b.GetExperiment();
