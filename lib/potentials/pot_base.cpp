@@ -30,27 +30,23 @@ const int BUF_LEN = 256;
 
 namespace slicepp {
 
-CPotential::CPotential(cModelConfPtr mc, cOutputConfPtr oc , PersistenceManagerPtr persist) :
-		_ddx(0), _ddy(0) ,_nrAtomTrans(0),
-		_dkx(0), _dky(0), _dkz(0), _kmax(0), _kmax2(0), _totalThickness(0),
-		_dr(0), _atomRadius2(0), _offsetX(0), _offsetY(0), _nRadX(0),
-		_nRadY(0), _nRadZ(0), _nRad2Trans(0), _ndiaAtomX(0), _ndiaAtomY(0), _boxNx(0),
-		_boxNy(0), m_boxNz(0),
-		IPotential(mc,oc,persist) {
+CPotential::CPotential(cModelConfPtr mc, cOutputConfPtr oc, PersistenceManagerPtr persist) :
+		_ddx(0), _ddy(0), _nrAtomTrans(0), _dkx(0), _dky(0), _dkz(0), _kmax(0), _kmax2(0), _totalThickness(0), _dr(0), _atomRadius2(0), _offsetX(0), _offsetY(
+				0), _nRadX(0), _nRadY(0), _nRadZ(0), _nRad2Trans(0), _ndiaAtomX(0), _ndiaAtomY(0), _boxNx(0), _boxNy(0), m_boxNz(0), IPotential(mc,
+				oc, persist) {
 
 }
 CPotential::~CPotential() {
 }
 
 void CPotential::DisplayParams() {
-	BOOST_LOG_TRIVIAL(info) <<
+	BOOST_LOG_TRIVIAL(info)<<
 	"**************************************************************************************************";
 	BOOST_LOG_TRIVIAL(info)<<format("* Log level:            %d") % _oc->LogLevel;
-	BOOST_LOG_TRIVIAL(info)<<format("* Model Sampling:       %g x %g x %g A") % _mc->d[0]% _mc->d[1]% _mc->d[2];
-//	BOOST_LOG_TRIVIAL(info)<<format("* Pot. array offset:    (%g,%g,%g) A") % _c->Structure->xOffset%_c->Structure->yOffset% _c->Structure->zOffset;
+	BOOST_LOG_TRIVIAL(info)<<format("* Model Sampling:       %g x %g x %g Å") % _mc->d[0]% _mc->d[1]% _mc->d[2];
 	BOOST_LOG_TRIVIAL(info)<<format("* Potential periodic:   (x,y): %s ") %((_mc->periodicXY) ? "yes" : "no");
-	BOOST_LOG_TRIVIAL(info)<<format("* Potential array:      %d x %d")% _mc->n[0]% _mc->n[1];
-	BOOST_LOG_TRIVIAL(info)<<format("*                       %g x %gA") % (_mc->n[0] * _mc->d[0])% (_mc->n[1] * _mc->d[1]);
+	BOOST_LOG_TRIVIAL(info)<<format("* Potential array:      %d x %d x %d Å")% _mc->n[0]% _mc->n[1] % _mc->n[2];
+	BOOST_LOG_TRIVIAL(info)<<format("*                       %g x %g x %g Å") % (_mc->n[0] * _mc->d[0])% (_mc->n[1] * _mc->d[1])% (_mc->n[2] * _mc->d[2]);
 	BOOST_LOG_TRIVIAL(info) <<
 	"**************************************************************************************************";
 }
@@ -58,16 +54,15 @@ void CPotential::DisplayParams() {
 void CPotential::ReadPotential(std::string &fileName, unsigned subSlabIdx) {
 }
 
-void CPotential::ReadSlice(const std::string &fileName,
-		ComplexArray2DView slice, unsigned idx) {
+void CPotential::ReadSlice(const std::string &fileName, ComplexArray2DView slice, unsigned idx) {
 }
 
 void CPotential::SliceSetup() {
 	_ddx = _mc->d[0] / (double) OVERSAMPLING;
 	_ddy = _mc->d[1] / (double) OVERSAMPLING;
 
-	_ndiaAtomX = 2 * OVERSAMPLING * (int) ceil(_mc->ratom / _mc->d[0] );
-	_ndiaAtomY = 2 * OVERSAMPLING * (int) ceil(_mc->ratom / _mc->d[1] );
+	_ndiaAtomX = 2 * OVERSAMPLING * (int) ceil(_mc->ratom / _mc->d[0]);
+	_ndiaAtomY = 2 * OVERSAMPLING * (int) ceil(_mc->ratom / _mc->d[1]);
 
 	_dkx = 0.5 * OVERSAMPLING / ((_ndiaAtomX) * _mc->d[0]);
 	_dky = 0.5 * OVERSAMPLING / ((_ndiaAtomY) * _mc->d[1]);
@@ -80,12 +75,12 @@ void CPotential::SliceSetup() {
 	_boxNy = (int) (_mc->ratom / _ddy + 2.0);
 
 	_totalThickness = _mc->d[2] * _mc->n[2];
-	_dr = min(_mc->d[0],_mc->d[1]) / OVERSAMPLING;
-	_nrAtomTrans =  (int) ceil(_mc->ratom / _dr + 0.5);
+	_dr = min(_mc->d[0], _mc->d[1]) / OVERSAMPLING;
+	_nrAtomTrans = (int) ceil(_mc->ratom / _dr + 0.5);
 
 	_nRadX = (int) ceil(_mc->ratom / _mc->d[0]);
 	_nRadY = (int) ceil(_mc->ratom / _mc->d[1]);
-	_nRadZ = (int) ceil(_mc->ratom / _mc->d[2]) ;
+	_nRadZ = (int) ceil(_mc->ratom / _mc->d[2]);
 	_nRad2Trans = _nRadX * _nRadX + _nRadY * _nRadY;
 
 	_atomRadius2 = _mc->ratom * _mc->ratom;
@@ -111,11 +106,9 @@ void CPotential::SetScatteringFactors(float_tt kmax) {
 		if (1) {	// TODO: why if(1)? dont use all factors?
 			// set additional scattering parameters to zero:
 			for (; ix < N_SF - 10; ix++) {
-				if (scatPar[0][N_SF - 4 - ix]
-						< scatPar[0][N_SF - 3] - 0.001 * (ix + 1))
+				if (scatPar[0][N_SF - 4 - ix] < scatPar[0][N_SF - 3] - 0.001 * (ix + 1))
 					break;
-				scatPar[0][N_SF - 4 - ix] = scatPar[0][N_SF - 3]
-						- 0.001 * (ix + 1);
+				scatPar[0][N_SF - 4 - ix] = scatPar[0][N_SF - 3] - 0.001 * (ix + 1);
 				for (unsigned iy = 1; iy < N_ELEM; iy++)
 					scatPar[iy][N_SF - 4 - ix] = 0;
 			}
@@ -129,7 +122,7 @@ void CPotential::SetScatteringFactors(float_tt kmax) {
 			}
 		}
 		if (_oc->LogLevel < 2)
-				BOOST_LOG_TRIVIAL(info)<< format("* Reduced angular range of scattering factor to %g/Å!") % scatParOffs[0][N_SF - 4 - ix];
+			BOOST_LOG_TRIVIAL(info)<< format("* Reduced angular range of scattering factor to %g/Å!") % scatParOffs[0][N_SF - 4 - ix];
 		}
 	}
 
@@ -154,7 +147,8 @@ void CPotential::MakeSlices(superCellBoxPtr info) {
 #pragma omp parallel for shared(atomsAdded,info)
 	for (std::vector<atom>::iterator a = info->atoms.begin(); a < info->atoms.end(); a = a + 1) {
 		atom atom(a);
-		if (atom.Znum == 0) continue;
+		if (atom.Znum == 0)
+			continue;
 		AddAtomToSlices(atom);
 		BOOST_LOG_TRIVIAL(trace)<< format("Adding atom : (%3.3f, %3.3f, %3.3f) Z=%d") % atom.r[0] % atom.r[1] % atom.r[2] % atom.Znum;
 
@@ -166,7 +160,7 @@ void CPotential::MakeSlices(superCellBoxPtr info) {
 	}
 
 	CleanUp();
-	_t_d = af::array(_mc->n[0], _mc->n[1], _mc->n[2], (afcfloat *)_t.data());
+	_t_d = af::array(_mc->n[0], _mc->n[1], _mc->n[2], (afcfloat*)_t.data());
 	MakePhaseGratings();
 	time(&time1);
 	BOOST_LOG_TRIVIAL(info)<< format( "%g sec used for real space potential calculation (%g sec per atom)")
@@ -183,10 +177,10 @@ void CPotential::MakePhaseGratings() {
 	%_t.shape()[0]%scale%mm0%_mc->sigma;
 
 	float_tt minph = 3.1, maxph = 0, minabs = 100, maxabs = 0;
-		_t_d = scale * af::real(_t_d);
-		maxph = af::max<float_tt>(_t_d);
-		minph = af::min<float_tt>(_t_d);
-		_t_d = af::complex(af::cos(_t_d), af::sin(_t_d));
+	_t_d = scale * af::real(_t_d);
+	maxph = af::max<float_tt>(_t_d);
+	minph = af::min<float_tt>(_t_d);
+	_t_d = af::complex(af::cos(_t_d), af::sin(_t_d));
 	BOOST_LOG_TRIVIAL(info)<<format("Phase values %g ... %g")%minph%maxph;
 }
 
@@ -210,7 +204,7 @@ void CPotential::WriteProjectedPotential() {
 	ComplexArray2D sum(extents[_mc->n[0]][_mc->n[1]]);
 	float_tt potVal = 0;
 
-	for (unsigned iz = 0; iz < _mc->n[2]; iz++){
+	for (unsigned iz = 0; iz < _mc->n[2]; iz++) {
 		for (unsigned ix = 0; ix < _mc->n[0]; ix++) {
 			for (unsigned iy = 0; iy < _mc->n[1]; iy++) {
 				sum[ix][iy] += _t[iz][ix][iy];
@@ -258,8 +252,7 @@ void CPotential::SaveAtomicPotential(int znum) {
  interval. NOTE that the last set of coefficients,
  b[n-1], c[n-1], d[n-1] are meaningless.
  */
-void CPotential::splinh(float_tt x[], float_tt y[], std::vector<float_tt>& b,
-		std::vector<float_tt>& c, std::vector<float_tt>& d, int n) {
+void CPotential::splinh(float_tt x[], float_tt y[], std::vector<float_tt>& b, std::vector<float_tt>& c, std::vector<float_tt>& d, int n) {
 #define SMALL 1.0e-25
 
 	int i, nm1, nm4;
@@ -351,8 +344,7 @@ void CPotential::splinh(float_tt x[], float_tt y[], std::vector<float_tt>& b,
  interval. NOTE that the last set of coefficients,
  b[n-1], c[n-1], d[n-1] are meaningless.
  */
-float_tt CPotential::seval(float_tt *x, float_tt *y, std::vector<float_tt>& b,
-		std::vector<float_tt>& c, std::vector<float_tt>& d, int n,
+float_tt CPotential::seval(float_tt *x, float_tt *y, std::vector<float_tt>& b, std::vector<float_tt>& c, std::vector<float_tt>& d, int n,
 		float_tt x0) {
 	int i, j, k;
 	float_tt z, seval1;
@@ -381,11 +373,11 @@ float_tt CPotential::seval(float_tt *x, float_tt *y, std::vector<float_tt>& b,
 
 } /* end seval() */
 
-af::array CPotential::GetSubPotential(int startx, int starty, int nx, int ny){
-	return _t_d(af::seq(startx, startx + nx -1), af::seq(starty, starty + ny -1), af::span);
+af::array CPotential::GetSubPotential(int startx, int starty, int nx, int ny) {
+	return _t_d(af::seq(startx, startx + nx - 1), af::seq(starty, starty + ny - 1), af::span);
 }
 
-af::array& CPotential::GetPotential(){
+af::array& CPotential::GetPotential() {
 	return _t_d;
 }
 
@@ -394,13 +386,13 @@ void CPotential::GetSizePixels(unsigned int &nx, unsigned int &ny) const {
 	ny = _mc->n[1];
 }
 
-af:: array CPotential::GetSlice(af::array& t, unsigned idx){
+af::array CPotential::GetSlice(af::array& t, unsigned idx) {
 	return t(af::span, af::span, idx);
 }
 
-void CPotential::SavePotential(){
+void CPotential::SavePotential() {
 	_persist->SavePotential(_t);
-	if (_oc->SaveProjectedPotential || _oc->ComputeFromProjectedPotential){
+	if (_oc->SaveProjectedPotential || _oc->ComputeFromProjectedPotential) {
 //		if(!_persist->_potSaved){
 //			_t.resize(boost::extents[_t_d.dims(2)][_t_d.dims(1)][_t_d.dims(0)]);
 //			_t_d.host(_t.data());

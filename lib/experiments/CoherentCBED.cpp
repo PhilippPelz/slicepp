@@ -6,6 +6,7 @@
  */
 
 #include "CoherentCBED.hpp"
+#include "afhelpers.hpp"
 
 namespace slicepp {
 
@@ -17,7 +18,7 @@ CoherentCBED::~CoherentCBED() {
 }
 void CoherentCBED::PostSpecimenProcess(){
 	_wave->ToFourierSpace();
-	auto dp = _wave->fftShift(_wave->GetWaveAF());
+	auto dp = fftShift(_wave->GetWaveAF());
 	_det->RecordImage(dp);
 }
 } /* namespace slicepp */

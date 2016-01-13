@@ -28,7 +28,7 @@ namespace slicepp
 class DLL_EXPORT CPlaneWave : public CBaseWave
 {
 public:
-  CPlaneWave(cWaveConfPtr wc, cModelConfPtr mc, PersistenceManagerPtr p);
+  CPlaneWave(cWaveConfPtr wc, cModelConfPtr mc, cOutputConfPtr oc, PersistenceManagerPtr p);
   virtual void FormProbe();
   void TiltBeam(bool tiltBack=false);
   void TiltBack();

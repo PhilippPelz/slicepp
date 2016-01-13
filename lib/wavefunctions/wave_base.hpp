@@ -29,14 +29,15 @@
 #include "stemtypes_fftw3.hpp"
 #include "wave_interface.hpp"
 #include "data_IO/PersistenceManager.hpp"
+#include "Aberrations.hpp"
+
 namespace slicepp
 {
-
 
 class DLL_EXPORT CBaseWave : public IWave
 {
 public:
-	CBaseWave(cWaveConfPtr wc, cModelConfPtr mc, PersistenceManagerPtr p);
+	CBaseWave(cWaveConfPtr wc, cModelConfPtr mc, cOutputConfPtr oc, PersistenceManagerPtr p);
 	bool IsRealSpace(){return _realSpace;}
 	int GetTotalPixels() const {return _wc->n[0]*_wc->n[1];}
 	void DisplayParams();
@@ -46,11 +47,11 @@ public:
 	inline float_tt GetPixelIntensity(int x, int y) const  {return GetPixelIntensity(x+_wc->n[0]*y);}
 	inline ComplexArray2D GetWave() const {return  _wave;}
 
-	inline af::array GetPixelIntensity() const {return af::real(_wave_af)*af::real(_wave_af) + af::imag(_wave_af)*af::imag(_wave_af);}
+	inline af::array GetIntensity() const {return af::real(_wave_af)*af::real(_wave_af) + af::imag(_wave_af)*af::imag(_wave_af);}
 	inline af::array& GetWaveAF() {return  _wave_af;}
 	inline af::array& GetProbe() {return  _probe;}
+	void ApplyCTF();
 
-	void WriteBeams(int absoluteSlice);
 	float_tt GetIntegratedIntensity() const ;
 
 	virtual ~CBaseWave();
@@ -60,29 +61,25 @@ public:
 	virtual void Transmit(af::array& t);
 	virtual void PropagateToNextSlice();
 	virtual void InitializePropagators();
-	virtual af::array fftShift(af::array& _wave);
-	virtual af::array ifftShift(af::array& _wave);
-	virtual void ApplyTransferFunction();
 
+	virtual af::array GetKabs() {return _kabs;};
+	virtual af::array GetKx() {return _kx;};
+	virtual af::array GetKy() {return _ky;};
 protected:
 	ComplexArray2D _wave;
 	af::array _prop;
 	af::array _wave_af;
 	af::array _probe;
-	af::array _condition;
 	bool _realSpace;
 	float_tt _k2max;
 
 	af::array _kx;
 	af::array _ky;
-	af::array _k2;
+	af::array _kabs;
+
+	Aberrations _OLaberrations;
 
 	void Initialize(std::string input_ext, std::string output_ext);
-	void InitializeKVectors();
-
-	af::array GetKx();
-	af::array GetKy();
-	af::array GetK2();
 };
 }
 

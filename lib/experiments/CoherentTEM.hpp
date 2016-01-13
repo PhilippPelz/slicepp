@@ -9,6 +9,7 @@
 #define LIBS_EXPERIMENTS_COHERENTTEM_HPP_
 
 #include "CoherentSinglePositionExperiment.hpp"
+#include "Aberrations.hpp"
 
 namespace slicepp {
 
@@ -17,6 +18,8 @@ public:
 	CoherentTEM(const ConfigPtr& c,const StructureBuilderPtr& s,const WavePtr& w,const PotPtr& p, const DetPtr& d, const PersistenceManagerPtr& pers);
 	virtual ~CoherentTEM();
 	virtual void PostSpecimenProcess();
+protected:
+	Aberrations _aberration;
 };
 
 } /* namespace slicepp */

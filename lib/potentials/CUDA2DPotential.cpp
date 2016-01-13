@@ -44,66 +44,16 @@ void CUDA2DPotential::printCudaMem() {
 
 void CUDA2DPotential::initPotArrays(superCellBoxPtr info) {
 	_slicePixels = _mc->n[0] * _mc->n[1];
-//	cuda_assert(cudaMalloc(&_t_d_ptr,_mc->n[2] * _slicePixels * sizeof(float2)));
-//	cuda_assert(cudaMalloc(&_V_elem_ptr, _slicePixels * sizeof(float2)));
-//	cuda_assert(cudaMalloc(&_V_accum_ptr, _slicePixels * sizeof(float2)));
 	xyzPos = af::array(info->xyzPos.size(), (float_tt*) info->xyzPos.data(), afHost);
 	occupancy = af::array(info->occupancy.size(), (float_tt*) info->occupancy.data(), afHost);
 	znums = af::array(info->znums.size(), (int*) info->znums.data(), afHost);
 	t_d = af::array(_mc->n[2] * _slicePixels, c32);
 	V_elem = af::array(_slicePixels, c32);
 	V_accum = af::array(_slicePixels, c32);
-//	xyzPos_d = (float*)af::alloc(info->xyzPos.size(),f32);
-//	occupancy_d = (float*)af::alloc(info->occupancy.size(),f32);
-//	znums_d = (int*)af::alloc(info->znums.size(),s32);
-//	cuda_assert(cudaMalloc(&xyzPos_d, info->xyzPos.size() * sizeof(float)));
-//	cuda_assert(cudaMalloc(&occupancy_d, info->occupancy.size() * sizeof(float)));
-//	cuda_assert(cudaMalloc(&znums_d, info->znums.size() * sizeof(int)));
-
-//	auto t1 = af::array(info->xyzPos.size());
-
-//	t1 = af::reorder(t1, 1, 0);
-//	t2 = af::reorder(t2, 1, 0);
-//	t3 = af::reorder(t3, 1, 0);
-//	af::eval(t1);
-//	af::eval(t2);
-//	af::eval(t3);
-//	t1 = af::sin(t1);
-//	t2 = af::sin(t2);
-//	t3 = af::sin(t3);
-//	af::sync();
-//	cuda_assert(cudaStreamSynchronize(afcu::getStream(af::getDevice())));
 
 	_t_d_ptr = (float2*) t_d.device<af::cfloat>();
 	_V_elem_ptr = (float2*) V_elem.device<af::cfloat>();
 	_V_accum_ptr = (float2*) V_accum.device<af::cfloat>();
-//	af::sync(af::getDevice());
-//	cuda_assert(cudaStreamSynchronize(afcu::getStream(af::getDevice())));
-//	printf("_t_d_ptr:  %#08x\n", _t_d_ptr);
-//	printf("_V_elem_ptr:  %#08x\n", _V_elem_ptr);
-//	printf("_V_accum_ptr:  %#08x\n", _V_accum_ptr);
-
-//	printf("info->xyzPos.size() = %d\n", info->xyzPos.size());
-//	cuda_assert(cudaMemcpyAsync(xyzPos_d, info->xyzPos.data(), info->xyzPos.size() * sizeof(float_tt), cudaMemcpyHostToDevice, afcu::getStream(af::getDevice())));
-//	cuda_assert(cudaMemcpy(xyzPos_d, info->xyzPos.data(), info->xyzPos.size() * sizeof(float_tt), cudaMemcpyHostToDevice));
-//	auto t2 = af::array(info->occupancy.size());
-//	auto t3 = af::array(info->znums.size());
-
-//	cuda_assert(cudaDeviceSynchronize());
-//	printf("%g %g %g %g %g %g %g %g %g\n",_info->xyzPos[0],_info->xyzPos[1],_info->xyzPos[2],_info->xyzPos[3]
-//			,_info->xyzPos[4],_info->xyzPos[5],_info->xyzPos[6],_info->xyzPos[7],_info->xyzPos[8]);
-//	cuda_assert(cudaStreamSynchronize(_stream));
-
-//	cuda_assert(cudaMemcpyAsync(occupancy_d, info->occupancy.data(), info->occupancy.size() * sizeof(float_tt), cudaMemcpyHostToDevice, afcu::getStream(af::getDevice())));
-//	cuda_assert(cudaMemcpy(occupancy_d, info->occupancy.data(), info->occupancy.size() * sizeof(float_tt), cudaMemcpyHostToDevice));
-//	cuda_assert(cudaMemcpyAsync(znums_d, info->znums.data(), info->znums.size() * sizeof(int), cudaMemcpyHostToDevice, afcu::getStream(af::getDevice())));
-//	cuda_assert(cudaMemcpy(znums_d, info->znums.data(), info->znums.size() * sizeof(int), cudaMemcpyHostToDevice));
-//	cuda_assert(cudaStreamSynchronize(afcu::getStream(af::getDevice())));
-//	af::print("xyz: \n", t1);
-//	af::print("Z: \n", t3);
-
-//	_cf.printFloatArray(xyzPos_d, info->xyzPos.size() / 10, 10, 0);
-//	_cf.printIntArray(znums_d, info->znums.size());
 	printAfMem();
 }
 void CUDA2DPotential::ComputeAtomicPotential(superCellBoxPtr info) {

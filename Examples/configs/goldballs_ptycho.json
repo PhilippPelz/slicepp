@@ -58,7 +58,7 @@
     "beamCurrentpA": "1",
     "energy_keV": "80"
   },
-  "mode": "1",
+  "mode": "5",
   "Device": "0",
   "output": {
     "showProbe": "false",

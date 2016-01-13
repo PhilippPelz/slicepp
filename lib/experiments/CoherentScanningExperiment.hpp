@@ -3,15 +3,15 @@
 
 #include "base.hpp"
 namespace slicepp {
-class Ptychograph: public BaseExperiment {
+class CoherentScanningExperiment: public BaseExperiment {
 public:
-	Ptychograph(const ConfigPtr& c, const StructureBuilderPtr& s, const WavePtr& w, const PotPtr& p, const DetPtr& d,
+	CoherentScanningExperiment(const ConfigPtr& c, const StructureBuilderPtr& s, const WavePtr& w, const PotPtr& p, const DetPtr& d,
 			const PersistenceManagerPtr& pers);
 	void Run();
 
 	virtual void DisplayParams();
 	virtual void WriteBeams(unsigned absoluteSlice);
-	virtual ~Ptychograph() {
+	virtual ~CoherentScanningExperiment() {
 	}
 	;
 	void PostSpecimenProcess();

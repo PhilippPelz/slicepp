@@ -19,45 +19,17 @@
 
 #include "wave_convergent.hpp"
 #include "boost/log/trivial.hpp"
+#include "afhelpers.hpp"
 using boost::format;
 
 namespace slicepp {
 
-CConvergentWave::CConvergentWave(cWaveConfPtr wc, cModelConfPtr mc, PersistenceManagerPtr p) :
-		CBaseWave(wc, mc, p) {
-	m_Cs = wc->Cs;
-	m_C5 = wc->C5;
-	m_Cc = wc->Cc;
-	m_df0 = wc->Defocus;
-	m_Scherzer = "";
-	m_astigMag = wc->Astigmatism;
-	m_a33 = wc->a_33;
-	m_a31 = wc->a_31;
-	m_a44 = wc->a_44;
-	m_a42 = wc->a_42;
-	m_a55 = wc->a_55;
-	m_a53 = wc->a_53;
-	m_a51 = wc->a_51;
-	m_a66 = wc->a_66;
-	m_a64 = wc->a_64;
-	m_a62 = wc->a_62;
-	m_astigAngle = wc->AstigmatismAngle;
-	m_phi33 = wc->phi_33;
-	m_phi31 = wc->phi_31;
-	m_phi44 = wc->phi_44;
-	m_phi42 = wc->phi_42;
-	m_phi55 = wc->phi_55;
-	m_phi53 = wc->phi_53;
-	m_phi51 = wc->phi_51;
-	m_phi66 = wc->phi_66;
-	m_phi64 = wc->phi_64;
-	m_phi62 = wc->phi_62;
+CConvergentWave::CConvergentWave(cWaveConfPtr wc, cModelConfPtr mc, cOutputConfPtr oc, PersistenceManagerPtr p) :
+		_aberration(mc->wavelength*1e10,wc->aberrations,"Convergent Beam"),
+		CBaseWave(wc, mc,oc, p) {
 	_smoothen = wc->IsSmooth;
 	_sigma = wc->gaussFWHM / 2.35482;
 	_isGaussian = wc->IsGaussian;
-	m_dE_E = wc->dE_E;
-	m_dI_I = wc->dI_I;
-	m_dV_V = wc->dV_V;
 	_alpha_max = wc->alpha * 0.001;
 	_CLA = wc->AISaperture;
 }
@@ -74,39 +46,7 @@ void CConvergentWave::DisplayParams() {
 	if (_CLA > 0)
 		BOOST_LOG_TRIVIAL(info)<< format("*                  %g A") % (_CLA);
 		else BOOST_LOG_TRIVIAL(info)<< format("                        none");
-
-	BOOST_LOG_TRIVIAL(info)<< format("* C_3 (C_s):            %g mm") % (m_Cs*1e-7);
-	BOOST_LOG_TRIVIAL(info)<< format("* C_1 (Defocus):        %g nm%s") % (0.1*m_df0) % ((m_Scherzer == "Scherzer") ? " (Scherzer)" : (m_Scherzer=="") ? " (opt.)":"");
-	BOOST_LOG_TRIVIAL(info)<< format("* Astigmatism:          %g nm, %g deg") % (0.1*m_astigMag) % (RAD2DEG*m_astigAngle);
-
-	if (m_a33 > 0)
-		BOOST_LOG_TRIVIAL(info)<< format("* a_3,3:                %g nm, phi=%g deg") %(m_a33*1e-1)%(m_phi33*RAD2DEG);
-	if (m_a31 > 0)
-		BOOST_LOG_TRIVIAL(info)<< format("* a_3,1:                %g nm, phi=%g deg") %(m_a31*1e-1)%(m_phi31*RAD2DEG);
-
-	if (m_a44 > 0)
-		BOOST_LOG_TRIVIAL(info)<< format("* a_4,4:                %g um, phi=%g deg") %(m_a44*1e-4)%(m_phi44*RAD2DEG);
-	if (m_a42 > 0)
-		BOOST_LOG_TRIVIAL(info)<< format("* a_4,2:                %g um, phi=%g deg") %(m_a42*1e-4)%(m_phi42*RAD2DEG);
-
-	if (m_a55 > 0)
-		BOOST_LOG_TRIVIAL(info)<< format("* a_5,5:                %g um, phi=%g deg") %(m_a55*1e-4)%(m_phi55*RAD2DEG);
-	if (m_a53 > 0)
-		BOOST_LOG_TRIVIAL(info)<< format("* a_5,3:                %g um, phi=%g deg") %(m_a53*1e-4)%(m_phi53*RAD2DEG);
-	if (m_a51 > 0)
-		BOOST_LOG_TRIVIAL(info)<< format("* a_5,1:                %g um, phi=%g deg") %(m_a51*1e-4)%(m_phi51*RAD2DEG);
-
-	if (m_a66 > 0)
-		BOOST_LOG_TRIVIAL(info)<< format("* a_6,6:                %g um, phi=%g deg") %(m_a66*1e-7)%(m_phi66*RAD2DEG);
-	if (m_a64 > 0)
-		BOOST_LOG_TRIVIAL(info)<< format("* a_6,4:                %g um, phi=%g deg") %(m_a64*1e-7)%(m_phi64*RAD2DEG);
-	if (m_a62 > 0)
-		BOOST_LOG_TRIVIAL(info)<< format("* a_6,2:                %g um, phi=%g deg") %(m_a62*1e-7)%(m_phi62*RAD2DEG);
-	if (m_C5 != 0)
-		BOOST_LOG_TRIVIAL(info)<< format("* C_5:                  %g mm") % (m_C5*1e-7);
-
-	BOOST_LOG_TRIVIAL(info)<< format("* C_c:                  %g mm") %(m_Cc*1e-7);
-	BOOST_LOG_TRIVIAL(info)<< format("* Damping dE/E: %g / %g ") % (sqrt(m_dE_E*m_dE_E+m_dV_V*m_dV_V+m_dI_I*m_dI_I)*_mc->EnergykeV*1e3) %(_mc->EnergykeV*1e3);
+	_aberration.DisplayParams();
 }
 
 void CConvergentWave::FormProbe() {
@@ -122,9 +62,7 @@ void CConvergentWave::ConstructWave() {
 	float lambdaA = 1e10 * _mc->wavelength;
 
 	auto kmax = sin(_alpha_max) / lambdaA;
-	auto k = af::sqrt(_k2) * lambdaA;
-	auto phi = af::atan2(_ky * lambdaA, _kx * lambdaA);
-	auto alpha = af::asin(k);
+	auto alpha = af::asin(_kabs * lambdaA);
 	weights(alpha > _alpha_max) = 0;
 
 	if (_smoothen) {
@@ -137,23 +75,10 @@ void CConvergentWave::ConstructWave() {
 		weights(ind) = tmp(ind);
 	}
 	_persist->Save2DDataSet(weights,"weights");
-	auto chi = zeros;
-	chi += 0.5 * af::pow(k, 2) * (m_df0 + m_Cc * m_dE_E + (m_astigMag * af::cos(2.0 * (phi - m_astigAngle))));
-	if ((m_a33 > 0) || (m_a31 > 0))
-		chi += af::pow(k, 3) * (m_a33 * af::cos(3.0 * (phi - m_phi33)) + m_a31 * af::cos(phi - m_phi31)) / 3.0;
-	if ((m_a44 > 0) || (m_a42 > 0) || (m_Cs != 0))
-		chi += af::pow(k, 4) * (m_a44 * af::cos(4.0 * (phi - m_phi44)) + m_a42 * af::cos(2.0 * (phi - m_phi42)) + m_Cs) / 4.0;
-	if ((m_a55 > 0) || (m_a53 > 0) || (m_a51 > 0))
-		chi += af::pow(k, 5) * (m_a55 * af::cos(5.0 * (phi - m_phi55)) + m_a53 * af::cos(3.0 * (phi - m_phi53)) + m_a51 * af::cos(phi - m_phi51))
-				/ 5.0;
-	if ((m_a66 > 0) || (m_a64 > 0) || (m_a62 = 0) || (m_C5 != 0))
-		chi += af::pow(k, 6)
-				* (m_a66 * af::cos(6.0 * (phi - m_phi66)) + m_a64 * af::cos(4.0 * (phi - m_phi64)) + m_a62 * af::cos(2.0 * (phi - m_phi62)) + m_C5)
-				/ 6.0;
 
-	chi *= 2 * PI / lambdaA;
-
-	_wave_af = weights * af::complex(af::cos(chi), -af::sin(chi));
+	auto phase = _aberration.getPhasePlate(_kabs,_kx,_ky,_persist);
+	_persist->Save2DDataSet(phase,"phaseplate");
+	_wave_af = weights * phase;
 
 	/* Fourier transform into real space */
 	ToRealSpace();
@@ -168,15 +93,13 @@ void CConvergentWave::ConstructWave() {
 		auto r2 = rx*rx+ry*ry;
 
 		auto r = af::exp(-r2/2/(_sigma*_sigma));
-		auto gauss = af::complex(r,0);
-		_wave_af *= r;
+		_wave_af *= r.as(c32);
 	}
 
-	float_tt sum = af::sum<float_tt>(af::real(_wave_af) * af::real(_wave_af) + af::imag(_wave_af) * af::imag(_wave_af));
+	float_tt sum = af::sum<float_tt>(GetIntensity());
 	float_tt scale_s = 1.0 / sum;
 	_wave_af *= (float_tt) sqrt(scale_s);
 
-	sum = 0.0;
 	auto real = af::real(_wave_af);
 	auto imag = af::imag(_wave_af);
 	float_tt rmin = af::min<float_tt>(real);
@@ -184,10 +107,6 @@ void CConvergentWave::ConstructWave() {
 	float_tt aimin = af::min<float_tt>(imag);
 	float_tt aimax = af::max<float_tt>(imag);
 
-	m_rmin = rmin;
-	m_rmax = rmax;
-	m_aimin = aimin;
-	m_aimax = aimax;
 	_probe = _wave_af.copy();
 
 	BOOST_LOG_TRIVIAL(info)<<format("wave value range (%f .. %f,i %f ... %f)") % rmin % rmax % aimin % aimax;

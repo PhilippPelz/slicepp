@@ -12,14 +12,14 @@
 #include <string>
 
 namespace slicepp{
-class DLL_EXPORT FlatAreaDetector: public IDetector {
+class DLL_EXPORT ScintillatorDetector: public IDetector {
 public:
-	FlatAreaDetector(cDetectorConfPtr dc,PersistenceManagerPtr p);
+	ScintillatorDetector(cDetectorConfPtr dc,PersistenceManagerPtr p);
 	void RecordImage(af::array& wave);
-	virtual ~FlatAreaDetector();
+	virtual ~ScintillatorDetector();
 
 protected:
-	FlatAreaDetector();
+	ScintillatorDetector();
 	af::array anscombeNoise(af::array&);
 	af::array MultiplyMTF(af::array&);
 	int _numSaved;

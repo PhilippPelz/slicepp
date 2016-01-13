@@ -20,7 +20,9 @@ ScanConfig::ScanConfig(sScanConfig* c){
 	if(c->type == Raster){
 		for (int i=0; i < c->nSteps[0]; i++) {
 			for (int j = 0; j < c->nSteps[1]; j++) {
-					positions.push_back({c->xPos+(i*c->xStep),c->yPos+(j*c->yStep)});
+					int2 p = {c->xPos+(i*c->xStep),c->yPos+(j*c->yStep)};
+					printf("pos (%-3d,%-3d): (%-3d,%-3d)\n",i,j,p.x,p.y);
+					positions.push_back(p);
 			}
 		}
 	} else if (c->type == Custom){
@@ -71,7 +73,6 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
 	c->nThreads = t.get<int>("nthreads");
 	c->Device = t.get<int>("Device");
 
-
 	c->Detector->type = (DetectorType)t.get<int>("detector.type");
 	c->Detector->mtfA = t.get<float_tt>("detector.mtfA");
 	c->Detector->mtfB = t.get<float_tt>("detector.mtfB");
@@ -80,55 +81,58 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
 	c->Detector->DwellTimeMsec = t.get<float_tt>("beam.dwellTimeMsec");
 	c->Detector->n[0] = t.get<int>("wave.nx");
 	c->Detector->n[1] = t.get<int>("wave.ny");
-	c->Detector->MaxElectronCounts = t.get<float_tt>("wave.pixel dose");
+	c->Detector->MaxElectronCounts = t.get<float_tt>("wave.MaxElectronCounts");
 
 	sScanConfig s;
-	s.xPos = t.get<int>("scan.x Start Position");
-	s.yPos = t.get<int>("scan.y Start Position");
+	s.xPos = t.get<int>("scan.xstart");
+	s.yPos = t.get<int>("scan.ystart");
 	s.xStep = t.get<int>("scan.xStep");
 	s.yStep = t.get<int>("scan.yStep");
+	s.nSteps[0] = t.get<int>("scan.nStepX");
+	s.nSteps[1] = t.get<int>("scan.nStepY");
 	s.type = (ScanType)t.get<int>("scan.scanType");
 	c->Scan = ScanConfPtr(new ScanConfig(&s));
 
-	c->Wave->type = (WaveType)t.get<int>("wave.type");
-	c->Wave->Cs = t.get<float_tt>("wave.Cs");
-	c->Wave->C5 = t.get<float_tt>("wave.C5");
-	c->Wave->Cc = t.get<float_tt>("wave.Cc");
-	c->Wave->dV_V = t.get<float_tt>("wave.dV/V");
-	c->Wave->alpha = t.get<float_tt>("wave.alpha");
-	c->Wave->Defocus = t.get<float_tt>("wave.defocus");
-	c->Wave->Astigmatism = t.get<float_tt>("wave.astigmatism");
-	c->Wave->AstigmatismAngle = t.get<float_tt>("wave.astigmatismAngle");
-	c->Wave->IsSmooth = t.get<bool>("wave.smooth");
-	c->Wave->IsGaussian = t.get<bool>("wave.gaussian");
-	c->Wave->a_33 = t.get<float_tt>("wave.a_33");
-	c->Wave->a_31 = t.get<float_tt>("wave.a_31");
-	c->Wave->a_44 = t.get<float_tt>("wave.a_44");
-	c->Wave->a_42 = t.get<float_tt>("wave.a_42");
-	c->Wave->a_55 = t.get<float_tt>("wave.a_55");
-	c->Wave->a_53 = t.get<float_tt>("wave.a_53");
-	c->Wave->a_51 = t.get<float_tt>("wave.a_51");
-	c->Wave->a_66 = t.get<float_tt>("wave.a_66");
-	c->Wave->a_64 = t.get<float_tt>("wave.a_64");
-	c->Wave->a_62 = t.get<float_tt>("wave.a_62");
-	c->Wave->phi_33 = t.get<float_tt>("wave.phi_33");
-	c->Wave->phi_31 = t.get<float_tt>("wave.phi_31");
-	c->Wave->phi_44 = t.get<float_tt>("wave.phi_44");
-	c->Wave->phi_42 = t.get<float_tt>("wave.phi_42");
-	c->Wave->phi_55 = t.get<float_tt>("wave.phi_55");
-	c->Wave->phi_53 = t.get<float_tt>("wave.phi_53");
-	c->Wave->phi_51 = t.get<float_tt>("wave.phi_51");
-	c->Wave->phi_66 = t.get<float_tt>("wave.phi_66");
-	c->Wave->phi_64 = t.get<float_tt>("wave.phi_64");
-	c->Wave->phi_62 = t.get<float_tt>("wave.phi_62");
+	c->Wave->aberrations.Cs = t.get<float_tt>("wave.Cs");
+	c->Wave->aberrations.C5 = t.get<float_tt>("wave.C5");
+	c->Wave->aberrations.Cc = t.get<float_tt>("wave.Cc");
+	c->Wave->aberrations.dV_V = t.get<float_tt>("wave.dV/V");
+	c->Wave->aberrations.dI_I = t.get<float_tt>("wave.dI/I");
+	c->Wave->aberrations.dE_E = t.get<float_tt>("wave.dE/E");
+	c->Wave->aberrations.Defocus = t.get<float_tt>("wave.defocus");
+	c->Wave->aberrations.Astigmatism = t.get<float_tt>("wave.astigmatism");
+	c->Wave->aberrations.AstigmatismAngle = t.get<float_tt>("wave.astigmatismAngle");
+	c->Wave->aberrations.a33 = t.get<float_tt>("wave.a_33");
+	c->Wave->aberrations.a31 = t.get<float_tt>("wave.a_31");
+	c->Wave->aberrations.a44 = t.get<float_tt>("wave.a_44");
+	c->Wave->aberrations.a42 = t.get<float_tt>("wave.a_42");
+	c->Wave->aberrations.a55 = t.get<float_tt>("wave.a_55");
+	c->Wave->aberrations.a53 = t.get<float_tt>("wave.a_53");
+	c->Wave->aberrations.a51 = t.get<float_tt>("wave.a_51");
+	c->Wave->aberrations.a66 = t.get<float_tt>("wave.a_66");
+	c->Wave->aberrations.a64 = t.get<float_tt>("wave.a_64");
+	c->Wave->aberrations.a62 = t.get<float_tt>("wave.a_62");
+	c->Wave->aberrations.phi33 = t.get<float_tt>("wave.phi_33");
+	c->Wave->aberrations.phi31 = t.get<float_tt>("wave.phi_31");
+	c->Wave->aberrations.phi44 = t.get<float_tt>("wave.phi_44");
+	c->Wave->aberrations.phi42 = t.get<float_tt>("wave.phi_42");
+	c->Wave->aberrations.phi55 = t.get<float_tt>("wave.phi_55");
+	c->Wave->aberrations.phi53 = t.get<float_tt>("wave.phi_53");
+	c->Wave->aberrations.phi51 = t.get<float_tt>("wave.phi_51");
+	c->Wave->aberrations.phi66 = t.get<float_tt>("wave.phi_66");
+	c->Wave->aberrations.phi64 = t.get<float_tt>("wave.phi_64");
+	c->Wave->aberrations.phi62 = t.get<float_tt>("wave.phi_62");
+
 	c->Wave->gaussFWHM = t.get<float_tt>("wave.gaussScale");
-	c->Wave->dI_I = t.get<float_tt>("wave.dI/I");
-	c->Wave->dE_E = t.get<float_tt>("wave.dE/E");
 	c->Wave->AISaperture = t.get<float_tt>("wave.AISaperture");
-	c->Wave->tiltX = t.get<float_tt>("wave.tiltX");
-	c->Wave->tiltY = t.get<float_tt>("wave.tiltY");
+	c->Wave->tilt[0] = t.get<float_tt>("wave.tiltX");
+	c->Wave->tilt[1] = t.get<float_tt>("wave.tiltY");
 	c->Wave->n[0] = t.get<int>("wave.nx");
 	c->Wave->n[1] = t.get<int>("wave.ny");
+	c->Wave->IsSmooth = t.get<bool>("wave.smooth");
+	c->Wave->IsGaussian = t.get<bool>("wave.gaussian");
+	c->Wave->alpha = t.get<float_tt>("wave.alpha");
+	c->Wave->type = (WaveType)t.get<int>("wave.type");
 
 	c->Output->LogLevel = t.get<int>("output.loglevel");
 	c->Output->SaveWaveIterations = t.get<int>("output.SaveWaveAfterNSlices");
@@ -160,6 +164,36 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
 	c->Model->SliceCalcType = (SliceThicknessCalculation)t.get<int>("model.sliceThicknessCalculation");
 	c->Model->ResCalcType = (ResolutionCalculation)t.get<int>("model.resolutionCalculation");
 	c->Model->StructFactorType = (StructureFactorType)t.get<int>("model.structureFactors");
+
+	c->Model->OLaberrations.Cs = t.get<float_tt>("model.OLaberrations.Cs");
+	c->Model->OLaberrations.C5 = t.get<float_tt>("model.OLaberrations.C5");
+	c->Model->OLaberrations.Cc = t.get<float_tt>("model.OLaberrations.Cc");
+	c->Model->OLaberrations.dV_V = t.get<float_tt>("model.OLaberrations.dV/V");
+	c->Model->OLaberrations.dI_I = t.get<float_tt>("model.OLaberrations.dI/I");
+	c->Model->OLaberrations.dE_E = t.get<float_tt>("model.OLaberrations.dE/E");
+	c->Model->OLaberrations.Defocus = t.get<float_tt>("model.OLaberrations.defocus");
+	c->Model->OLaberrations.Astigmatism = t.get<float_tt>("model.OLaberrations.astigmatism");
+	c->Model->OLaberrations.AstigmatismAngle = t.get<float_tt>("model.OLaberrations.astigmatismAngle");
+	c->Model->OLaberrations.a33 = t.get<float_tt>("model.OLaberrations.a_33");
+	c->Model->OLaberrations.a31 = t.get<float_tt>("model.OLaberrations.a_31");
+	c->Model->OLaberrations.a44 = t.get<float_tt>("model.OLaberrations.a_44");
+	c->Model->OLaberrations.a42 = t.get<float_tt>("model.OLaberrations.a_42");
+	c->Model->OLaberrations.a55 = t.get<float_tt>("model.OLaberrations.a_55");
+	c->Model->OLaberrations.a53 = t.get<float_tt>("model.OLaberrations.a_53");
+	c->Model->OLaberrations.a51 = t.get<float_tt>("model.OLaberrations.a_51");
+	c->Model->OLaberrations.a66 = t.get<float_tt>("model.OLaberrations.a_66");
+	c->Model->OLaberrations.a64 = t.get<float_tt>("model.OLaberrations.a_64");
+	c->Model->OLaberrations.a62 = t.get<float_tt>("model.OLaberrations.a_62");
+	c->Model->OLaberrations.phi33 = t.get<float_tt>("model.OLaberrations.phi_33");
+	c->Model->OLaberrations.phi31 = t.get<float_tt>("model.OLaberrations.phi_31");
+	c->Model->OLaberrations.phi44 = t.get<float_tt>("model.OLaberrations.phi_44");
+	c->Model->OLaberrations.phi42 = t.get<float_tt>("model.OLaberrations.phi_42");
+	c->Model->OLaberrations.phi55 = t.get<float_tt>("model.OLaberrations.phi_55");
+	c->Model->OLaberrations.phi53 = t.get<float_tt>("model.OLaberrations.phi_53");
+	c->Model->OLaberrations.phi51 = t.get<float_tt>("model.OLaberrations.phi_51");
+	c->Model->OLaberrations.phi66 = t.get<float_tt>("model.OLaberrations.phi_66");
+	c->Model->OLaberrations.phi64 = t.get<float_tt>("model.OLaberrations.phi_64");
+	c->Model->OLaberrations.phi62 = t.get<float_tt>("model.OLaberrations.phi_62");
 
 	c->Model->TiltBack = t.get<bool>("model.tiltBack");
 	c->Model->CenterSample = t.get<bool>("model.centerSample");

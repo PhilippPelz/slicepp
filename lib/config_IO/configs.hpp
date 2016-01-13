@@ -59,7 +59,37 @@ typedef enum  {
 	Real3D = 4,
 	CUDA2D = 5
 } PotentialType;
-
+typedef struct AberrationConfig {
+	float Defocus;
+	float a33;
+	float a31;
+	float a44;
+	float a42;
+	float a55;
+	float a53;
+	float a51;
+	float a66;
+	float a64;
+	float a62;
+	float phi33;
+	float phi31;
+	float phi44;
+	float phi42;
+	float phi55;
+	float phi53;
+	float phi51;
+	float phi66;
+	float phi64;
+	float phi62;
+	float Astigmatism;
+	float AstigmatismAngle;
+	float Cs;
+	float C5;
+	float Cc;
+	float dI_I;
+	float dE_E;
+	float dV_V;
+} AberrationConfig;
 typedef struct StructureConfig {
 	char StructureFilename[1000];
 
@@ -105,6 +135,7 @@ typedef struct ModelConfig {
 	//atom radius in angstrom
 	float ratom;
 	PotentialType PotType;
+	AberrationConfig OLaberrations;
 	float EnergykeV;
 	float wavelength;
 	float sigma;
@@ -113,51 +144,18 @@ typedef struct ModelConfig {
 } ModelConfig;
 
 typedef struct WaveConfig {
-
-	float Cs;
-	float C5;
-	float Cc;
-
 	float alpha;
-	float Defocus;
 	float defocspread;
-	float Astigmatism;
-	float AstigmatismAngle;
-
-	float a_33;
-	float a_31;
-	float a_44;
-	float a_42;
-	float a_55;
-	float a_53;
-	float a_51;
-	float a_66;
-	float a_64;
-	float a_62;
-	float phi_33;
-	float phi_31;
-	float phi_44;
-	float phi_42;
-	float phi_55;
-	float phi_53;
-	float phi_51;
-	float phi_66;
-	float phi_64;
-	float phi_62;
 	float gaussFWHM;
 
-	float dI_I;
-	float dE_E;
-	float dV_V;
-
 	float AISaperture;
-	float tiltX;
-	float tiltY;
+	float tilt[2];
 
 	bool IsSmooth;
 	bool IsGaussian;
 
 	WaveType type;
+	AberrationConfig aberrations;
 	int n[2];
 } WaveConfig;
 

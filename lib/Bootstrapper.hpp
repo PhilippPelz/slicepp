@@ -39,7 +39,7 @@ namespace bpt = boost::property_tree;
 #include "experiments/base.hpp"
 #include "experiments/CoherentCBED.hpp"
 #include "experiments/CoherentTEM.hpp"
-#include "experiments/Ptychograph.hpp"
+#include "experiments/CoherentScanningExperiment.hpp"
 #include "potentials/pot_interface.hpp"
 #include "potentials/pot_2d.hpp"
 #include "potentials/pot_2d_fft.hpp"

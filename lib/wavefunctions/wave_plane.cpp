@@ -25,7 +25,7 @@ using boost::format;
 namespace slicepp
 {
 
-CPlaneWave::CPlaneWave(cWaveConfPtr wc, cModelConfPtr mc, PersistenceManagerPtr p) : CBaseWave(wc,mc,p)
+CPlaneWave::CPlaneWave(cWaveConfPtr wc, cModelConfPtr mc, cOutputConfPtr oc, PersistenceManagerPtr p) : CBaseWave(wc,mc,oc,p)
 {
 }
 
@@ -40,14 +40,14 @@ void CPlaneWave::DisplayParams()
 
 	// TODO: transmit tiltBack status somehow (it's an experiment parameter, not a wave parameter.
 	BOOST_LOG_TRIVIAL(info) << format("* Beam tilt:            x=%g deg, y=%g deg")
-			% (_wc->tiltX*RAD2DEG) % (_wc->tiltY *RAD2DEG);
+			% (_wc->tilt[0]*RAD2DEG) % (_wc->tilt[1] *RAD2DEG);
 }
 
 void CPlaneWave::FormProbe()
 {
 	CBaseWave::FormProbe();
 	float_tt scale = 1/sqrt((float_tt)(_wc->n[0]*_wc->n[1]));
-	if ((_wc->tiltX == 0) && (_wc->tiltY == 0)) {
+	if ((_wc->tilt[0] == 0) && (_wc->tilt[1] == 0)) {
 		af::array theta = af::constant(0, _wc->n[0], _wc->n[1]);
 		_wave_af = scale*af::complex(cos(theta), sin(theta));
 	}
@@ -61,14 +61,14 @@ void CPlaneWave::FormProbe()
 
 void CPlaneWave::TiltBeam(bool tiltBack)
 {
-	if ((_wc->tiltX != 0) || (_wc->tiltY != 0))
+	if ((_wc->tilt[0] != 0) || (_wc->tilt[1] != 0))
 	{
 		float_tt scale = 1/sqrt(_wc->n[0]*_wc->n[1]);
 		int direction = tiltBack ? -1 : 1;
 
 		// produce a tilted wave function (btiltx,btilty):
-		float_tt ktx = direction*2.0*M_PI*sin(_wc->tiltX)/_mc->wavelength;
-		float_tt kty = direction*2.0*M_PI*sin(_wc->tiltY)/_mc->wavelength;
+		float_tt ktx = direction*2.0*M_PI*sin(_wc->tilt[0])/_mc->wavelength;
+		float_tt kty = direction*2.0*M_PI*sin(_wc->tilt[1])/_mc->wavelength;
 		unsigned px=_wc->n[0]*_wc->n[1];
 		af::array x = _mc->d[0]*(af::range(_wc->n[0]) - _wc->n[0]/2);
 		af::array y = _mc->d[1]*(af::range(_wc->n[1]) - _wc->n[1]/2);

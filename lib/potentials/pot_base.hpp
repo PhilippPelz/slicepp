@@ -77,11 +77,9 @@ protected:
 	ComplexArray3D _t;
 	//transmission array on GPU
 	af::array _t_d;
-//	thrust::device_vector<thrust::complex<float>> _t_thrust;
 
 	//map of atomic potential arrays
 	std::map<int, ComplexArray2D> _atomPot;
-
 
 	int _nx,_ny;
 	// oversampled resolutions

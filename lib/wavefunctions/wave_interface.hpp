@@ -34,14 +34,15 @@
 namespace slicepp {
 class IWave;
 typedef boost::shared_ptr<IWave> WavePtr;
-typedef boost::function<IWave*(cWaveConfPtr wc, cModelConfPtr mc, PersistenceManagerPtr p)> waveCreator;
+typedef boost::function<IWave*(cWaveConfPtr wc, cModelConfPtr mc, cOutputConfPtr oc, PersistenceManagerPtr p)> waveCreator;
 typedef std::map<int, waveCreator> WaveFactory;
 class IWave {
 public:
-	IWave(cWaveConfPtr wc, cModelConfPtr mc, PersistenceManagerPtr p) {
+	IWave(cWaveConfPtr wc, cModelConfPtr mc, cOutputConfPtr oc, PersistenceManagerPtr p) {
 		_persist = p;
 		_wc = wc;
 		_mc = mc;
+		_oc = oc;
 	}
 	virtual ~IWave() {
 	}
@@ -51,7 +52,6 @@ public:
 	virtual void ToRealSpace()=0;
 	virtual void ToFourierSpace()=0;
 	virtual bool IsRealSpace()=0;
-	virtual void ApplyTransferFunction()=0;
 	virtual WavePtr Clone()=0;
 	virtual ComplexArray2D GetWave() const = 0;
 	virtual af::array& GetWaveAF() = 0;
@@ -63,12 +63,15 @@ public:
 	virtual void PropagateToNextSlice()=0;
 	virtual void InitializePropagators()=0;
 	virtual void ResetProbe()=0;
-	virtual af::array fftShift(af::array& _wave) =0;
-	virtual af::array ifftShift(af::array& _wave) =0;
+	virtual void ApplyCTF() = 0;
+	virtual af::array GetKx() =0;
+	virtual af::array GetKy() =0;
+	virtual af::array GetKabs() =0;
 protected:
 	PersistenceManagerPtr _persist;
 	cWaveConfPtr _wc;
 	cModelConfPtr _mc;
+	cOutputConfPtr _oc;
 };
 
 }

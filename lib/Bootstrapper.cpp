@@ -77,7 +77,7 @@ void Bootstrapper::InitInternal(ConfigPtr c){
 	auto persist = PersistenceManagerPtr(new PersistenceManager(c));
 	auto w = WaveConfPtr(c->Wave);
 	auto m = ModelConfPtr(c->Model);
-	auto wave = WavePtr(_waveFactory[c->Wave->type](w,m,persist));
+	auto wave = WavePtr(_waveFactory[c->Wave->type](w,m,c->Output,persist));
 	auto detector = DetPtr(_detectorFactory[c->Detector->type](c->Detector,persist));
 	auto potential = PotPtr(_potentialFactory[c->Model->PotType](c->Model,c->Output,persist));
 	_e = ExperimentPtr( _experimentFactory[c->ExpType](c,structureBuilder,wave,potential,detector, persist));
@@ -111,7 +111,7 @@ void Bootstrapper::RegisterWaveTypes(){
 void Bootstrapper::RegisterExperimentTypes(){
 	_experimentFactory[CBED] = boost::factory<CoherentCBED*>();
 	_experimentFactory[TEM] = boost::factory<CoherentTEM*>();
-	_experimentFactory[PTYCHO] = boost::factory<Ptychograph*>();
+	_experimentFactory[PTYCHO] = boost::factory<CoherentScanningExperiment*>();
 }
 void Bootstrapper::RegisterPotentialTypes(){
 	_potentialFactory[FFT3D]= boost::factory<C3DFFTPotential*>();
@@ -122,7 +122,7 @@ void Bootstrapper::RegisterPotentialTypes(){
 }
 
 void Bootstrapper::RegisterDetectorTypes(){
-	_detectorFactory[1]= boost::factory<FlatAreaDetector*>();
+	_detectorFactory[1]= boost::factory<ScintillatorDetector*>();
 }
 
 void Bootstrapper::RegisterStructureTypes(){
