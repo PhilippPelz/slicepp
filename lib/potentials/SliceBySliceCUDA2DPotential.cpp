@@ -9,8 +9,8 @@
 #include <stdio.h>
 
 namespace slicepp {
-SliceBySliceCUDA2DPotential::SliceBySliceCUDA2DPotential(cModelConfPtr mc, cOutputConfPtr oc, PersistenceManagerPtr p) :
-		CPotential(mc, oc, p) {
+SliceBySliceCUDA2DPotential::SliceBySliceCUDA2DPotential(cModelConfPtr mc, cOutputConfPtr oc, cWaveConfPtr wc, PersistenceManagerPtr p) :
+		CPotential(mc, oc, wc, p) {
 }
 
 SliceBySliceCUDA2DPotential::~SliceBySliceCUDA2DPotential() {
@@ -23,7 +23,7 @@ void SliceBySliceCUDA2DPotential::MakeSlices(superCellBoxPtr info) {
 }
 
 void SliceBySliceCUDA2DPotential::copyDataToGPU(superCellBoxPtr info) {
-	cf = new CUDAFunctions(info, _mc);
+	cf = new CUDAFunctions(info, _mc,_wc);
 
 	slicePixels = _mc->n[0] * _mc->n[1];
 	numAtoms = info->atoms.size();

@@ -11,8 +11,8 @@
 #include <chrono>
 
 namespace slicepp {
-CUDA2DPotential::CUDA2DPotential(cModelConfPtr mc, cOutputConfPtr oc, PersistenceManagerPtr p) :
-		CPotential(mc, oc, p) {
+CUDA2DPotential::CUDA2DPotential(cModelConfPtr mc, cOutputConfPtr oc, cWaveConfPtr wc, PersistenceManagerPtr p) :
+		CPotential(mc, oc, wc, p) {
 	cufft_assert(cufftPlan2d(&_fftPlan, _mc->n[0], _mc->n[1], CUFFT_C2C));
 	cufft_assert(cufftSetStream(_fftPlan, afcu::getStream(af::getDevice())));
 	cublas_assert(cublasCreate ( &_cublasHandle));
@@ -88,7 +88,7 @@ void CUDA2DPotential::sync() {
 }
 void CUDA2DPotential::MakeSlices(superCellBoxPtr info) {
 
-	_cf = CUDAFunctions(info, _mc);
+	_cf = CUDAFunctions(info, _mc, _wc);
 	initPotArrays(info);
 	_cf.initArrays();
 	ComputeAtomicPotential(info);
@@ -153,7 +153,10 @@ void CUDA2DPotential::SaveAtomicPotential(int Z) {
 	std::stringstream str;
 	str << "atomicPotential_";
 	str << Z;
-	_persist->SaveCx2DDataSet(_atomPot[Z], str.str());
+	int2 c = {_mc->n[0]/2,_mc->n[1]/2};
+	int2 s = {_wc->n[0]/2,_wc->n[1]/2};
+	auto ind = boost::indices[range(c.x-s.x,c.x+s.x)][range(c.y-s.y,c.y+s.y)];
+	_persist->SaveCx2DDataSet(_atomPot[Z][ind], str.str());
 }
 void CUDA2DPotential::SavePotential() {
 	_t.resize(boost::extents[_mc->n[2]][_mc->n[0]][_mc->n[1]]);

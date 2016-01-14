@@ -7,7 +7,7 @@ namespace slicepp {
 
 class C2DPotential: public RealSpacePotential {
 public:
-	C2DPotential(cModelConfPtr mc, cOutputConfPtr oc , PersistenceManagerPtr p) ;
+	C2DPotential(cModelConfPtr mc, cOutputConfPtr oc, cWaveConfPtr wc , PersistenceManagerPtr p) ;
 	virtual void DisplayParams();
 	virtual void AtomBoxLookUp(complex_tt &val, int Znum, float_tt x,float_tt y, float_tt z, float_tt B);
 	virtual void AddAtomToSlices(atom& atom );

@@ -26,7 +26,7 @@ namespace slicepp{
 class IDetector;
 typedef boost::shared_ptr<IDetector> DetPtr;
 typedef boost::function<IDetector*(cDetectorConfPtr dc,PersistenceManagerPtr p)> detectorCreator;
-typedef std::map<int,detectorCreator> DetectorFactory;
+typedef std::map<DetectorType,detectorCreator> DetectorFactory;
 
 class IDetector
 {

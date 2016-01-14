@@ -41,7 +41,7 @@ namespace slicepp
 class CPotential : public IPotential
 {
 public:
-	CPotential(cModelConfPtr mc, cOutputConfPtr oc , PersistenceManagerPtr persist);
+	CPotential(cModelConfPtr mc, cOutputConfPtr oc, cWaveConfPtr wc , PersistenceManagerPtr persist);
 
 	void GetSizePixels(unsigned &nx, unsigned &ny) const;
 	void WriteSlice(unsigned idx, std::string prefix);

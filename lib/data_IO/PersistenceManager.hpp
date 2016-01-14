@@ -43,6 +43,7 @@ public:
 	void SaveProjectedPotential(af::array& data);
 	void SaveF2DDataSet(FloatArray2DPtr a, string name);
 	void SaveCx2DDataSet(ComplexArray2DPtr a, string name);
+	void SaveCx2DDataSet(ComplexArray2DView2D a, string name);
 	void SaveF3DDataSet(FloatArray3DPtr a, string name);
 	void SaveCx3DDataSet(ComplexArray3DPtr a, string name);
 	void Save2DDataSet(af::array& data, string name);

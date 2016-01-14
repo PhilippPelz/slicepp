@@ -18,7 +18,8 @@ namespace slicepp {
 class RealSpacePotential : public CPotential
 {
 public :
-	inline RealSpacePotential(cModelConfPtr mc, cOutputConfPtr oc , PersistenceManagerPtr p): CPotential(mc,oc,p){};
+	inline RealSpacePotential(cModelConfPtr mc, cOutputConfPtr oc , cWaveConfPtr wc, PersistenceManagerPtr p):
+	CPotential(mc,oc,wc,p){};
 	virtual ~RealSpacePotential();
 	void AtomBoxLookUp(complex_tt &val, int Znum, float_tt x, float_tt y, float_tt z, float_tt B);
 protected:

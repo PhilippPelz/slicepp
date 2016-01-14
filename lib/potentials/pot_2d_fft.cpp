@@ -26,8 +26,8 @@ using boost::format;
 
 namespace slicepp {
 
-C2DFFTPotential::C2DFFTPotential(cModelConfPtr mc, cOutputConfPtr oc, PersistenceManagerPtr p) :
-		CPotential(mc, oc, p) {
+C2DFFTPotential::C2DFFTPotential(cModelConfPtr mc, cOutputConfPtr oc, cWaveConfPtr wc, PersistenceManagerPtr p) :
+		CPotential(mc, oc,wc, p) {
 	_atomPot = std::map<int, ComplexArray2D>();
 }
 

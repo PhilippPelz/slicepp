@@ -204,39 +204,39 @@ void BaseExperiment::DisplayProgress(int flag) {
 	//  timer = cputim();
 }
 
-int BaseExperiment::RunMultislice(af::array t_af) {
+int BaseExperiment::RunMultislice(af::array t) {
 	BOOST_LOG_TRIVIAL(info)<< "Propagating through slices ...";
 	af::timer time = af::timer::start();
-	for (int islice = 0; islice < _c->Model->n[2]; islice++) {
+	for (int i = 0; i < _c->Model->n[2]; i++) {
 
-		auto slice = _pot->GetSlice(t_af, islice);
+		af::array slice = t(af::span, af::span, i);
 		_wave->Transmit(slice);
 		if (_c->Output->SaveWaveAfterTransmit)
-			_persist->SaveWaveAfterTransmit(_wave->GetWaveAF(), islice);
+			_persist->SaveWaveAfterTransmit(_wave->GetWaveAF(), i);
 
 		_wave->ToFourierSpace();
 		if (_c->Output->SaveWaveAfterTransform)
-			_persist->SaveWaveAfterTransform(_wave->GetWaveAF(), islice);
+			_persist->SaveWaveAfterTransform(_wave->GetWaveAF(), i);
 
 		_wave->PropagateToNextSlice();
 		if (_c->Output->SaveWaveAfterPropagation)
-			_persist->SaveWaveAfterPropagation(_wave->GetWaveAF(), islice);
+			_persist->SaveWaveAfterPropagation(_wave->GetWaveAF(), i);
 
-		CollectIntensity(islice);
+		CollectIntensity(i);
 
 		_wave->ToRealSpace();
 
-		if (_c->Output->SaveWaveAfterSlice && islice % _c->Output->SaveWaveIterations == 0)
-			_persist->SaveWaveAfterSlice(_wave->GetWaveAF(), islice);
-		PostSliceProcess(islice);
+		if (_c->Output->SaveWaveAfterSlice && i % _c->Output->SaveWaveIterations == 0)
+			_persist->SaveWaveAfterSlice(_wave->GetWaveAF(), i);
+		PostSliceProcess(i);
 
 		if (_c->Output->LogLevel <= 2) { ///info
-			if (islice % (int) ceil(_c->Model->n[2] / 10.0) == 0)
-				loadbar(islice + 1, _c->Model->n[2]);
+			if (i % (int) ceil(_c->Model->n[2] / 10.0) == 0)
+				loadbar(i + 1, _c->Model->n[2]);
 			auto psi = _wave->GetIntegratedIntensity();
-			BOOST_LOG_TRIVIAL(info)<< format("slice %-3d I=%-3.3f") % islice % (psi);
+			BOOST_LOG_TRIVIAL(info)<< format("slice %-3d I=%-3.3f") % i % (psi);
 		}
-	} /* end for(islice...) */
+	}
 	BOOST_LOG_TRIVIAL(info)<< format( "%g ms used for wave propagation (%g us per slice)")
 	% (af::timer::stop(time)*1000) %( af::timer::stop(time)*1e6 / _c->Model->n[2]);
 	return 0;

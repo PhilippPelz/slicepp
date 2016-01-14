@@ -23,7 +23,8 @@
 namespace slicepp
 {
 
-C3DPotential::C3DPotential(cModelConfPtr mc, cOutputConfPtr oc , PersistenceManagerPtr p) : RealSpacePotential(mc,oc,p)
+C3DPotential::C3DPotential(cModelConfPtr mc, cOutputConfPtr oc, cWaveConfPtr wc , PersistenceManagerPtr p) :
+		RealSpacePotential(mc,oc, wc,p)
 {
 	m_sliceStep = 2*_mc->n[0]*_mc->n[1];
 	m_boxNz = (int)(_mc->ratom/_ddz+2.0);

@@ -29,7 +29,7 @@ class CUDA2DPotential: public CPotential {
 
 public:
 	CUDA2DPotential();
-	CUDA2DPotential(cModelConfPtr mc, cOutputConfPtr oc , PersistenceManagerPtr p);
+	CUDA2DPotential(cModelConfPtr mc, cOutputConfPtr oc, cWaveConfPtr wc , PersistenceManagerPtr p);
 
 	virtual ~CUDA2DPotential();
 	virtual void MakeSlices(superCellBoxPtr info);

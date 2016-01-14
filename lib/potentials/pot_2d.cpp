@@ -22,7 +22,8 @@ QSTEM - image simulation for TEM/STEM/CBED
 namespace slicepp
 {
 
-C2DPotential::C2DPotential(cModelConfPtr mc, cOutputConfPtr oc , PersistenceManagerPtr p)  : RealSpacePotential(mc,oc,p)
+C2DPotential::C2DPotential(cModelConfPtr mc, cOutputConfPtr oc, cWaveConfPtr wc , PersistenceManagerPtr p)
+: RealSpacePotential(mc,oc,wc,p)
 {
 	m_boxNz = 1;
 }

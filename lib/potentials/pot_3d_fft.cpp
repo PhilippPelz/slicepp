@@ -29,12 +29,12 @@ using boost::format;
 
 namespace slicepp {
 
-C3DFFTPotential::C3DFFTPotential(cModelConfPtr mc, cOutputConfPtr oc , PersistenceManagerPtr p) :
+C3DFFTPotential::C3DFFTPotential(cModelConfPtr mc, cOutputConfPtr oc, cWaveConfPtr wc , PersistenceManagerPtr p) :
 		_ndiaAtomZ(0),
 		_nzPerSlice(0),
 		_nrAtomZ(0),
 		_currentZnum(0),
-		CPotential(mc,oc,p) {
+		CPotential(mc,oc,wc,p) {
 }
 
 void C3DFFTPotential::DisplayParams() {

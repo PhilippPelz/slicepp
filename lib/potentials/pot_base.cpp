@@ -30,10 +30,10 @@ const int BUF_LEN = 256;
 
 namespace slicepp {
 
-CPotential::CPotential(cModelConfPtr mc, cOutputConfPtr oc, PersistenceManagerPtr persist) :
+CPotential::CPotential(cModelConfPtr mc, cOutputConfPtr oc, cWaveConfPtr wc, PersistenceManagerPtr persist) :
 		_ddx(0), _ddy(0), _nrAtomTrans(0), _dkx(0), _dky(0), _dkz(0), _kmax(0), _kmax2(0), _totalThickness(0), _dr(0), _atomRadius2(0), _offsetX(0), _offsetY(
 				0), _nRadX(0), _nRadY(0), _nRadZ(0), _nRad2Trans(0), _ndiaAtomX(0), _ndiaAtomY(0), _boxNx(0), _boxNy(0), m_boxNz(0), IPotential(mc,
-				oc, persist) {
+				oc,wc, persist) {
 
 }
 CPotential::~CPotential() {

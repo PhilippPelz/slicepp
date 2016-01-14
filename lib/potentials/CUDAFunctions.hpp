@@ -35,7 +35,7 @@ namespace slicepp {
 class CUDAFunctions{
 public:
 	CUDAFunctions();
-	CUDAFunctions(superCellBoxPtr info, cModelConfPtr mc);
+	CUDAFunctions(superCellBoxPtr info, cModelConfPtr mc, cWaveConfPtr wc);
 //	void GetPhaseGrating(cufftComplex* V_d, int s,  std::map<int, af::array> & atomPot);
 
 	void GetSincAtomicPotential( cufftComplex* V, int Z);
@@ -61,6 +61,7 @@ protected:
 	af::array _V_elem, _V_atom, _v_accum;
 	cufftComplex *_V_elem_ptr, *_V_atom_ptr, *_V_accum_ptr;
 	cModelConfPtr _mc;
+	cWaveConfPtr _wc;
 	superCellBoxPtr _info;
 	af::array xyzPos, occupancy, znums;
 	float_tt *xyzPos_d, *occupancy_d;
@@ -68,7 +69,7 @@ protected:
 	int _gS, _bS, _bS3D, _gS3D, slicePixels;
 	cudaStream_t _stream;
 };
-__global__ void zeroHighFreq ( cufftComplex* f, int dim1, int dim2 );
+__global__ void zeroHighFreq ( cufftComplex* f, int dim1, int dim2, int ldim1, int ldim2 );
 __global__ void putAtomDeltas (  cufftComplex* V, int nAt, int *Z, int Z0, float_tt *xyz, float_tt imPot, float_tt *occ, int s, int nx, int ny, int nslice, float_tt dx, float_tt dy, float_tt dz );
 __global__ void divideBySinc ( cufftComplex* V, int nx, int ny, float_tt PI);
 __global__ void multiplyWithProjectedPotential_d ( cufftComplex* V1, cufftComplex* V2, int nx, int ny);

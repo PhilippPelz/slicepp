@@ -79,7 +79,7 @@ void Bootstrapper::InitInternal(ConfigPtr c){
 	auto m = ModelConfPtr(c->Model);
 	auto wave = WavePtr(_waveFactory[c->Wave->type](w,m,c->Output,persist));
 	auto detector = DetPtr(_detectorFactory[c->Detector->type](c->Detector,persist));
-	auto potential = PotPtr(_potentialFactory[c->Model->PotType](c->Model,c->Output,persist));
+	auto potential = PotPtr(_potentialFactory[c->Model->PotType](c->Model,c->Output,c->Wave,persist));
 	_e = ExperimentPtr( _experimentFactory[c->ExpType](c,structureBuilder,wave,potential,detector, persist));
 }
 
@@ -105,8 +105,8 @@ void Bootstrapper::RegisterStructureReaders(){
 }
 
 void Bootstrapper::RegisterWaveTypes(){
-	_waveFactory[1] = boost::factory<CPlaneWave*>();
-	_waveFactory[2] = boost::factory<CConvergentWave*>();
+	_waveFactory[Plane] = boost::factory<CPlaneWave*>();
+	_waveFactory[Convergent] = boost::factory<CConvergentWave*>();
 }
 void Bootstrapper::RegisterExperimentTypes(){
 	_experimentFactory[CBED] = boost::factory<CoherentCBED*>();
@@ -122,7 +122,9 @@ void Bootstrapper::RegisterPotentialTypes(){
 }
 
 void Bootstrapper::RegisterDetectorTypes(){
-	_detectorFactory[1]= boost::factory<ScintillatorDetector*>();
+	_detectorFactory[Scintillator]= boost::factory<ScintillatorDetector*>();
+	_detectorFactory[Direct]= boost::factory<DirectDetector*>();
+	_detectorFactory[Noiseless]= boost::factory<NoiselessDetector*>();
 }
 
 void Bootstrapper::RegisterStructureTypes(){

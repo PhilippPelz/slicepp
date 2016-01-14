@@ -5,7 +5,7 @@
  *      Author: wenxuan
  */
 
-#include "FlatAreaDetector.hpp"
+#include "ScintillatorDetector.hpp"
 #include "afhelpers.hpp"
 
 namespace slicepp{
@@ -26,7 +26,7 @@ void ScintillatorDetector::RecordImage(af::array& wave){
 	af::fft2InPlace(image);
 	image = MultiplyMTF(image);
 	af::ifft2InPlace(image);
-	_p->Save2DDataSet(image, "wave after mtf");
+//	_p->Save2DDataSet(image, "wave after mtf");
 	image = af::pow2(af::abs(image));
 	_p->SaveMeasurement(image,_numSaved);
 	_numSaved++;
@@ -56,7 +56,7 @@ af::array ScintillatorDetector::MultiplyMTF(af::array& wave){
 	ix *= PI;
 	iy *= PI;
 	mtf *= ((af::sin ( ix ) + FLT_EPSILON ) / ( ix + FLT_EPSILON ) ) * ( (af::sin ( iy ) + FLT_EPSILON ) / ( iy + FLT_EPSILON ) );
-	_p->Save2DDataSet(mtf, "mtf");
+//	_p->Save2DDataSet(mtf, "mtf");
 	return wave * mtf.as(c32);
 }
 }

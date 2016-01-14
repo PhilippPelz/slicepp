@@ -35,7 +35,7 @@ namespace slicepp {
 class IWave;
 typedef boost::shared_ptr<IWave> WavePtr;
 typedef boost::function<IWave*(cWaveConfPtr wc, cModelConfPtr mc, cOutputConfPtr oc, PersistenceManagerPtr p)> waveCreator;
-typedef std::map<int, waveCreator> WaveFactory;
+typedef std::map<WaveType, waveCreator> WaveFactory;
 class IWave {
 public:
 	IWave(cWaveConfPtr wc, cModelConfPtr mc, cOutputConfPtr oc, PersistenceManagerPtr p) {

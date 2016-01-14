@@ -85,7 +85,8 @@ void CBaseWave::FormProbe() {
 }
 
 void CBaseWave::ResetProbe() {
-	_wave_af = _probe;
+	_wave_af = _probe.copy();
+	_realSpace = true;
 }
 
 void CBaseWave::DisplayParams() {

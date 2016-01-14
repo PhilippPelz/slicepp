@@ -36,14 +36,8 @@ public:
 
   WavePtr Clone();
 
-  // ReadImage is for TEM mode
   void ReadImage();
   void WriteImage();
-protected:
-  RealVector m_image;               /* Real-space image output */
-private:
-  friend class CWaveFactory;
-//  static WavePtr Create(const ConfigPtr reader){  return WavePtr(new CPlaneWave(reader));  }
 };
 
 typedef boost::shared_ptr<CPlaneWave> PlaneWavePtr;

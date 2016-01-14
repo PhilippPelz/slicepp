@@ -25,7 +25,7 @@ namespace slicepp {
 
 class C3DFFTPotential: public CPotential {
 public:
-	C3DFFTPotential(cModelConfPtr mc, cOutputConfPtr oc , PersistenceManagerPtr p);
+	C3DFFTPotential(cModelConfPtr mc, cOutputConfPtr oc, cWaveConfPtr wc , PersistenceManagerPtr p);
 	virtual void DisplayParams();
 	virtual void AddAtomToSlices(atom& atom );
 

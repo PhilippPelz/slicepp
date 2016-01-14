@@ -9,7 +9,7 @@ namespace slicepp
 class C3DPotential : public RealSpacePotential
 {
 public:
-  C3DPotential(cModelConfPtr mc, cOutputConfPtr oc , PersistenceManagerPtr p);
+  C3DPotential(cModelConfPtr mc, cOutputConfPtr oc, cWaveConfPtr wc , PersistenceManagerPtr p);
   virtual void DisplayParams();
   virtual void AtomBoxLookUp(complex_tt &val, int Znum, float_tt x, float_tt y, float_tt z, float_tt B);
   //virtual void makeSlices(int nlayer, char *fileName, atom *center);

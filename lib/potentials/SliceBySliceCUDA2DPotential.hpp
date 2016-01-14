@@ -30,7 +30,7 @@ class SliceBySliceCUDA2DPotential: public CPotential {
 
 public:
 	SliceBySliceCUDA2DPotential();
-	SliceBySliceCUDA2DPotential(cModelConfPtr mc, cOutputConfPtr oc , PersistenceManagerPtr p);
+	SliceBySliceCUDA2DPotential(cModelConfPtr mc, cOutputConfPtr oc, cWaveConfPtr wc , PersistenceManagerPtr p);
 
 	virtual ~SliceBySliceCUDA2DPotential();
 	virtual void MakeSlices(superCellBoxPtr info);

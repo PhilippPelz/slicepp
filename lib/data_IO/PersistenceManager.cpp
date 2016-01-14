@@ -138,6 +138,9 @@ void PersistenceManager::SaveF3DDataSet(FloatArray3DPtr a, string name) {
 void PersistenceManager::SaveCx2DDataSet(ComplexArray2DPtr a, string name) {
 	_file.SaveComplexArray2D(ComplexArray2D(a), name);
 }
+void PersistenceManager::SaveCx2DDataSet(ComplexArray2DView2D a, string name) {
+	_file.SaveComplexArray2D(ComplexArray2D(a), name);
+}
 void PersistenceManager::SaveF2DDataSet(FloatArray2DPtr a, string name) {
 	_file.SaveRealArray2D(FloatArray2D(a), name);
 }

@@ -1,28 +1,10 @@
 /*
- * Ptychograph.cpp
+ * CoherentScanningExperiment.cpp
  *
  *  Created on: Jul 20, 2015
- *      Author: wenxuan
+ *      Author: wenxuan, philipp
  */
 
-/*
- QSTEM - image simulation for TEM/STEM/CBED
- Copyright (C) 2000-2010  Christoph Koch
- Copyright (C) 2010-2013  Christoph Koch, Michael Sarahan
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 
 #include "CoherentScanningExperiment.hpp"
 #include "afhelpers.hpp"
@@ -31,6 +13,7 @@
 #include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
 #include "math.h"
+#include <string>
 using boost::format;
 
 namespace slicepp {
@@ -82,6 +65,9 @@ void CoherentScanningExperiment::Run() {
 
 			_persist->StoreToDiscMP(i + 1, xp, yp);
 			_wave->ResetProbe();
+//			std::stringstream ss;
+//			ss << "resetprobe_" << i;
+//			_persist->Save2DDataSet(_wave->GetWaveAF(),ss.str());
 		}
 
 		_persist->SavePositions(scanPositions);

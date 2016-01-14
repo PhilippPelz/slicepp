@@ -26,7 +26,7 @@ class C2DFFTPotential : public CPotential
 {
 public:
 	C2DFFTPotential();
-	C2DFFTPotential(cModelConfPtr mc, cOutputConfPtr oc , PersistenceManagerPtr persist);
+	C2DFFTPotential(cModelConfPtr mc, cOutputConfPtr oc , cWaveConfPtr wc, PersistenceManagerPtr persist);
 	virtual void DisplayParams();
 
 

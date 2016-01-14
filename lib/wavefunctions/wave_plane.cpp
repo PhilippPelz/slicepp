@@ -54,7 +54,7 @@ void CPlaneWave::FormProbe()
 	else {
 		TiltBeam();
 	}
-	_probe = af::array(_wave_af);
+	_probe = _wave_af.copy();
 }
 
 
@@ -75,13 +75,6 @@ void CPlaneWave::TiltBeam(bool tiltBack)
 		af::array x2D = af::tile(x.T(), 1, _wc->n[1]);
 		af::array y2D = af::tile(y, _wc->n[0]);
 		_wave_af = af::complex(cos(ktx*x2D + kty*y2D)*scale, sin(ktx*x2D + kty*y2D)*scale);
-//		for (unsigned i=0; i<_wc->nx; i++)
-//			for (unsigned j=0; j<_wc->ny; j++)
-//			{
-//				float_tt x = m_dx*(i-_wc->nx/2);
-//				float_tt y = m_dy*(j-_wc->ny/2);
-//				_wave[i][j]=complex_tt((float_tt)cos(ktx*x+kty*y)*scale,(float_tt)sin(ktx*x+kty*y)*scale);
-//			}
 	}
 }
 

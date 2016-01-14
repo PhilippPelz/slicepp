@@ -45,7 +45,7 @@ typedef enum  {
 } WaveType;
 
 typedef enum  {
-	Scintillator = 1, Direct = 2
+	Scintillator = 1, Direct = 2, Noiseless = 3
 } DetectorType;
 
 typedef enum  {
@@ -59,6 +59,7 @@ typedef enum  {
 	Real3D = 4,
 	CUDA2D = 5
 } PotentialType;
+
 typedef struct AberrationConfig {
 	float Defocus;
 	float a33;

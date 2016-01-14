@@ -36,7 +36,7 @@ namespace slicepp
 
 class IPotential;
 typedef boost::shared_ptr<IPotential> PotPtr;
-typedef boost::function<IPotential*(cModelConfPtr mc, cOutputConfPtr oc , PersistenceManagerPtr persist) > potentialCreator;
+typedef boost::function<IPotential*(cModelConfPtr mc, cOutputConfPtr oc, cWaveConfPtr wc , PersistenceManagerPtr persist) > potentialCreator;
 typedef std::map<PotentialType,potentialCreator> PotentialFactory;
 typedef PotPtr (*CreatePotentialFn)(ConfigPtr);
 
@@ -44,7 +44,8 @@ typedef PotPtr (*CreatePotentialFn)(ConfigPtr);
 class IPotential
 {
 public:
-	IPotential(cModelConfPtr mc, cOutputConfPtr oc , PersistenceManagerPtr persist) : _mc(mc), _oc(oc), _persist(persist){} ;
+	IPotential(cModelConfPtr mc, cOutputConfPtr oc , cWaveConfPtr wc, PersistenceManagerPtr persist) :
+		_mc(mc), _oc(oc), _wc(wc), _persist(persist){} ;
 	virtual void DisplayParams(){};
 	virtual void MakeSlices(superCellBoxPtr info)=0;
 	virtual void ReadPotential(std::string &fileName, unsigned subSlabIdx){};
@@ -61,6 +62,7 @@ protected:
 	IPotential(){};
 	cModelConfPtr _mc;
 	cOutputConfPtr _oc;
+	cWaveConfPtr _wc;
 	PersistenceManagerPtr _persist;
 };
 
