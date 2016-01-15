@@ -15,6 +15,8 @@ public:
 	DirectDetector(cDetectorConfPtr dc,PersistenceManagerPtr p);
 	virtual ~DirectDetector();
 	void RecordImage(af::array& wave);
+protected:
+	af::array Noise(af::array&);
 };
 
 } /* namespace slicepp */

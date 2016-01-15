@@ -117,6 +117,9 @@ void PersistenceManager::SavePositions(std::vector<int2> pos){
 	}
 	_file.SaveRealArray2D(p,"positions");
 }
+void PersistenceManager::StoreMeasurements(){
+	_file.SaveRealArray3D(_measurements, "measurements");
+}
 void PersistenceManager::SavePotential(af::array& data) {
 	data.host(_potential.data());
 }
@@ -218,7 +221,7 @@ void PersistenceManager::StoreToDisc() {
 	_file.SaveComplexArray3D(_waveSlicesAfterProp, "waveSlicesAfterProp");
 	_file.SaveComplexArray3D(_waveSlicesAfterSlice, "waveSlicesAfterSlice");
 	_file.SaveComplexArray3D(_potential, "potentialSlices");
-	_file.SaveComplexArray3D(_measurements, "measurements");
+	_file.SaveRealArray3D(_measurements, "measurements");
 	for (auto& kv : _atomDeltas) {
 		string s = "atomDeltas_";
 		s += std::to_string(kv.first);
@@ -247,6 +250,23 @@ void PersistenceManager::StoreToDiscMP(int pos, int x, int y) {
 		_file.SaveComplexArray3D(_waveSlicesAfterProp, "waveSlicesAfterProp" + info);
 		_file.SaveComplexArray3D(_waveSlicesAfterSlice, "waveSlicesAfterSlice" + info);
 		_file.SaveComplexArray3D(_potential, "potentialSlices");
+
+		for (auto& kv : _atomDeltas) {
+			string s = "atomDeltas_";
+			s += std::to_string(kv.first);
+			auto arr = kv.second;
+			auto sh = arr->shape();
+	//		BOOST_LOG_TRIVIAL(info)<< format("%s shape: [%d,%d,%d]") % s % sh[0] % sh[1] % sh[2];
+			_file.SaveComplexArray3D(*arr.get(), s);
+		}
+		for (auto& kv : _atomConv) {
+			string s = "atomConv_";
+			s += std::to_string(kv.first);
+			auto arr = kv.second;
+			auto sh = arr->shape();
+	//		BOOST_LOG_TRIVIAL(info)<< format("%s shape: [%d,%d,%d]") % s % sh[0] % sh[1] % sh[2];
+			_file.SaveComplexArray3D(*arr.get(), s);
+		}
 	} else {
 //		_file.SaveComplexArray3D(_waveSlicesAfterTransmit,"waveSlicesAfterTransmit" + info);
 //		_file.SaveComplexArray3D(_waveSlicesAfterFT, "waveSlicesAfterFT");

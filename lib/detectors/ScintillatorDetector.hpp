@@ -22,7 +22,7 @@ protected:
 	ScintillatorDetector();
 	af::array anscombeNoise(af::array&);
 	af::array MultiplyMTF(af::array&);
-	int _numSaved;
+
 };
 }
 #endif /* FLATAREADETECTOR_HPP_ */

@@ -39,7 +39,7 @@ af::array ScintillatorDetector::anscombeNoise(af::array& wave){
 	wavem *= _dc->MaxElectronCounts;
 
 //	af::array filter = wavem > 1e-2f;
-	af::array y = af::randn(wave.dims(0), wave.dims(1)) * wavem;
+	af::array y = af::randn(wave.dims(0), wave.dims(1)) * wavem + wavem;
 	auto poisson = 0.25*af::pow2(y) + 0.306186 * af::pow(y,-1) - 11.0/8*af::pow(y,-2) + 0.765465 * af::pow(y,-3) - 0.125;
 	_p->Save2DDataSet(poisson, "poisson");
 	poisson /= _dc->MaxElectronCounts;

@@ -285,7 +285,7 @@ class SliceGUI(QtGui.QMainWindow):
         else:
                 self.v1Label.setText(self.labelText[1][0])
                 self.v2Label.setText(self.labelText[1][1])
-        if self.selected.shape[0] > 1:
+        if self.selected.shape[1] > 1:
             if 'float' in self.selected.dtype.name:
                 self.view1.setImage(self.selected, autoRange=True, autoLevels=True, levels=None, axes=None, \
                                             xvals=None, pos=None, scale=None, transform=None, autoHistogramRange=True)

@@ -21,7 +21,7 @@ ScanConfig::ScanConfig(sScanConfig* c){
 		for (int i=0; i < c->nSteps[0]; i++) {
 			for (int j = 0; j < c->nSteps[1]; j++) {
 					int2 p = {c->xPos+(i*c->xStep),c->yPos+(j*c->yStep)};
-					printf("pos (%-3d,%-3d): (%-3d,%-3d)\n",i,j,p.x,p.y);
+//					printf("pos (%-3d,%-3d): (%-3d,%-3d)\n",i,j,p.x,p.y);
 					positions.push_back(p);
 			}
 		}
