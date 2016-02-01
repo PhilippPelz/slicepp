@@ -74,12 +74,10 @@ void CBaseWave::FormProbe() {
 	_prop = af::complex(af::cos(s), af::sin(s));
 
 	af::array bandwidthLimit = (_k2 > _k2max);
-//	auto tm = bandwidthLimit.as(f32);
-//	_persist->Save2DDataSet(tm, "bandwidthLimit");
 	_prop(bandwidthLimit) = 0;
 
 	if(_oc->SaveProbe)
-		_persist->Save2DDataSet(_prop, "Propagator");
+		_persist->Save2DDataSet(_prop, "propagator");
 
 	_kabs = af::sqrt(_k2);
 }

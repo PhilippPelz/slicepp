@@ -156,7 +156,7 @@ void CUDA2DPotential::SaveAtomicPotential(int Z) {
 	int2 c = {_mc->n[0]/2,_mc->n[1]/2};
 	int2 s = {_wc->n[0]/2,_wc->n[1]/2};
 	auto ind = boost::indices[range(c.x-s.x,c.x+s.x)][range(c.y-s.y,c.y+s.y)];
-	_persist->SaveCx2DDataSet(_atomPot[Z][ind], str.str());
+	_persist->SaveCx2DDataSet(_atomPot[Z], str.str());
 }
 void CUDA2DPotential::SavePotential() {
 	_t.resize(boost::extents[_mc->n[2]][_mc->n[0]][_mc->n[1]]);

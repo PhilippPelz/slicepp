@@ -71,6 +71,7 @@ void CoherentScanningExperiment::Run() {
 		}
 
 		_persist->SavePositions(scanPositions);
+		_persist->SaveZnums(box->uniqueZ);
 		_persist->StoreMeasurements();
 		DisplayProgress(1);
 		BOOST_LOG_TRIVIAL(info)<< "Finished saving...";

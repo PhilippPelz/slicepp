@@ -30,6 +30,7 @@ public:
 	void SaveWaveAfterPropagation(ComplexArray2DPtr a, int slice);
 	void SaveMeasurement(af::array& m, int n);
 	void SavePositions(std::vector<int2> pos);
+	void SaveZnums(std::vector<int> Z);
 	void StoreMeasurements();
 	void SaveProbe(af::array& a);
 	void SaveAtomDelta(cuComplex* delta, int slice, int Z);

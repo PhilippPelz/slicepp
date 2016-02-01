@@ -101,6 +101,16 @@ int HDFFile::SaveRealArray2D(multi_array<float_tt,2> a, string dsetName){
 	return H5LTmake_dataset(_file.getId(),dsetName.c_str(),RANK,dims,H5T_NATIVE_DOUBLE,(const void *)a.data());
 #endif
 }
+int HDFFile::SaveRealArray1D(multi_array<float_tt,1> a, string dsetName){
+	int RANK = 1;
+	hsize_t     dims[RANK]={a.shape()[0] };
+	herr_t      status;
+#if(FLOAT_PRECISION == 1)
+	return H5LTmake_dataset(_file.getId(),dsetName.c_str(),RANK,dims,H5T_NATIVE_FLOAT,(const void *)a.data());
+#else
+	return H5LTmake_dataset(_file.getId(),dsetName.c_str(),RANK,dims,H5T_NATIVE_DOUBLE,(const void *)a.data());
+#endif
+}
 int HDFFile::SaveRealArray3D(multi_array<float_tt,3> a, string dsetName){
 	int RANK = 3;
 	hsize_t     dims[3]={a.shape()[0],a.shape()[1],a.shape()[2]};

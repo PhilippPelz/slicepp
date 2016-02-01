@@ -68,6 +68,7 @@ void CoherentSinglePositionExperiment::Run()
 		}
 	}
 	time = af::timer::start();
+	_persist->SaveZnums(box->uniqueZ);
 	PostSpecimenProcess();
 	elapsed = af::timer::stop(time) * 1000;
 	BOOST_LOG_TRIVIAL(info)<< format( "%g msec used for post specimen process.") % elapsed;

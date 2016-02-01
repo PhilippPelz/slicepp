@@ -67,6 +67,7 @@ public:
 	virtual ~HDFFile();
 	int SaveComplexArray2D(ComplexArray2D a, string dsetName);
 	int SaveComplexArray3D(ComplexArray3D a, string dsetName);
+	int SaveRealArray1D(multi_array<float_tt,1> a, string dsetName);
 	int SaveRealArray2D(multi_array<float_tt,2> a, string dsetName);
 	int SaveRealArray3D(multi_array<float_tt,3> a, string dsetName);
 	int SaveInt(int value,string dsetName);
