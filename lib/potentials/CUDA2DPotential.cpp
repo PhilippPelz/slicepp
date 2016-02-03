@@ -119,9 +119,9 @@ void CUDA2DPotential::MakeSlices(superCellBoxPtr info) {
 
 			XplusequY(_V_accum_ptr, _V_elem_ptr);
 		}
-		fft(_V_accum_ptr);
-		_cf.limitBandwidth(_V_accum_ptr);
-		ifft(_V_accum_ptr);
+//		fft(_V_accum_ptr);
+//		_cf.limitBandwidth(_V_accum_ptr);
+//		ifft(_V_accum_ptr);
 		_cf.PotentialToTransmission(&_t_d_ptr[islice * _slicePixels], _V_accum_ptr);
 		sync();
 	}

@@ -281,7 +281,7 @@ __global__ void divideBySinc(cufftComplex* V, int nx, int ny, float_tt PI) {
 		x = (x + FLT_EPSILON) / (sinf(x) + FLT_EPSILON);
 		y *= ((float_tt) i2) / ((float_tt) m2);
 		x *= (y + FLT_EPSILON) / (sinf(y) + FLT_EPSILON);
-		x /= (nx*ny);
+//		x /= (nx*ny);
 		V[i].x *= x;
 		V[i].y *= x;
 	}

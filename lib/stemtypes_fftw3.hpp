@@ -79,6 +79,7 @@ typedef boost::multi_array<complex_tt, 3> ComplexArray3D;
 typedef boost::multi_array<complex_tt, 2> ComplexArray2D;
 typedef boost::multi_array<float_tt, 3> FloatArray3D;
 typedef boost::multi_array<float_tt, 2> FloatArray2D;
+typedef boost::multi_array<float_tt, 1> FloatArray1D;
 typedef ComplexArray3D::index ComplexArray3DIndex;
 typedef boost::multi_array_types::index_range range;
 typedef ComplexArray2D::array_view<2>::type ComplexArray2DView2D;

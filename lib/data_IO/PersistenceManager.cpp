@@ -118,7 +118,7 @@ void PersistenceManager::SavePositions(std::vector<int2> pos){
 	_file.SaveRealArray2D(p,"positions");
 }
 void PersistenceManager::SaveZnums(std::vector<int> Z){
-	FloatArray2D p(boost::extents[Z.size()]);
+	FloatArray1D p(boost::extents[Z.size()]);
 	for(int i = 0; i < Z.size();i++){
 		p[i] = (float)Z[i];
 	}
