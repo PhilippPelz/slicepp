@@ -63,7 +63,7 @@ template<> struct get_hdf5_data_type<uint64_t>              {   H5::IntType type
 class HDFFile {
 public:
 	HDFFile();
-	HDFFile(boost::filesystem::path p);
+	HDFFile(boost::filesystem::path p, bool saveComplexAsFloat2);
 	virtual ~HDFFile();
 	int SaveComplexArray2D(ComplexArray2D a, string dsetName);
 	int SaveComplexArray3D(ComplexArray3D a, string dsetName);
@@ -84,6 +84,7 @@ public:
 protected:
 	hid_t _c_id;
 	H5File _file;
+	bool _saveComplexAsFloat2;
 };
 
 #endif /* SRC_HDFFILE_H_ */

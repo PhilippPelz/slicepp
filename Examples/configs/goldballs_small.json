@@ -63,7 +63,8 @@
     "pendelloesungPlot": "false",
     "savePath": "~/Documents/slicepp/goldballs_small.h5",
     "readPotential": "false",
-    "folder": "CBED"
+    "folder": "CBED",
+    "SaveComplexAsFloat2": "false"
   },
   "model": {
     "resolutionCalculation": "2",

@@ -184,6 +184,7 @@ typedef struct OutputConfig {
 	// TODO: deprecated
 	bool PendelloesungPlot;
 	bool readPotential;
+	bool SaveComplexAsFloat2;
 
 } OutputConfig;
 

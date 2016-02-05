@@ -34,7 +34,7 @@ int main(int argc, char *argv[]){
 
 	// write to HDF5 format
 	boost::filesystem::path p("test.h5");
-	HDFFile f(p);
+	HDFFile f(p,false);
 	Group* g = f.CreateGroup(string("config"));
 	f.SaveRealArray3D(float_data,string("3D"));
 	f.SaveComplexArray3D(complex_data,string("3Dcomplex"));

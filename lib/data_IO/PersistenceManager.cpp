@@ -20,7 +20,7 @@ PersistenceManager::PersistenceManager() :
 PersistenceManager::PersistenceManager(const ConfigPtr c) :
 		PersistenceManager() {
 	_c = c;
-	_file = HDFFile(_c->Output->SavePath);
+	_file = HDFFile(_c->Output->SavePath, _c->Output->SaveComplexAsFloat2);
 	_info = _file.CreateGroup("config");
 }
 

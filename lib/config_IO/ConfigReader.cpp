@@ -148,6 +148,7 @@ ConfigPtr ConfigReader::Read(boost::filesystem::path configFile){
 	c->Output->SaveAtomDeltas = t.get<bool>("output.SaveAtomDeltas");
 	c->Output->SaveAtomConv = t.get<bool>("output.SaveAtomConv");
 	c->Output->readPotential = t.get<bool>("output.readPotential");
+	c->Output->SaveComplexAsFloat2 = t.get<bool>("output.SaveComplexAsFloat2");
 //	string p = t.get<string>("output.savePath").c_str();
 //	c->Output->savePath = boost::filesystem::path(p);
 	auto sp1 = t.get<string>("output.savePath");

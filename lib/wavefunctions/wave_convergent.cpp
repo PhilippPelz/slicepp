@@ -74,10 +74,10 @@ void CConvergentWave::ConstructWave() {
 		tmp = af::complex(tmp,zeros);
 		weights(ind) = tmp(ind);
 	}
-	_persist->Save2DDataSet(weights,"weights");
+//	_persist->Save2DDataSet(weights,"weights");
 
 	auto phase = _aberration.getPhasePlate(_kabs,_kx,_ky,_persist);
-	_persist->Save2DDataSet(phase,"phaseplate");
+//	_persist->Save2DDataSet(phase,"phaseplate");
 	_wave_af = weights * phase;
 
 	/* Fourier transform into real space */
