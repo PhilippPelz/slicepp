@@ -33,6 +33,7 @@ void CoherentScanningExperiment::Run() {
 	auto box = _structureBuilder->Build();
 	SetResolution(box);
 	SetSliceThickness(box);
+	_persist->SaveZnums(box->uniqueZ);
 	auto elapsed = af::timer::stop(time) * 1000;
 
 	BOOST_LOG_TRIVIAL(info)<< format( "%g msec used for building structure.") % elapsed;
@@ -71,7 +72,7 @@ void CoherentScanningExperiment::Run() {
 		}
 
 		_persist->SavePositions(scanPositions);
-		_persist->SaveZnums(box->uniqueZ);
+
 		_persist->StoreMeasurements();
 		DisplayProgress(1);
 		BOOST_LOG_TRIVIAL(info)<< "Finished saving...";

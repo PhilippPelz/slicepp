@@ -113,14 +113,14 @@ std::string QH5::GetDetectorPath(std::string detectorName)
   return path.str();
 }
 
-void QH5::CreateDataSet(std::string path, hid_t type, unsigned int size_x, unsigned int size_y, 
+void QH5::CreateDataSet(std::string path, hid_t type, unsigned int size_x, unsigned int size_y,
                             std::vector<unsigned> &position)
 {
   std::vector<unsigned>::iterator pos;
   std::vector<hsize_t> dims(2+position.size(),0);
   dims[0]=size_x;
   dims[1]=size_y;
-  
+
   for (unsigned pos=0; pos<position.size(); pos++)
     {
       dims[2+pos] = position[pos];

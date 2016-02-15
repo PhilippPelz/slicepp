@@ -33,32 +33,35 @@ void PersistenceManager::SaveProbe(ComplexArray2DPtr a) {
 }
 
 void PersistenceManager::SaveProbe(af::array& wave) {
-	ComplexArray2D a(boost::extents[wave.dims(0)][wave.dims(1)]);
-	wave.host(a.data());
-	SaveProbe(a);
+	wave.host(_probe.data());
 }
 void PersistenceManager::SaveAtomDelta(cuComplex* delta, int slice, int Z) {
-	auto a = _atomDeltas[Z];
-	if (a.get() == NULL) {
-		auto e3 = boost::extents[_c->Model->n[2]][_c->Model->n[0]][_c->Model->n[1]];
-		_atomDeltas[Z] = boost::shared_ptr<ComplexArray3D>(new ComplexArray3D(e3));
-		auto sh = _atomDeltas[Z]->shape();
-//		BOOST_LOG_TRIVIAL(info)<< format("%s shape: [%d,%d,%d]") % "_atomDeltas" % sh[0] % sh[1] % sh[2];
+	string s = "/atomDeltas_";
+	s += std::to_string(Z);
+	auto e3 = boost::extents[_c->Model->n[0]][_c->Model->n[1]];
+	auto arr = ComplexArray2D(e3);
+
+	cuda_assert(cudaMemcpy(arr.data(), delta, _c->Model->n[0] * _c->Model->n[1] * sizeof(cuComplex), cudaMemcpyDeviceToHost));
+//#pragma omp parallel
+//	{
+#pragma omp single nowait
+	{
+#pragma omp task
+		_file.SaveComplexSlice(s, _c->Model->n[0], _c->Model->n[1], slice, arr, _c->Output->SaveComplexAsFloat2);
 	}
-	cuda_assert(
-			cudaMemcpy(_atomDeltas[Z]->operator [](slice).origin(), delta, _c->Model->n[0] * _c->Model->n[1] * sizeof(cuComplex),
-					cudaMemcpyDeviceToHost));
+//	}
 }
 void PersistenceManager::SaveAtomConv(cuComplex* delta, int slice, int Z) {
-	auto a = _atomConv[Z];
-	if (a.get() == NULL) {
-		auto e3 = boost::extents[_c->Model->n[2]][_c->Model->n[0]][_c->Model->n[1]];
-		_atomConv[Z] = boost::shared_ptr<ComplexArray3D>(new ComplexArray3D(e3));
-		auto sh = _atomConv[Z]->shape();
+	string s = "/atomConv_";
+	s += std::to_string(Z);
+	auto e3 = boost::extents[_c->Model->n[0]][_c->Model->n[1]];
+	auto arr = ComplexArray2D(e3);
+
+	cuda_assert(cudaMemcpy(arr.data(), delta, _c->Model->n[0] * _c->Model->n[1] * sizeof(cuComplex), cudaMemcpyDeviceToHost));
+#pragma omp task
+	{
+		_file.SaveComplexSlice(s, _c->Model->n[0], _c->Model->n[1], slice, arr, _c->Output->SaveComplexAsFloat2);
 	}
-	cuda_assert(
-			cudaMemcpy(_atomConv[Z]->operator [](slice).origin(), delta, _c->Model->n[0] * _c->Model->n[1] * sizeof(cuComplex),
-					cudaMemcpyDeviceToHost));
 }
 void PersistenceManager::SaveMeasurement(af::array& m, int n) {
 	m.host(_measurements[n].origin());
@@ -69,6 +72,7 @@ void PersistenceManager::SaveWaveAfterTransmit(ComplexArray2DPtr a, int slice) {
 		for (int j = 0; j < a.num_elements() / a.size(); j++) {
 			_waveSlicesAfterTransmit[slice][i][j] = a[i][j];
 		}
+
 }
 void PersistenceManager::SaveWaveAfterTransmit(af::array& wave, int slice) {
 	wave.host(_waveSlicesAfterTransmit[slice].origin());
@@ -109,22 +113,41 @@ void PersistenceManager::SavePotential(ComplexArray3D a) {
 	_potSaved = true;
 	_potential = a;
 }
-void PersistenceManager::SavePositions(std::vector<int2> pos){
+void PersistenceManager::SavePositions(std::vector<int2> pos) {
 	FloatArray2D p(boost::extents[pos.size()][2]);
-	for(int i = 0; i < pos.size();i++){
-		p[i][0] = (float)pos[i].x;
-		p[i][1] = (float)pos[i].y;
+	for (int i = 0; i < pos.size(); i++) {
+		p[i][0] = (float) pos[i].x;
+		p[i][1] = (float) pos[i].y;
 	}
-	_file.SaveRealArray2D(p,"positions");
+	_file.SaveRealArray2D(p, "positions");
 }
-void PersistenceManager::SaveZnums(std::vector<int> Z){
+void PersistenceManager::SaveZnums(std::vector<int> Z) {
 	FloatArray1D p(boost::extents[Z.size()]);
-	for(int i = 0; i < Z.size();i++){
-		p[i] = (float)Z[i];
+	std::vector<unsigned> dims;
+	dims.push_back((unsigned) _c->Model->n[2]);
+	dims.push_back((unsigned) _c->Model->n[0]);
+	dims.push_back((unsigned) _c->Model->n[1]);
+	if (_c->Output->SaveComplexAsFloat2)
+		dims.push_back(2);
+//	printf("%d %d %d %d\n",dims.size(), dims[0],dims[1],dims[2]);
+	for (int i = 0; i < Z.size(); i++) {
+		p[i] = (float) Z[i];
+		string s1 = "/atomDeltas_";
+		s1 += std::to_string(Z[i]);
+		if (_c->Output->SaveComplexAsFloat2)
+			_file.CreateFloatDataSet(s1, dims);
+		else
+			_file.CreateComplexDataSet(s1, dims);
+		string s2 = "/atomConv_";
+		s2 += std::to_string(Z[i]);
+		if (_c->Output->SaveComplexAsFloat2)
+			_file.CreateFloatDataSet(s2, dims);
+		else
+			_file.CreateComplexDataSet(s2, dims);
 	}
-	_file.SaveRealArray1D(p,"Znums");
+	_file.SaveRealArray1D(p, "Znums");
 }
-void PersistenceManager::StoreMeasurements(){
+void PersistenceManager::StoreMeasurements() {
 	_file.SaveRealArray3D(_measurements, "measurements");
 }
 void PersistenceManager::SavePotential(af::array& data) {
@@ -183,12 +206,12 @@ void PersistenceManager::InitStorage() {
 		_waveSlicesAfterTransmit.resize(e3);
 	if (_c->Output->SaveProbe)
 		_probe.resize(e2);
-	if (_c->Output->SaveAtomDeltas)
-		for (auto& kv : _atomDeltas)
-			kv.second->resize(e3);
-	if (_c->Output->SaveAtomConv)
-		for (auto& kv : _atomConv)
-			kv.second->resize(e3);
+//	if (_c->Output->SaveAtomDeltas)
+//		for (auto& kv : _atomDeltas)
+//			kv.second->resize(e3);
+//	if (_c->Output->SaveAtomConv)
+//		for (auto& kv : _atomConv)
+//			kv.second->resize(e3);
 	if (_c->Output->SaveProjectedPotential || _c->Output->ComputeFromProjectedPotential)
 		_projectedPotential.resize(e2);
 	_measurements.resize(boost::extents[1][_c->Model->n[0]][_c->Model->n[1]]);
@@ -209,12 +232,18 @@ void PersistenceManager::ResizeStorage(int xdim, int ydim) {
 		_waveSlicesAfterTransmit.resize(e3);
 	if (_c->Output->SaveProbe)
 		_probe.resize(e2);
-	if (_c->Output->SaveAtomDeltas)
-		for (auto& kv : _atomDeltas)
-			kv.second->resize(e3);
-	if (_c->Output->SaveAtomConv)
-		for (auto& kv : _atomConv)
-			kv.second->resize(e3);
+//	if (_c->Output->SaveAtomDeltas)
+//		for (auto& kv : _atomDeltas) {
+//			string s = "atomDeltas_";
+//			s += std::to_string(kv.first);
+//		}
+//			kv.second->resize(e3);
+//	if (_c->Output->SaveAtomConv)
+//		for (auto& kv : _atomConv) {
+//			string s = "atomConv_";
+//			s += std::to_string(kv.first);
+//		}
+//			kv.second->resize(e3);
 	if (_c->Output->SaveProjectedPotential || _c->Output->ComputeFromProjectedPotential)
 		_projectedPotential.resize(boost::extents[_c->Model->n[0]][_c->Model->n[1]]);
 	_measurements.resize(boost::extents[_c->Scan->positions.size()][xdim][ydim]);
@@ -229,22 +258,22 @@ void PersistenceManager::StoreToDisc() {
 	_file.SaveComplexArray3D(_waveSlicesAfterSlice, "waveSlicesAfterSlice");
 	_file.SaveComplexArray3D(_potential, "potentialSlices");
 	_file.SaveRealArray3D(_measurements, "measurements");
-	for (auto& kv : _atomDeltas) {
-		string s = "atomDeltas_";
-		s += std::to_string(kv.first);
-		auto arr = kv.second;
-		auto sh = arr->shape();
-//		BOOST_LOG_TRIVIAL(info)<< format("%s shape: [%d,%d,%d]") % s % sh[0] % sh[1] % sh[2];
-		_file.SaveComplexArray3D(*arr.get(), s);
-	}
-	for (auto& kv : _atomConv) {
-		string s = "atomConv_";
-		s += std::to_string(kv.first);
-		auto arr = kv.second;
-		auto sh = arr->shape();
-//		BOOST_LOG_TRIVIAL(info)<< format("%s shape: [%d,%d,%d]") % s % sh[0] % sh[1] % sh[2];
-		_file.SaveComplexArray3D(*arr.get(), s);
-	}
+//	for (auto& kv : _atomDeltas) {
+//		string s = "atomDeltas_";
+//		s += std::to_string(kv.first);
+//		auto arr = kv.second;
+//		auto sh = arr->shape();
+////		BOOST_LOG_TRIVIAL(info)<< format("%s shape: [%d,%d,%d]") % s % sh[0] % sh[1] % sh[2];
+//		_file.SaveComplexArray3D(*arr.get(), s);
+//	}
+//	for (auto& kv : _atomConv) {
+//		string s = "atomConv_";
+//		s += std::to_string(kv.first);
+//		auto arr = kv.second;
+//		auto sh = arr->shape();
+////		BOOST_LOG_TRIVIAL(info)<< format("%s shape: [%d,%d,%d]") % s % sh[0] % sh[1] % sh[2];
+//		_file.SaveComplexArray3D(*arr.get(), s);
+//	}
 }
 
 void PersistenceManager::StoreToDiscMP(int pos, int x, int y) {
@@ -258,22 +287,22 @@ void PersistenceManager::StoreToDiscMP(int pos, int x, int y) {
 		_file.SaveComplexArray3D(_waveSlicesAfterSlice, "waveSlicesAfterSlice" + info);
 		_file.SaveComplexArray3D(_potential, "potentialSlices");
 
-		for (auto& kv : _atomDeltas) {
-			string s = "atomDeltas_";
-			s += std::to_string(kv.first);
-			auto arr = kv.second;
-			auto sh = arr->shape();
-	//		BOOST_LOG_TRIVIAL(info)<< format("%s shape: [%d,%d,%d]") % s % sh[0] % sh[1] % sh[2];
-			_file.SaveComplexArray3D(*arr.get(), s);
-		}
-		for (auto& kv : _atomConv) {
-			string s = "atomConv_";
-			s += std::to_string(kv.first);
-			auto arr = kv.second;
-			auto sh = arr->shape();
-	//		BOOST_LOG_TRIVIAL(info)<< format("%s shape: [%d,%d,%d]") % s % sh[0] % sh[1] % sh[2];
-			_file.SaveComplexArray3D(*arr.get(), s);
-		}
+//		for (auto& kv : _atomDeltas) {
+//			string s = "atomDeltas_";
+//			s += std::to_string(kv.first);
+//			auto arr = kv.second;
+//			auto sh = arr->shape();
+//	//		BOOST_LOG_TRIVIAL(info)<< format("%s shape: [%d,%d,%d]") % s % sh[0] % sh[1] % sh[2];
+//			_file.SaveComplexArray3D(*arr.get(), s);
+//		}
+//		for (auto& kv : _atomConv) {
+//			string s = "atomConv_";
+//			s += std::to_string(kv.first);
+//			auto arr = kv.second;
+//			auto sh = arr->shape();
+//	//		BOOST_LOG_TRIVIAL(info)<< format("%s shape: [%d,%d,%d]") % s % sh[0] % sh[1] % sh[2];
+//			_file.SaveComplexArray3D(*arr.get(), s);
+//		}
 	} else {
 //		_file.SaveComplexArray3D(_waveSlicesAfterTransmit,"waveSlicesAfterTransmit" + info);
 //		_file.SaveComplexArray3D(_waveSlicesAfterFT, "waveSlicesAfterFT");

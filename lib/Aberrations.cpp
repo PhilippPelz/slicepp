@@ -59,7 +59,7 @@ af::array Aberrations::getPhasePlate(af::array& k,af::array& kx,af::array& ky, P
 //	printf("lambda: %f\n",_lambdaAngstrom);
 	auto phi = af::atan2(kx * _lambdaAngstrom, ky * _lambdaAngstrom);
 	auto k0 = k*_lambdaAngstrom;
-	p->Save2DDataSet(phi,"phi");
+//	p->Save2DDataSet(phi,"phi");
 	auto chi = af::constant(0, k.dims(), f32);
 	chi += 0.5 * af::pow(k0, 2) * (_c.Defocus + _c.Cc * _c.dE_E + (_c.Astigmatism * af::cos(2.0 * (phi - _c.AstigmatismAngle))));
 	if ((_c.a33 > 0) || (_c.a31 > 0))
@@ -73,9 +73,9 @@ af::array Aberrations::getPhasePlate(af::array& k,af::array& kx,af::array& ky, P
 		chi += af::pow(k0, 6)
 				* (_c.a66 * af::cos(6.0 * (phi - _c.phi66)) + _c.a64 * af::cos(4.0 * (phi - _c.phi64)) + _c.a62 * af::cos(2.0 * (phi - _c.phi62))
 						+ _c.C5) / 6.0;
-	p->Save2DDataSet(chi,"chi0");
+//	p->Save2DDataSet(chi,"chi0");
 	chi *= 2 * PI / _lambdaAngstrom;
-	p->Save2DDataSet(chi,"chi");
+//	p->Save2DDataSet(chi,"chi");
 	return af::complex(af::cos(chi), -af::sin(chi));
 }
 } /* namespace slicepp */

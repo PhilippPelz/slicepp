@@ -79,12 +79,22 @@ public:
 	int SaveAttributeInt(string dsetName, string attName, int data);
 	int SaveAttributeDouble(string dsetName, string attName, float_tt data);
 	int SaveAttributeString(string dsetName, string attName, string data);
+
+	void CreateComplexDataSet(std::string path, std::vector<unsigned> dims);
+	void CreateFloatDataSet(std::string path, std::vector<unsigned> dims);
+	void SaveComplexSlice(std::string path, unsigned size_x, unsigned size_y, unsigned slice, multi_array<Complex, 2> a, bool float2);
+	void SaveFloatSlice(std::string path, unsigned size_x, unsigned size_y, unsigned slice, multi_array<float_tt,2> a);
+
 	Group* CreateGroup(string groupName);
 
 protected:
-	hid_t _c_id;
+	hid_t _complex_id,_float_id;
 	H5File _file;
 	bool _saveComplexAsFloat2;
+	CompType _complex_type;
+	void CreateDataSet(std::string path, DataType type, std::vector<unsigned> dims);
+	void DataSlabIO(bool read, DataType datatype, void *pix, std::string path, unsigned size_x, unsigned size_y, unsigned slice);
+	void DataSlabIOFloat2(bool read, DataType datatype, void *pix, std::string path, unsigned size_x, unsigned size_y, unsigned slice);
 };
 
 #endif /* SRC_HDFFILE_H_ */

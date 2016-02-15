@@ -92,11 +92,12 @@ void CBaseWave::DisplayParams() {
 	"*****************************  Wave  Parameters **************************************************";
 	BOOST_LOG_TRIVIAL(info) <<
 	"**************************************************************************************************";
-	BOOST_LOG_TRIVIAL(info)<<format("* Real space res.:      %gA (=%gmrad)")% (1.0/_k2max)%(_mc->wavelength*_k2max*1000.0);
-	BOOST_LOG_TRIVIAL(info)<<format("* Reciprocal space res: dkx=%g, dky=%g (1/A)")% (1.0/(_wc->n[0]*_mc->d[0]))%(1.0/(_wc->n[1]*_mc->d[1]));
-	BOOST_LOG_TRIVIAL(info)<<format("* Acc. voltage:         %g kV (lambda=%gA)")%_mc->EnergykeV%_mc->wavelength;
+	BOOST_LOG_TRIVIAL(info)<<format("* Real space res.:      %g Å (=%g mrad)")% (1.0/_k2max)%(_mc->wavelength*1e10*_k2max*1000.0);
+	BOOST_LOG_TRIVIAL(info)<<format("* Reciprocal space res: dkx=%g, dky=%g (1/Å)")% (1.0/(_wc->n[0]*_mc->d[0]))%(1.0/(_wc->n[1]*_mc->d[1]));
+	BOOST_LOG_TRIVIAL(info)<<format("* Acc. voltage:         %g kV (lambda=%g Å)")%_mc->EnergykeV%(_mc->wavelength*1e10);
 	BOOST_LOG_TRIVIAL(info)<<format("* Probe array:          %d x %d pixels")%_wc->n[0]%_wc->n[1];
-	BOOST_LOG_TRIVIAL(info)<<format("*                       %g x %gA")%(_wc->n[0]*_mc->d[0])%(_wc->n[1]*_mc->d[1]);
+	BOOST_LOG_TRIVIAL(info)<<format("*                       %g x %g Å")%(_wc->n[0]*_mc->d[0])%(_wc->n[1]*_mc->d[1]);
+	BOOST_LOG_TRIVIAL(info)<<format("* sigma				 %g 1/Vm")%(_mc->sigma);
 	BOOST_LOG_TRIVIAL(info) <<
 		"**************************************************************************************************";
 	_OLaberrations.DisplayParams();
