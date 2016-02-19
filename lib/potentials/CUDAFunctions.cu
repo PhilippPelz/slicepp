@@ -14,8 +14,10 @@
 #include <thrust/complex.h>
 using boost::format;
 namespace slicepp {
-CUDAFunctions::CUDAFunctions(){}
-CUDAFunctions::CUDAFunctions(superCellBoxPtr info, cModelConfPtr mc, cWaveConfPtr wc) {
+CUDAFunctions::CUDAFunctions() {
+}
+CUDAFunctions::CUDAFunctions(superCellBoxPtr info, cModelConfPtr mc,
+		cWaveConfPtr wc) {
 	_info = info;
 	_mc = mc;
 	_wc = wc;
@@ -23,46 +25,56 @@ CUDAFunctions::CUDAFunctions(superCellBoxPtr info, cModelConfPtr mc, cWaveConfPt
 	slicePixels = _mc->n[0] * _mc->n[1];
 	_stream = afcu::getStream(af::getDevice());
 	_gS = myGSize(slicePixels);
-	_gS3D = myGSize(slicePixels* _mc->n[2]);
+	_gS3D = myGSize(slicePixels * _mc->n[2]);
 	_bS = myBSize(slicePixels);
-	_bS3D = myBSize(slicePixels* _mc->n[2]);
+	_bS3D = myBSize(slicePixels * _mc->n[2]);
 }
 
-void CUDAFunctions::PotentialToTransmission(cufftComplex* pot, cufftComplex* trans) {
-	potential2Transmission<<< _gS, _bS, 0, _stream >>> (pot, trans, slicePixels);
+void CUDAFunctions::PotentialToTransmission(cufftComplex* pot,
+		cufftComplex* trans) {
+	potential2Transmission<<<_gS, _bS, 0, _stream>>>(pot, trans, slicePixels);
 }
 void CUDAFunctions::cmul(cufftComplex* a1, cufftComplex* a2) {
-	multiplyWithProjectedPotential_d<<< _gS, _bS, 0, _stream >>> (a1,a2,_mc->n[0],_mc->n[1]);
+	multiplyWithProjectedPotential_d<<<_gS, _bS, 0, _stream>>>(a1, a2,
+			_mc->n[0], _mc->n[1]);
 }
 void CUDAFunctions::SetComplex2D(cufftComplex* a, float real, float imag) {
-	initialValues<<< _gS, _bS , 0, _stream>>> ( a, slicePixels, 0.f, 0.f);
+	initialValues<<<_gS, _bS, 0, _stream>>>(a, slicePixels, 0.f, 0.f);
 }
 void CUDAFunctions::SetComplex3D(cufftComplex* a, float real, float imag) {
-	initialValues<<< _gS3D, _bS3D , 0, _stream>>> ( a, slicePixels * _mc->n[2], 0.f, 0.f);
+	initialValues<<<_gS3D, _bS3D, 0, _stream>>>(a, slicePixels * _mc->n[2], 0.f,
+			0.f);
 }
 void CUDAFunctions::GetAtomicPotential(cufftComplex* V, int Z) {
-	createAtomicPotential<<< _gS, _bS, 0, _stream>>> ( V, Z, _mc->n[0], _mc->n[1], _mc->d[0], _mc->d[1],_mc->sigma);
+	createAtomicPotential<<<_gS, _bS, 0, _stream>>>(V, Z, _mc->n[0], _mc->n[1],
+			_mc->d[0], _mc->d[1], _mc->sigma);
 }
 void CUDAFunctions::GetSincAtomicPotential(cufftComplex* V, int Z) {
-	createAtomicPotential<<< _gS, _bS, 0, _stream >>> ( V, Z, _mc->n[0], _mc->n[1], _mc->d[0], _mc->d[1],_mc->sigma);
-	divideBySinc<<< _gS, _bS, 0, _stream >>> ( V, _mc->n[0], _mc->n[1], PI);
+	createAtomicPotential<<<_gS, _bS, 0, _stream>>>(V, Z, _mc->n[0], _mc->n[1],
+			_mc->d[0], _mc->d[1], _mc->sigma);
+	divideBySinc<<<_gS, _bS, 0, _stream>>>(V, _mc->n[0], _mc->n[1], PI);
 }
-void CUDAFunctions::GetAtomDeltaFunctions(cufftComplex* V, int Z, int slice, float* xyzPos_d, float* occupancy_d, int* znums_d) {
+void CUDAFunctions::GetAtomDeltaFunctions(cufftComplex* V, int Z, int slice,
+		float* xyzPos_d, float* occupancy_d, int* znums_d) {
 	int nAtom = _info->znums.size();
-	putAtomDeltas<<< myGSize( nAtom ), myBSize( nAtom ), 0, _stream >>> ( V, nAtom, znums_d, Z, xyzPos_d, _mc->ImagPot,
-			occupancy_d, slice, _mc->n[0], _mc->n[1], _mc->n[2], _mc->d[0], _mc->d[1], _mc->d[2]);
+	putAtomDeltas<<<myGSize(nAtom), myBSize(nAtom), 0, _stream>>>(V, nAtom,
+			znums_d, Z, xyzPos_d, _mc->ImagPot, occupancy_d, slice, _mc->n[0],
+			_mc->n[1], _mc->n[2], _mc->d[0], _mc->d[1], _mc->d[2]);
 }
 void CUDAFunctions::printPotArray(cufftComplex* V_d, int nx, int ny) {
 	cufftComplex *V_host;
 	V_host = (cufftComplex *) malloc(nx * ny * sizeof(cufftComplex));
-	cuda_assert(cudaMemcpyAsync(V_host, V_d, nx * ny * sizeof(cufftComplex), cudaMemcpyDeviceToHost, afcu::getStream(af::getDevice())));
+	cuda_assert(
+			cudaMemcpyAsync(V_host, V_d, nx * ny * sizeof(cufftComplex),
+					cudaMemcpyDeviceToHost, afcu::getStream(af::getDevice())));
 	cuda_assert(cudaStreamSynchronize(_stream));
 	for (int i = 0; i < nx; i++) {
 		for (int j = 0; j < ny; j++) {
 			float x = V_host[i * nx + j].x;
 			float y = V_host[i * nx + j].y;
 //			if (x > 1e-10 || y > 1e-10)
-			cout << "(" << i << "," << j << ") = (" << x << ", " << y << ")" << endl;
+			cout << "(" << i << "," << j << ") = (" << x << ", " << y << ")"
+					<< endl;
 		}
 	}
 	free(V_host);
@@ -71,7 +83,10 @@ void CUDAFunctions::printPotArray(cufftComplex* V_d, int nx, int ny) {
 void CUDAFunctions::printFloatArray(float_tt* f, int nx, int ny, int offset) {
 	float_tt *f_host;
 	f_host = (float_tt *) malloc(nx * ny * sizeof(float_tt));
-	cuda_assert(cudaMemcpyAsync((void * )f_host, (void * )f, nx * ny * sizeof(float_tt), cudaMemcpyDeviceToHost, afcu::getStream(af::getDevice())));
+	cuda_assert(
+			cudaMemcpyAsync((void * )f_host, (void * )f,
+					nx * ny * sizeof(float_tt), cudaMemcpyDeviceToHost,
+					afcu::getStream(af::getDevice())));
 	cuda_assert(cudaStreamSynchronize(_stream));
 	f_host += offset;
 	float_tt *ff = (float_tt *) f_host;
@@ -87,7 +102,9 @@ void CUDAFunctions::printFloatArray(float_tt* f, int nx, int ny, int offset) {
 void CUDAFunctions::printIntArray(int* p, int size) {
 	int *f_host;
 	f_host = (int *) malloc(size * sizeof(int));
-	cuda_assert(cudaMemcpyAsync(f_host, p, size * sizeof(int), cudaMemcpyDeviceToHost, afcu::getStream(af::getDevice())));
+	cuda_assert(
+			cudaMemcpyAsync(f_host, p, size * sizeof(int),
+					cudaMemcpyDeviceToHost, afcu::getStream(af::getDevice())));
 	cuda_assert(cudaStreamSynchronize(_stream));
 	for (int i = 0; i < size; i++) {
 		cout << f_host[i] << endl;
@@ -149,7 +166,8 @@ void CUDAFunctions::unlockArrays() {
 	_v_accum.unlock();
 }
 void CUDAFunctions::limitBandwidth(cufftComplex* f) {
-	zeroHighFreq<<< 2 * _gS, _bS, 0, _stream >>>(f,_mc->n[0], _mc->n[1],_mc->n[0], _mc->n[1]);
+	zeroHighFreq<<<2 * _gS, _bS, 0, _stream>>>(f, _mc->n[0], _mc->n[1],
+			_mc->n[0], _mc->n[1]);
 }
 __global__ void zeroHighFreq(cufftComplex* f, int dim1, int dim2, int limitdim1, int limitdim2) {
 	const int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -177,7 +195,8 @@ __global__ void zeroHighFreq(cufftComplex* f, int dim1, int dim2, int limitdim1,
 		}
 	}
 }
-__global__ void initialValues(cuComplex* V, int size, float_tt initRe, float_tt initIm) {
+__global__ void initialValues(cuComplex* V, int size, float_tt initRe,
+		float_tt initIm) {
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	if (i < size) {
 		V[i].x = initRe;
@@ -185,7 +204,8 @@ __global__ void initialValues(cuComplex* V, int size, float_tt initRe, float_tt 
 	}
 }
 
-__global__ void putAtomDeltas(cufftComplex* V, int nAt, int *Z, int Z0, float_tt *xyz, float_tt imPot, float_tt *occ, int s, int nx, int ny,
+__global__ void putAtomDeltas(cufftComplex* V, int nAt, int *Z, int Z0,
+		float_tt *xyz, float_tt imPot, float_tt *occ, int s, int nx, int ny,
 		int nSlices, float_tt dx, float_tt dy, float_tt dz) //double linear interpolation
 		{
 	const int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -208,7 +228,9 @@ __global__ void putAtomDeltas(cufftComplex* V, int nAt, int *Z, int Z0, float_tt
 //			x2,i*3+1,xyz[i * 3 + 1],dy,
 //			i3,i*3+2,xyz[i * 3 + 2],dz);
 
-			if (((x1 > 1.f) && (x1 < ((float_tt) (m1 - 2)))) && ((x2 > 1.f) && (x2 < ((float_tt) (m2 - 2)))) && ((i3 > s - 1) && (i3 <= s))) {
+			if (((x1 > 1.f) && (x1 < ((float_tt) (m1 - 2))))
+					&& ((x2 > 1.f) && (x2 < ((float_tt) (m2 - 2))))
+					&& ((i3 > s - 1) && (i3 <= s))) {
 //				if(Z0==79)
 //				printf("s=%d	Z=%d (xyz)=(%3.3g,%3.3g,%3.3g)	(m1,m2,i3)=(%d,%d,%d)	(dx,dy,dz)=(%3.3g,%3.3g,%3.3g)\n",
 //						s,Z0,xyz[i * 3 + 0],xyz[i * 3 + 1],xyz[i * 3 + 2],
@@ -286,7 +308,8 @@ __global__ void divideBySinc(cufftComplex* V, int nx, int ny, float_tt PI) {
 		V[i].y *= x;
 	}
 }
-__global__ void multiplyWithProjectedPotential_d(cufftComplex* V1, cufftComplex* V2, int nx, int ny) {
+__global__ void multiplyWithProjectedPotential_d(cufftComplex* V1,
+		cufftComplex* V2, int nx, int ny) {
 	const int i = blockIdx.x * blockDim.x + threadIdx.x;
 	const int m1 = nx;
 	const int m2 = ny;
@@ -298,12 +321,15 @@ __global__ void multiplyWithProjectedPotential_d(cufftComplex* V1, cufftComplex*
 	}
 }
 struct potential2TransmissionFunctor {
-	__host__ __device__
-	thrust::complex<float> operator()(const thrust::complex<float>& x, const thrust::complex<float>& y) const {
-		return thrust::complex<float>(expf(-x.imag()) * cosf(x.real()), expf(-x.imag()) * sinf(x.real()));
+	__host__  __device__ thrust::complex<float> operator()(
+			const thrust::complex<float>& x,
+			const thrust::complex<float>& y) const {
+		return thrust::complex<float>(expf(-x.imag()) * cosf(x.real()),
+				expf(-x.imag()) * sinf(x.real()));
 	}
 };
-__global__ void potential2Transmission(cufftComplex* t, cufftComplex* V, int size) {
+__global__ void potential2Transmission(cufftComplex* t, cufftComplex* V,
+		int size) {
 	const int i = blockIdx.x * blockDim.x + threadIdx.x;
 
 	if (i < size) {
@@ -346,7 +372,8 @@ int CUDAFunctions::myGSize(int size) {
 	}
 
 	if ((bS * gS) < size) {
-		fprintf( stderr, "    WARNING: Dimensions of the object too large for the GPU.");
+		fprintf( stderr,
+				"    WARNING: Dimensions of the object too large for the GPU.");
 	}
 
 	return gS;
@@ -371,7 +398,8 @@ int CUDAFunctions::myBSize(int size) {
 	}
 
 	if ((bS * gS) < size) {
-		fprintf( stderr, "    WARNING: Dimensions of the object too large for the GPU.");
+		fprintf( stderr,
+				"    WARNING: Dimensions of the object too large for the GPU.");
 	}
 
 	return bS;
