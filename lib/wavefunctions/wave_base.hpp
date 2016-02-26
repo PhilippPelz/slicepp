@@ -47,7 +47,7 @@ public:
 	inline float_tt GetPixelIntensity(int x, int y) const  {return GetPixelIntensity(x+_wc->n[0]*y);}
 	inline ComplexArray2D GetWave() const {return  _wave;}
 
-	inline af::array GetIntensity() const {return af::real(_wave_af)*af::real(_wave_af) + af::imag(_wave_af)*af::imag(_wave_af);}
+	inline af::array GetIntensity() const {return af::pow(af::abs(_wave_af),2);}
 	inline af::array& GetWaveAF() {return  _wave_af;}
 	inline af::array& GetProbe() {return  _probe;}
 	void ApplyCTF();

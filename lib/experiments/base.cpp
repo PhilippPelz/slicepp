@@ -88,8 +88,8 @@ void BaseExperiment::SetResolution(superCellBoxPtr b) {
 			mc->n[1] = ceil((max_y - 0) / mc->d[1]);
 			mc->n[0] = (mc->n[0] % 2 != 0) ? mc->n[0] + 1 : mc->n[0];
 			mc->n[1] = (mc->n[1] % 2 != 0) ? mc->n[1] + 1 : mc->n[1];
-			mc->d[0] = (max_x - 0) / mc->n[0];
-			mc->d[1] = (max_y - 0) / mc->n[1];
+//			mc->d[0] = (max_x - 0) / mc->n[0];
+//			mc->d[1] = (max_y - 0) / mc->n[1];
 			mc->offset[0] = 0;
 			mc->offset[1] = 0;
 			break;
@@ -124,9 +124,9 @@ void BaseExperiment::SetResolution(superCellBoxPtr b) {
 	if (_c->ExpType != PTYCHO) {
 		wc->n[0] = mc->n[0];
 		wc->n[1] = mc->n[1];
-		dc->n[0] = mc->n[0];
-		dc->n[1] = mc->n[1];
 	}
+	dc->n[0] = wc->n[0];
+	dc->n[1] = wc->n[1];
 }
 void BaseExperiment::SetSliceThickness(superCellBoxPtr b) {
 	float_tt max_x = b->ax, max_y = b->by, max_z = b->cz, zTotal = b->cz;
@@ -205,7 +205,7 @@ void BaseExperiment::DisplayProgress(int flag) {
 }
 
 int BaseExperiment::RunMultislice(af::array t) {
-	BOOST_LOG_TRIVIAL(info)<< "Propagating through slices ...";
+
 	af::timer time = af::timer::start();
 	for (int i = 0; i < _c->Model->n[2]; i++) {
 
@@ -229,14 +229,15 @@ int BaseExperiment::RunMultislice(af::array t) {
 		if (_c->Output->SaveWaveAfterSlice && i % _c->Output->SaveWaveIterations == 0)
 			_persist->SaveWaveAfterSlice(_wave->GetWaveAF(), i);
 		PostSliceProcess(i);
-
 		if (_c->Output->LogLevel <= 2) { ///info
 			if (i % (int) ceil(_c->Model->n[2] / 10.0) == 0)
 				loadbar(i + 1, _c->Model->n[2]);
-			auto psi = _wave->GetIntegratedIntensity();
-			BOOST_LOG_TRIVIAL(info)<< format("slice %-3d I=%-3.3f") % i % (psi);
 		}
 	}
+
+	auto psi = _wave->GetIntegratedIntensity();
+	BOOST_LOG_TRIVIAL(info)<< format("intensity I=%-3.3f") % (psi);
+
 	BOOST_LOG_TRIVIAL(info)<< format( "%g ms used for wave propagation (%g us per slice)")
 	% (af::timer::stop(time)*1000) %( af::timer::stop(time)*1e6 / _c->Model->n[2]);
 	return 0;

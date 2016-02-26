@@ -33,7 +33,7 @@ af::array DirectDetector::Noise(af::array& I){
 //	auto poisson = 0.25*af::pow2(r) + 0.306186 * af::pow(r,-1) - 11.0/8*af::pow(r,-2) + 0.765465 * af::pow(r,-3) - 0.125;
 //	_p->Save2DDataSet(poisson, "poisson");
 //	poisson /= _dc->MaxElectronCounts;
-	r(r < FLT_MIN) = 0;
+//	r(r < FLT_MIN) = 0;
 	return r;
 }
 DirectDetector::~DirectDetector() {

@@ -43,6 +43,7 @@ public:
 	void GetAtomDeltaFunctions(cufftComplex* V, int Z,int slice, float* xyzPos_d, float* occupancy_d, int* znums_d);
 	void PotentialToTransmission(cufftComplex* pot, cufftComplex* trans);
 	void limitBandwidth(cufftComplex* f);
+	void limitBandwidthWave(cufftComplex* f);
 	void cmul(cufftComplex* a1, cufftComplex* a2);
 	void SetComplex2D(cufftComplex* a, float real, float imag);
 	void SetComplex3D(cufftComplex* a, float real, float imag);

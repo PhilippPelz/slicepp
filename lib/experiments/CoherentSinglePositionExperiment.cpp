@@ -62,6 +62,7 @@ void CoherentSinglePositionExperiment::Run()
 		auto box = _structureBuilder->DisplaceAtoms();
 		_pot->MakeSlices(box);
 		if (_c->Output->SaveProbe) _persist->SaveProbe(_wave->GetProbe());
+		BOOST_LOG_TRIVIAL(info)<< "Propagating through slices ...";
 		RunMultislice(_pot->GetPotential());
 
 		if (_lbeams) {

@@ -57,7 +57,8 @@ void CoherentScanningExperiment::Run() {
 		if (_c->Output->SaveProbe)
 			_persist->SaveProbe(_wave->GetProbe());
 		BOOST_LOG_TRIVIAL(info)<< format("Calculating for %.1f position(s)") % scanPositions.size();
-		for (auto i = 0; i != scanPositions.size(); i++) {
+		BOOST_LOG_TRIVIAL(info)<< "Propagating through slices ...";
+		for (auto i = 0; i < scanPositions.size(); i++) {
 			int xp = scanPositions[i].x, yp = scanPositions[i].y;
 			BOOST_LOG_TRIVIAL(info)<< format("==== Position %.lf (%.lf, %.lf) ====") % (i + 1) % xp % yp;
 			RunMultislice(_pot->GetSubPotential(xp, yp, _c->Wave->n[0], _c->Wave->n[1]));
