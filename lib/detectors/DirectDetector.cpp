@@ -16,9 +16,10 @@ DirectDetector::DirectDetector(cDetectorConfPtr dc,PersistenceManagerPtr p):IDet
 void DirectDetector::RecordImage(af::array& w){
 	auto abs = af::abs(w);
 	auto I = abs*abs;
-	float_tt max = af::max<float_tt>(I);
-	I *= _dc->MaxElectronCounts / max;
-	I = af::round(Noise(I));
+//	float_tt max = af::max<float_tt>(I);
+//	I *= _dc->MaxElectronCounts / max;
+//	I = af::round(Noise(I));
+	I = af::round((I));
 //	_p->Save2DDataSet(I, "Iround");
 	_p->SaveMeasurement(I,_numSaved);
 	_numSaved++;

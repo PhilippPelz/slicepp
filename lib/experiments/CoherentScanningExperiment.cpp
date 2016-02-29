@@ -81,7 +81,8 @@ void CoherentScanningExperiment::Run() {
 }
 void CoherentScanningExperiment::PostSpecimenProcess() {
 	_wave->ToFourierSpace();
-	auto dp = fftShift(_wave->GetWaveAF());
+//	auto dp = fftShift(_wave->GetWaveAF());
+	auto dp = (_wave->GetWaveAF());
 	_det->RecordImage(dp);
 }
 
