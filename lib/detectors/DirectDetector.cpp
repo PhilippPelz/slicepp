@@ -19,7 +19,7 @@ void DirectDetector::RecordImage(af::array& w){
 //	float_tt max = af::max<float_tt>(I);
 //	I *= _dc->MaxElectronCounts / max;
 //	I = af::round(Noise(I));
-	I = af::round((I));
+//	I = af::round((I));
 //	_p->Save2DDataSet(I, "Iround");
 	_p->SaveMeasurement(I,_numSaved);
 	_numSaved++;

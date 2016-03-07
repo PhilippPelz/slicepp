@@ -152,6 +152,9 @@ void CUDAFunctions::unlockArrays() {
 void CUDAFunctions::limitBandwidth(cufftComplex* f) {
 	zeroHighFreq<<< 2 * _gS, _bS, 0, _stream >>>(f,_mc->n[0], _mc->n[1],_mc->n[0], _mc->n[1]);
 }
+void CUDAFunctions::limitBandwidthWave(cufftComplex* f) {
+	zeroHighFreq<<< 2 * _gS, _bS, 0, _stream >>>(f,_mc->n[0], _mc->n[1],_wc->n[0], _wc->n[1]);
+}
 __global__ void zeroHighFreq(cufftComplex* f, int dim1, int dim2, int limitdim1, int limitdim2) {
 	const int i = blockIdx.x * blockDim.x + threadIdx.x;
 	float mindim = (float) limitdim1;
