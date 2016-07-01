@@ -46,7 +46,7 @@ struct zoneAxisOptParams{
 
 class  CrystalBuilder : public IStructureBuilder{
 public:
-	CrystalBuilder(StructureReaderPtr r,cStructureConfPtr sc, cModelConfPtr mc, cOutputConfPtr oc);
+	CrystalBuilder(StructureReaderFactory f,cStructureConfPtr sc, cModelConfPtr mc, cOutputConfPtr oc);
 	~CrystalBuilder();
 
 	void ReadFromFile();

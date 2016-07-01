@@ -72,8 +72,8 @@ void Bootstrapper::InitInternal(ConfigPtr c){
 			);
 
 	boost::filesystem::path p(c->Structure->StructureFilename);
-	auto sreader = StructureReaderPtr(_structureReaderFactory[".cif"](p));
-	auto structureBuilder = StructureBuilderPtr(_structureBuilderFactory[p.extension().string()](sreader,c->Structure,c->Model,c->Output));
+//	auto sreader = StructureReaderPtr(_structureReaderFactory[".cif"](p));
+	auto structureBuilder = StructureBuilderPtr(_structureBuilderFactory[p.extension().string()](_structureReaderFactory,c->Structure,c->Model,c->Output));
 	auto persist = PersistenceManagerPtr(new PersistenceManager(c));
 	auto w = WaveConfPtr(c->Wave);
 	auto m = ModelConfPtr(c->Model);
@@ -102,6 +102,7 @@ void Bootstrapper::RegisterStructureBuilders(){
 }
 void Bootstrapper::RegisterStructureReaders(){
 	_structureReaderFactory[".cif"] = boost::factory<CifReader*>();
+	_structureReaderFactory[".pdb"] = boost::factory<PdbReader*>();
 }
 
 void Bootstrapper::RegisterWaveTypes(){

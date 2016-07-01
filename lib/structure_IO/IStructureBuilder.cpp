@@ -9,12 +9,12 @@
 
 namespace slicepp {
 
-IStructureBuilder::IStructureBuilder(StructureReaderPtr r,cStructureConfPtr sc, cModelConfPtr mc, cOutputConfPtr oc) {
-	_r = r;
+IStructureBuilder::IStructureBuilder(StructureReaderFactory f,cStructureConfPtr sc, cModelConfPtr mc, cOutputConfPtr oc) {
+	_f = f;
 	_sc = sc;
 	_mc = mc;
 	_oc = oc;
-	_r->SetFilePath(sc->StructureFilename);
+//	_r->SetFilePath(sc->StructureFilename);
 }
 
 IStructureBuilder::~IStructureBuilder() {

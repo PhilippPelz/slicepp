@@ -55,6 +55,7 @@ namespace bpt = boost::property_tree;
 #include "structure_IO/IStructureBuilder.hpp"
 #include "structure_IO/SuperstructureBuilder.hpp"
 #include "structure_IO/CifReader.hpp"
+#include "structure_IO/PdbReader.hpp"
 
 //#define BOOST_FUNCTIONAL_FACTORY_SUPPORT_NONE_T
 

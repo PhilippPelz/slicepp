@@ -31,7 +31,7 @@ namespace slicepp {
 
 class SuperstructureBuilder : public IStructureBuilder {
 public:
-	SuperstructureBuilder(StructureReaderPtr r,cStructureConfPtr sc, cModelConfPtr mc, cOutputConfPtr oc);
+	SuperstructureBuilder(StructureReaderFactory f,cStructureConfPtr sc, cModelConfPtr mc, cOutputConfPtr oc);
 	virtual ~SuperstructureBuilder();
 	int removeVacancies(std::vector<atom>& atoms);
 	void computeCenterofMass();

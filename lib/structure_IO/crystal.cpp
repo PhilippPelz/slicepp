@@ -46,10 +46,10 @@ static const float_tt k_sq3 = 1.0 / sqrt(3.0); /* sq3 is an additional needed fa
  * introduced in order to match the wobble factor with <u^2>
  */
 
-CrystalBuilder::CrystalBuilder(StructureReaderPtr r, cStructureConfPtr sc, cModelConfPtr mc, cOutputConfPtr oc) :
+CrystalBuilder::CrystalBuilder(StructureReaderFactory f, cStructureConfPtr sc, cModelConfPtr mc, cOutputConfPtr oc) :
 		_minX(0), _maxX(0), _minY(0), _maxY(0), _minZ(0), _maxZ(0), _offsetX(0), _offsetY(0), m_adjustCubeSize(false), m_phononFile(
 				boost::filesystem::path()), m_ax(0), _superCellBox(new superCellBox()), _baseAtoms(std::vector<atom>()), _atoms(std::vector<atom>()), _Mm(
-				FloatArray2D(boost::extents[3][3])), m_MmInv(FloatArray2D(boost::extents[3][3])), IStructureBuilder(r, sc, mc, oc) {
+				FloatArray2D(boost::extents[3][3])), m_MmInv(FloatArray2D(boost::extents[3][3])), IStructureBuilder(f, sc, mc, oc) {
 	m_wobble_temp_scale = sqrt(_sc->T_Kelvin / 300.0);
 	_tiltX = sc->crystalTilt[0];
 	_tiltY = sc->crystalTilt[1];
@@ -407,8 +407,10 @@ void CrystalBuilder::SetFillUnitCell(bool val) {
 	_fillUnitCell = val;
 }
 void CrystalBuilder::ReadFromFile() {
-	_r->ReadCellParams(_Mm);
-	_r->ReadAtoms(_baseAtoms, _uniqueAtoms, true);
+	boost::filesystem::path p(_sc->StructureFilename);
+	auto r = _f[p.extension().string()](p);
+	r->ReadCellParams(_Mm);
+	r->ReadAtoms(_baseAtoms, _uniqueAtoms, true);
 	CalculateCellDimensions();
 	int s = _baseAtoms.size();
 //	BOOST_LOG_TRIVIAL(info)<< format("Read %d atoms, tds: %d") % s % (_mc->UseTDS);

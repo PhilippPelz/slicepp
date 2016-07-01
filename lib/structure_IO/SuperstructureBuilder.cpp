@@ -13,7 +13,7 @@ using boost::format;
 using boost::algorithm::trim;
 namespace slicepp {
 
-SuperstructureBuilder::SuperstructureBuilder(StructureReaderPtr r,cStructureConfPtr sc, cModelConfPtr mc, cOutputConfPtr oc) : IStructureBuilder(r,sc,mc,oc)
+SuperstructureBuilder::SuperstructureBuilder(StructureReaderFactory f,cStructureConfPtr sc, cModelConfPtr mc, cOutputConfPtr oc) : IStructureBuilder(f,sc,mc,oc)
 {
 	_atRadf = {0.79,0.49, 2.05,1.40,1.17,0.91,0.75,0.65,0.57,0.51, 2.23,1.72,0.00,1.46,0.00,0.00,0.97,0.88, 2.77,2.23,2.09,2.00,1.92,1.85,1.79,1.72,1.67,1.62,1.57,1.53,1.81,1.52,1.33,1.22,1.12,1.03};
 	_covRadf = {0.32,0.93, 1.23,0.90,0.82,0.77,0.75,0.73,0.72,0.71, 1.54,1.36,0.00,1.90,0.00,0.00,0.99,0.98, 2.03,1.74,1.44,1.32,1.63,1.18,1.17,1.17,1.16,1.15,1.17,1.25,1.26,1.22,1.20,1.16,1.14,1.12};
@@ -349,7 +349,7 @@ int SuperstructureBuilder::readParams(const char *datFileName){
 			auto sc = StructureConfig_clone(_sc.get());
 			std::memset(sc->StructureFilename,0,1000);
 			std::memcpy(sc->StructureFilename,p.string().c_str(),p.string().length());
-			CrystalBuilder cryst(_r,cStructureConfPtr(sc),_mc,_oc);
+			CrystalBuilder cryst(_f,cStructureConfPtr(sc),_mc,_oc);
 			cryst.ReadFromFile();
 //			free(sc);
 			auto atoms = cryst.GetUnitCellAtoms();
@@ -405,7 +405,7 @@ int SuperstructureBuilder::readParams(const char *datFileName){
 			auto sc = StructureConfig_clone(_sc.get());
 			std::memset(sc->StructureFilename,0,1000);
 			std::memcpy(sc->StructureFilename,p.string().c_str(),p.string().length());
-			CrystalBuilder cryst(_r,cStructureConfPtr(sc),_mc,_oc);
+			CrystalBuilder cryst(_f,cStructureConfPtr(sc),_mc,_oc);
 			cryst.ReadFromFile();
 //			free(sc);
 			auto atoms = cryst.GetUnitCellAtoms();

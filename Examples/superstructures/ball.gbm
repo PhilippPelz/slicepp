@@ -4,7 +4,7 @@ crystal: NP ../../Examples/cif/au.cif % name of first cystal
 sphere: 40 150 190 40
 tilt: 0 10 19 degree
 
-crystal: NP ../../Examples/cif/au.cif % name of first cystal
+crystal: NP ../../Examples/cif/si.cif % name of first cystal
 sphere: 40 60 70 40
 tilt: 0 70 25 degree
 
@@ -16,6 +16,6 @@ crystal: NP ../../Examples/cif/au.cif % name of first cystal
 sphere: 35 145 95 35
 tilt: 0 70 25 degree
 
-%crystal: substrate ../../Examples/cif/Si3N4-beta.cif
+%crystal: substrate ../../Examples/cif/au.cif
 %plane: 0 0 80 0 1 0  1 0 0
 %plane: 0 0 100 1 0 0  0 1 0

@@ -17,7 +17,7 @@ namespace slicepp {
 
 class IStructureBuilder {
 public:
-	IStructureBuilder(StructureReaderPtr r,cStructureConfPtr sc, cModelConfPtr mc, cOutputConfPtr oc);
+	IStructureBuilder(StructureReaderFactory f,cStructureConfPtr sc, cModelConfPtr mc, cOutputConfPtr oc);
 	virtual ~IStructureBuilder();
 	virtual superCellBoxPtr Build()=0;
 	virtual superCellBoxPtr DisplaceAtoms()=0;
@@ -28,14 +28,14 @@ public:
 	void RegisterAtomVisitor(boost::function<void(const atom& a)>);
 protected:
 	IStructureBuilder(){};
-	StructureReaderPtr _r;
+	StructureReaderFactory _f;
 	cStructureConfPtr _sc;
 	cModelConfPtr _mc;
 	cOutputConfPtr _oc;
 };
 
 typedef boost::shared_ptr<IStructureBuilder> StructureBuilderPtr;
-typedef boost::function<IStructureBuilder*(StructureReaderPtr r,cStructureConfPtr sc, cModelConfPtr mc, cOutputConfPtr oc)> structureBuilderCreator;
+typedef boost::function<IStructureBuilder*(StructureReaderFactory f,cStructureConfPtr sc, cModelConfPtr mc, cOutputConfPtr oc)> structureBuilderCreator;
 typedef std::map<string,structureBuilderCreator> StructureBuilderFactory;
 
 } /* namespace slicepp */
